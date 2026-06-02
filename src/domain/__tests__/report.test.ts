@@ -183,10 +183,11 @@ describe("computeStudioReport — per-designer results for the target day", () =
 });
 
 describe("computeStudioReport — missing-designer roster gap (D-18 / T-01-06)", () => {
-  it("a designer absent from all input is reported in missingDesigners; call does not throw", () => {
-    // Input mentions only A and B; C never appears in bookings or absences.
+  it("a designer the pull did not cover is reported in missingDesigners; call does not throw", () => {
+    // The pull only reached A and B (assessedDesigners); C could not be assessed.
     const r = computeStudioReport(
       input({
+        assessedDesigners: [A, B],
         bookings: [
           { designerId: A, minutes: 300, isTentative: false, date: "2026-06-09" },
           { designerId: B, minutes: 300, isTentative: false, date: "2026-06-09" },
@@ -195,14 +196,15 @@ describe("computeStudioReport — missing-designer roster gap (D-18 / T-01-06)",
       }),
     );
     assert.deepEqual(r.missingDesigners, [C]);
-    // The present designers are still reported.
+    // The roster is still fully represented in designers[], in roster order.
     assert.deepEqual(
       r.designers.map((d) => d.designerId),
-      [A, B, C], // roster order preserved; C present-but-empty in the result list
+      [A, B, C],
     );
   });
 
   it("present-but-empty is NOT missing — empty input for the full roster yields no gaps (D-19)", () => {
+    // assessedDesigners omitted → whole roster assumed assessed (present-but-empty).
     const r = computeStudioReport(input({ bookings: [], absences: [] }));
     assert.deepEqual(r.missingDesigners, []);
     // Every designer underbooked with full open on the target day (D-17).
@@ -212,10 +214,12 @@ describe("computeStudioReport — missing-designer roster gap (D-18 / T-01-06)",
     }
   });
 
-  it("a designer present only via an absence is NOT missing", () => {
+  it("an explicitly-assessed designer with zero bookings is NOT missing (present-but-empty)", () => {
+    // The pull reached all three; C simply had nothing booked.
     const r = computeStudioReport(
       input({
-        absences: [{ designerId: C, minutes: 120, date: "2026-06-09" }],
+        assessedDesigners: [A, B, C],
+        bookings: [{ designerId: A, minutes: 300, isTentative: false, date: "2026-06-09" }],
       }),
     );
     assert.deepEqual(r.missingDesigners, []);
