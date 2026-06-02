@@ -34,7 +34,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 **Plans**: 3 plans
 Plans:
 - [x] 01-01-PLAN.md — Scaffold + working-day clock (next working day, Fri→Mon, holiday/DST-safe)
-- [ ] 01-02-PLAN.md — Per-designer capacity + classification (available/booked/open, off/underbooked/overbooked/shaky, 0.25h rounding)
+- [x] 01-02-PLAN.md — Per-designer capacity + classification (available/booked/open, off/underbooked/overbooked/shaky, 0.25h rounding)
 - [ ] 01-03-PLAN.md — Studio rest-of-week rollup + roster-gap detection + StudioReport assembly
 
 ### Phase 2: Productive Pull & Briefed Discovery
@@ -105,7 +105,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Core Math & Clock | 1/3 | In Progress|  |
+| 1. Core Math & Clock | 2/3 | In Progress|  |
 | 2. Productive Pull & Briefed Discovery | 0/TBD | Not started | - |
 | 3. Template Renderer & Chat Delivery | 0/TBD | Not started | - |
 | 4. Calendar & Meeting Reconciliation | 0/TBD | Not started | - |

@@ -4,13 +4,13 @@ milestone: v1.0
 milestone_name: milestone
 status: executing
 stopped_at: Completed 01-01-PLAN.md
-last_updated: "2026-06-02T14:24:10.227Z"
+last_updated: "2026-06-02T14:30:22.866Z"
 last_activity: 2026-06-02
 progress:
   total_phases: 6
   completed_phases: 0
   total_plans: 3
-  completed_plans: 1
+  completed_plans: 2
   percent: 0
 ---
 
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-06-02)
 ## Current Position
 
 Phase: 01 (core-math-clock) — EXECUTING
-Plan: 2 of 3
+Plan: 3 of 3
 Status: Ready to execute
 Last activity: 2026-06-02
 
-Progress: [███░░░░░░░] 33%
+Progress: [███████░░░] 67%
 
 ## Performance Metrics
 
@@ -53,6 +53,7 @@ Progress: [███░░░░░░░] 33%
 
 *Updated after each plan completion*
 | Phase 01 P01 | 20 | 2 tasks | 6 files |
+| Phase 01 P02 | 3 | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -66,6 +67,8 @@ Recent decisions affecting current work:
 - [Roadmap]: "Briefed" is org-specific, not a native Productive field — confirmed via a mandatory live-data discovery spike in Phase 2 before brief flags are trusted.
 - [Phase 1]: STUDIO_ZONE/TARGET_MINUTES live as named constants in types.ts (no separate config.ts); clock/capacity functions stay parameterised to preserve purity.
 - [Phase 1]: Holidays injected as ReadonlySet<yyyy-MM-dd> studio-zone keys; clock injects now (never DateTime.now()) for DST-safe determinism.
+- [Phase ?]: [Phase 1]: Capacity computes in exact integer minutes; rounding to 0.25h is display-only via round.ts (round-half-up), never re-entering arithmetic (D-15/D-16).
+- [Phase ?]: [Phase 1]: DesignerResult + DayStatus exported from capacity.ts as the stable contract for 01-03; overbooked openMin left unclamped (D-06); shaky orthogonal to status (D-05).
 
 ### Pending Todos
 
@@ -90,6 +93,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-06-02T14:24:10.223Z
+Last session: 2026-06-02T14:30:06.115Z
 Stopped at: Completed 01-01-PLAN.md
 Resume file: None
