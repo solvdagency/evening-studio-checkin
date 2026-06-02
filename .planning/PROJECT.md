@@ -29,7 +29,7 @@ Every evening the team gets one clear, trustworthy heads-up of exactly what need
 - [ ] Always posts — including a short positive note on nights when everything is sorted
 - [ ] Posts a degraded message naming what it couldn't reach if a data source fails (never silently skips a night)
 - [ ] Delivers to Google Chat (primary); Gmail optional
-- [ ] Uses an LLM (via the existing Pro subscription, not the paid API) for the meeting-reconciliation judgment and message writing, with a deterministic templated fallback
+- [ ] Uses an LLM via a sanctioned Anthropic API key (pay-per-use, ~pennies/night) for the meeting-reconciliation judgment and message writing, with a deterministic templated fallback; the LLM layer is gated on org approval of the key and is cuttable
 
 ### Out of Scope
 
@@ -37,7 +37,7 @@ Every evening the team gets one clear, trustworthy heads-up of exactly what need
 - Historical tracking, trends, or a dashboard — the value is the nightly nudge, not analytics
 - Strict 7.5h tracking of the Head of Creative/Strategy and the Creative Director — their time is fluid and booked in larger, irregular chunks
 - Weekend runs — the studio doesn't work weekends
-- Pay-per-use Claude API — the org blocks API-key creation, so the LLM must run on the existing Pro subscription
+- LLM on the Pro/Max subscription via unattended OAuth — prohibited by Anthropic's terms (enforced) and metered from 15 Jun 2026; rejected in favour of a sanctioned API key
 
 ## Context
 
@@ -50,18 +50,19 @@ Every evening the team gets one clear, trustworthy heads-up of exactly what need
 
 ## Constraints
 
-- **Tech stack**: LLM must run on the existing Claude Pro subscription, not the pay-per-use API — the org locks API-key creation. Exact unattended auth route is a research item.
-- **Hosting**: Runs unattended on a nightly schedule with no always-on server (GitHub Actions cron is the leading candidate).
+- **Tech stack**: Node.js 22 + TypeScript; GitHub Actions cron for scheduling; Google Chat incoming webhook with Cards v2.
+- **LLM access**: LLM runs via a sanctioned Anthropic API key (pay-per-use). The unattended Pro/Max-subscription OAuth route is prohibited by Anthropic's terms and metered from 15 Jun 2026, so it is not used.
+- **Hosting**: Runs unattended on a nightly schedule with no always-on server (GitHub Actions cron).
 - **Trust**: All hour/capacity arithmetic is done in deterministic code, never by the LLM — the numbers must be exact or the team stops reading the message.
-- **Dependencies**: Productive.io API, Google Calendar API (three calendars), and a Google Chat delivery mechanism (webhook vs Chat app — TBD in research).
-- **Cost**: Effectively zero ongoing cost — free scheduled hosting plus the existing subscription; no new per-use billing.
+- **Dependencies**: Productive.io API; Google Calendar API via service account + domain-wide delegation (needs a Google Workspace admin to authorise); Google Chat incoming webhook; org-provisioned Anthropic API key (for the LLM phase only).
+- **Cost**: Near-zero ongoing cost — free scheduled hosting; LLM is a few cents per night on the sanctioned API key.
 
 ## Key Decisions
 
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
 | Deterministic code for all arithmetic; LLM only for judgment + writing | Hours must be trustworthy; LLM doing maths is a risk | — Pending |
-| LLM runs on the existing Pro subscription, not the paid API | Org blocks API-key creation; avoid new per-use cost | — Pending (research to validate unattended auth) |
+| LLM runs via a sanctioned Anthropic API key (org-approved) | Pro-subscription unattended route is a ToS breach + metered from 15 Jun 2026; API key is permitted and ~pennies/night | — Pending (org to provision key) |
 | GitHub Actions cron for scheduling | Free, no server to maintain, secrets built in | — Pending |
 | Productive time-off is the source of truth for availability | Keeps capacity logic in one system | — Pending |
 | Intelligence/render layer is swappable (templated fallback) | Ships even if the LLM-on-Pro route proves unworkable | — Pending |
