@@ -86,4 +86,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-06-02 after initialization*
+*Last updated: 2026-06-03 — Phase 1 (Core Math & Clock) complete: pure, fully unit-tested capacity + working-day arithmetic exists as the trust boundary. No requirements moved to Validated yet — these validate on ship (Phase 3+).*
