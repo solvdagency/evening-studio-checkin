@@ -13,8 +13,7 @@ import { DateTime } from "luxon";
 import { nextWorkingDay, isWorkingDay, restOfWeekWindow } from "../clock.ts";
 import { STUDIO_ZONE } from "../types.ts";
 
-const sydney = (iso: string): DateTime =>
-  DateTime.fromISO(iso, { zone: STUDIO_ZONE });
+const sydney = (iso: string): DateTime => DateTime.fromISO(iso, { zone: STUDIO_ZONE });
 
 describe("nextWorkingDay", () => {
   it("rolls a Friday-evening run forward to Monday (Friday→Monday, SCHED-03)", () => {
@@ -26,10 +25,7 @@ describe("nextWorkingDay", () => {
   it("skips an injected holiday on the would-be target (holiday-eve)", () => {
     // Tue 2026-06-09 16:30 → Wed 06-10 is the injected holiday → Thu 2026-06-11.
     const tue = sydney("2026-06-09T16:30:00");
-    assert.equal(
-      nextWorkingDay(tue, new Set(["2026-06-10"])).toISODate(),
-      "2026-06-11",
-    );
+    assert.equal(nextWorkingDay(tue, new Set(["2026-06-10"])).toISODate(), "2026-06-11");
   });
 
   it("is correct across the Sydney DST-end boundary (DST-boundary, SCHED-04)", () => {
@@ -64,10 +60,7 @@ describe("isWorkingDay", () => {
   });
 
   it("returns false for a weekday present in the holiday set", () => {
-    assert.equal(
-      isWorkingDay(sydney("2026-06-10T00:00:00"), new Set(["2026-06-10"])),
-      false,
-    );
+    assert.equal(isWorkingDay(sydney("2026-06-10T00:00:00"), new Set(["2026-06-10"])), false);
   });
 
   it("returns true for a plain weekday with no holidays", () => {

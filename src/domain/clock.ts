@@ -52,10 +52,7 @@ export function nextWorkingDay(now: DateTime, holidays: HolidaySet): WorkingDay 
  * branch: a Tuesday target yields Tue–Fri; a Monday target (produced by a
  * Friday-evening run) yields the whole next week Mon–Fri.
  */
-export function restOfWeekWindow(
-  targetDay: DateTime,
-  holidays: HolidaySet,
-): WorkingDay[] {
+export function restOfWeekWindow(targetDay: DateTime, holidays: HolidaySet): WorkingDay[] {
   const friday = targetDay.plus({ days: 5 - targetDay.weekday });
   const days: WorkingDay[] = [];
   for (let d = targetDay; d <= friday; d = d.plus({ days: 1 })) {
