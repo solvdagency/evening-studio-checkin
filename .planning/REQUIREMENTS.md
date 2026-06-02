@@ -11,8 +11,8 @@ Requirements for the initial release. Each maps to roadmap phases.
 
 - [ ] **SCHED-01**: The check runs automatically every weekday at ~4:30pm studio time, and not on weekends
 - [ ] **SCHED-02**: The check can be triggered manually on demand for testing (without waiting for the schedule)
-- [ ] **SCHED-03**: The "next working day" window targets the following weekday; on a Friday it targets Monday
-- [ ] **SCHED-04**: All working-day and window logic is computed from the studio timezone in code (not from the scheduler's clock), and is DST-safe
+- [x] **SCHED-03**: The "next working day" window targets the following weekday; on a Friday it targets Monday
+- [x] **SCHED-04**: All working-day and window logic is computed from the studio timezone in code (not from the scheduler's clock), and is DST-safe
 
 ### Capacity & Bookings
 
@@ -97,8 +97,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 |-------------|-------|--------|
 | SCHED-01 | Phase 3 | Pending |
 | SCHED-02 | Phase 3 | Pending |
-| SCHED-03 | Phase 1 | Pending |
-| SCHED-04 | Phase 1 | Pending |
+| SCHED-03 | Phase 1 | Complete |
+| SCHED-04 | Phase 1 | Complete |
 | CAP-01 | Phase 1 | Pending |
 | CAP-02 | Phase 1 | Pending |
 | CAP-03 | Phase 1 | Pending |

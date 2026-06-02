@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: planning
-stopped_at: Phase 1 context gathered
-last_updated: "2026-06-02T13:50:23.803Z"
-last_activity: 2026-06-02 — Roadmap created (6 phases, coarse granularity, 25/25 requirements mapped)
+status: executing
+stopped_at: Completed 01-01-PLAN.md
+last_updated: "2026-06-02T14:24:10.227Z"
+last_activity: 2026-06-02
 progress:
   total_phases: 6
   completed_phases: 0
-  total_plans: 0
-  completed_plans: 0
+  total_plans: 3
+  completed_plans: 1
   percent: 0
 ---
 
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-02)
 
 **Core value:** Every evening the team gets one clear, trustworthy heads-up of exactly what needs fixing before tomorrow — so the three designers start the day with full, briefed workloads instead of chasing the work themselves.
-**Current focus:** Phase 1 — Core Math & Clock
+**Current focus:** Phase 01 — core-math-clock
 
 ## Current Position
 
-Phase: 1 of 6 (Core Math & Clock)
-Plan: 0 of TBD in current phase
-Status: Ready to plan
-Last activity: 2026-06-02 — Roadmap created (6 phases, coarse granularity, 25/25 requirements mapped)
+Phase: 01 (core-math-clock) — EXECUTING
+Plan: 2 of 3
+Status: Ready to execute
+Last activity: 2026-06-02
 
-Progress: [░░░░░░░░░░] 0%
+Progress: [███░░░░░░░] 33%
 
 ## Performance Metrics
 
@@ -52,6 +52,7 @@ Progress: [░░░░░░░░░░] 0%
 - Trend: —
 
 *Updated after each plan completion*
+| Phase 01 P01 | 20 | 2 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -63,6 +64,8 @@ Recent decisions affecting current work:
 - [Roadmap]: Build inside-out — deterministic core first, LLM last and cuttable; Phase 3 is the first genuinely shippable product (no LLM, no Calendar).
 - [Roadmap]: All hour/capacity arithmetic stays in deterministic code (Phase 1); the LLM never does maths.
 - [Roadmap]: "Briefed" is org-specific, not a native Productive field — confirmed via a mandatory live-data discovery spike in Phase 2 before brief flags are trusted.
+- [Phase 1]: STUDIO_ZONE/TARGET_MINUTES live as named constants in types.ts (no separate config.ts); clock/capacity functions stay parameterised to preserve purity.
+- [Phase 1]: Holidays injected as ReadonlySet<yyyy-MM-dd> studio-zone keys; clock injects now (never DateTime.now()) for DST-safe determinism.
 
 ### Pending Todos
 
@@ -87,6 +90,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-06-02T13:50:23.794Z
-Stopped at: Phase 1 context gathered
-Resume file: .planning/phases/01-core-math-clock/01-CONTEXT.md
+Last session: 2026-06-02T14:24:10.223Z
+Stopped at: Completed 01-01-PLAN.md
+Resume file: None

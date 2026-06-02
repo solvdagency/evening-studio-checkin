@@ -33,7 +33,7 @@ Decimal phases appear between their surrounding integers in numeric order.
   4. The same inputs always produce the same outputs (no randomness, no I/O), and partial/empty inputs degrade gracefully rather than throwing
 **Plans**: 3 plans
 Plans:
-- [ ] 01-01-PLAN.md — Scaffold + working-day clock (next working day, Fri→Mon, holiday/DST-safe)
+- [x] 01-01-PLAN.md — Scaffold + working-day clock (next working day, Fri→Mon, holiday/DST-safe)
 - [ ] 01-02-PLAN.md — Per-designer capacity + classification (available/booked/open, off/underbooked/overbooked/shaky, 0.25h rounding)
 - [ ] 01-03-PLAN.md — Studio rest-of-week rollup + roster-gap detection + StudioReport assembly
 
@@ -105,7 +105,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Core Math & Clock | 0/3 | Not started | - |
+| 1. Core Math & Clock | 1/3 | In Progress|  |
 | 2. Productive Pull & Briefed Discovery | 0/TBD | Not started | - |
 | 3. Template Renderer & Chat Delivery | 0/TBD | Not started | - |
 | 4. Calendar & Meeting Reconciliation | 0/TBD | Not started | - |
