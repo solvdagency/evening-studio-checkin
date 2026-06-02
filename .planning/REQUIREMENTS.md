@@ -20,7 +20,7 @@ Requirements for the initial release. Each maps to roadmap phases.
 - [x] **CAP-02**: For each designer, the check computes booked hours for the target day from confirmed bookings
 - [x] **CAP-03**: A designer booked below their available hours for the target day is flagged as underbooked, naming the designer and the open hours
 - [x] **CAP-04**: Tentative (draft) bookings are counted toward hours but shown distinctly as shaky/unconfirmed
-- [ ] **CAP-05**: The check computes a studio "rest of this week" rollup — open hours vs total studio hours across the remaining working days
+- [x] **CAP-05**: The check computes a studio "rest of this week" rollup — open hours vs total studio hours across the remaining working days
 
 ### Briefs
 
@@ -103,7 +103,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | CAP-02 | Phase 1 | Complete |
 | CAP-03 | Phase 1 | Complete |
 | CAP-04 | Phase 1 | Complete |
-| CAP-05 | Phase 1 | Pending |
+| CAP-05 | Phase 1 | Complete |
 | BRIEF-01 | Phase 2 | Pending |
 | BRIEF-02 | Phase 2 | Pending |
 | BRIEF-03 | Phase 2 | Pending |

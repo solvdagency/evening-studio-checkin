@@ -12,7 +12,7 @@ The build goes inside-out, deterministic-first. We start at the trust boundary �
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [ ] **Phase 1: Core Math & Clock** - Pure, unit-tested capacity arithmetic and working-day logic with no external dependencies
+- [x] **Phase 1: Core Math & Clock** - Pure, unit-tested capacity arithmetic and working-day logic with no external dependencies (completed 2026-06-02)
 - [ ] **Phase 2: Productive Pull & Briefed Discovery** - Live Productive data into typed objects; discover and confirm the real "briefed" mapping
 - [ ] **Phase 3: Template Renderer & Chat Delivery** - Shippable v1: on-brand Cards v2 message, scheduled weekday posting, always-post and degraded mode (no LLM, no Calendar)
 - [ ] **Phase 4: Calendar & Meeting Reconciliation** - Read designer calendars and reconcile ad-hoc meetings against bookings, behind a real-evening pilot gate
@@ -35,7 +35,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 Plans:
 - [x] 01-01-PLAN.md — Scaffold + working-day clock (next working day, Fri→Mon, holiday/DST-safe)
 - [x] 01-02-PLAN.md — Per-designer capacity + classification (available/booked/open, off/underbooked/overbooked/shaky, 0.25h rounding)
-- [ ] 01-03-PLAN.md — Studio rest-of-week rollup + roster-gap detection + StudioReport assembly
+- [x] 01-03-PLAN.md — Studio rest-of-week rollup + roster-gap detection + StudioReport assembly
 
 ### Phase 2: Productive Pull & Briefed Discovery
 **Goal**: Real Productive data flows into trusted typed domain objects, and the studio's actual "briefed" convention is discovered and confirmed against live data so brief flags are correct from night one.
@@ -105,7 +105,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Core Math & Clock | 2/3 | In Progress|  |
+| 1. Core Math & Clock | 3/3 | Complete   | 2026-06-02 |
 | 2. Productive Pull & Briefed Discovery | 0/TBD | Not started | - |
 | 3. Template Renderer & Chat Delivery | 0/TBD | Not started | - |
 | 4. Calendar & Meeting Reconciliation | 0/TBD | Not started | - |

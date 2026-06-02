@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: executing
+status: verifying
 stopped_at: Completed 01-01-PLAN.md
-last_updated: "2026-06-02T14:30:22.866Z"
+last_updated: "2026-06-02T14:36:56.283Z"
 last_activity: 2026-06-02
 progress:
   total_phases: 6
-  completed_phases: 0
+  completed_phases: 1
   total_plans: 3
-  completed_plans: 2
-  percent: 0
+  completed_plans: 3
+  percent: 17
 ---
 
 # Project State
@@ -27,10 +27,10 @@ See: .planning/PROJECT.md (updated 2026-06-02)
 
 Phase: 01 (core-math-clock) — EXECUTING
 Plan: 3 of 3
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-06-02
 
-Progress: [███████░░░] 67%
+Progress: [██████████] 100%
 
 ## Performance Metrics
 
@@ -54,6 +54,7 @@ Progress: [███████░░░] 67%
 *Updated after each plan completion*
 | Phase 01 P01 | 20 | 2 tasks | 6 files |
 | Phase 01 P02 | 3 | 2 tasks | 4 files |
+| Phase 01 P03 | 4 | 1 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -69,6 +70,8 @@ Recent decisions affecting current work:
 - [Phase 1]: Holidays injected as ReadonlySet<yyyy-MM-dd> studio-zone keys; clock injects now (never DateTime.now()) for DST-safe determinism.
 - [Phase ?]: [Phase 1]: Capacity computes in exact integer minutes; rounding to 0.25h is display-only via round.ts (round-half-up), never re-entering arithmetic (D-15/D-16).
 - [Phase ?]: [Phase 1]: DesignerResult + DayStatus exported from capacity.ts as the stable contract for 01-03; overbooked openMin left unclamped (D-06); shaky orthogonal to status (D-05).
+- [Phase ?]: [Phase 1]: StudioReport is the top-level output contract (targetDay, window, designers, rollup, missingDesigners); computeStudioReport composes the clock window + per-designer capacity — Phase 2 feeds it, Phase 3 renders it (CAP-05).
+- [Phase ?]: [Phase 1]: Roster-gap uses an explicit assessedDesigners input signal (missingDesigners = roster minus assessedDesigners); omitting it means whole roster assessed, so an empty pull is present-but-empty not a gap (D-18/D-19).
 
 ### Pending Todos
 
@@ -93,6 +96,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-06-02T14:30:06.115Z
+Last session: 2026-06-02T14:36:39.453Z
 Stopped at: Completed 01-01-PLAN.md
 Resume file: None
