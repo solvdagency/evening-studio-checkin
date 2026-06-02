@@ -31,7 +31,11 @@ Decimal phases appear between their surrounding integers in numeric order.
   2. A designer booked below their available hours is returned as underbooked with the designer named and the open hours stated; tentative bookings are counted toward hours but carried as a distinct "shaky" flag
   3. The clock derives the correct target day from the studio timezone (not the scheduler's clock), and a Friday run targets Monday — proven by passing tests for the Friday-to-Monday case, a holiday-eve case, and a DST-boundary case
   4. The same inputs always produce the same outputs (no randomness, no I/O), and partial/empty inputs degrade gracefully rather than throwing
-**Plans**: TBD
+**Plans**: 3 plans
+Plans:
+- [ ] 01-01-PLAN.md — Scaffold + working-day clock (next working day, Fri→Mon, holiday/DST-safe)
+- [ ] 01-02-PLAN.md — Per-designer capacity + classification (available/booked/open, off/underbooked/overbooked/shaky, 0.25h rounding)
+- [ ] 01-03-PLAN.md — Studio rest-of-week rollup + roster-gap detection + StudioReport assembly
 
 ### Phase 2: Productive Pull & Briefed Discovery
 **Goal**: Real Productive data flows into trusted typed domain objects, and the studio's actual "briefed" convention is discovered and confirmed against live data so brief flags are correct from night one.
@@ -101,7 +105,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Core Math & Clock | 0/TBD | Not started | - |
+| 1. Core Math & Clock | 0/3 | Not started | - |
 | 2. Productive Pull & Briefed Discovery | 0/TBD | Not started | - |
 | 3. Template Renderer & Chat Delivery | 0/TBD | Not started | - |
 | 4. Calendar & Meeting Reconciliation | 0/TBD | Not started | - |
