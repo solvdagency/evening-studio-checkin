@@ -1,0 +1,31 @@
+{
+  "name": "evening-design-team-check",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "node --import tsx --test \"src/**/*.test.ts\"",
+    "format": "prettier --write ."
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/solvdagency/evening-studio-checkin.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "bugs": {
+    "url": "https://github.com/solvdagency/evening-studio-checkin/issues"
+  },
+  "homepage": "https://github.com/solvdagency/evening-studio-checkin#readme",
+  "dependencies": {
+    "luxon": "^3.7.2"
+  },
+  "devDependencies": {
+    "@types/luxon": "^3.7.1",
+    "prettier": "^3.8.3",
+    "tsx": "^4.22.4",
+    "typescript": "~5.9.3"
+  }
+}
