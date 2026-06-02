@@ -95,13 +95,41 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| (to be populated by roadmap) | — | Pending |
+| SCHED-01 | Phase 3 | Pending |
+| SCHED-02 | Phase 3 | Pending |
+| SCHED-03 | Phase 1 | Pending |
+| SCHED-04 | Phase 1 | Pending |
+| CAP-01 | Phase 1 | Pending |
+| CAP-02 | Phase 1 | Pending |
+| CAP-03 | Phase 1 | Pending |
+| CAP-04 | Phase 1 | Pending |
+| CAP-05 | Phase 1 | Pending |
+| BRIEF-01 | Phase 2 | Pending |
+| BRIEF-02 | Phase 2 | Pending |
+| BRIEF-03 | Phase 2 | Pending |
+| MEET-01 | Phase 4 | Pending |
+| MEET-02 | Phase 4 | Pending |
+| MEET-03 | Phase 4 | Pending |
+| MEET-04 | Phase 4 | Pending |
+| MEET-05 | Phase 4 | Pending |
+| MSG-01 | Phase 3 | Pending |
+| MSG-02 | Phase 3 | Pending |
+| MSG-03 | Phase 3 | Pending |
+| MSG-04 | Phase 3 | Pending |
+| MSG-05 | Phase 3 | Pending |
+| MSG-06 | Phase 3 | Pending |
+| MSG-07 | Phase 3 | Pending |
+| REL-01 | Phase 3 | Pending |
+| REL-02 | Phase 3 | Pending |
+| REL-03 | Phase 6 | Pending |
+| LLM-01 | Phase 5 | Pending |
+| LLM-02 | Phase 5 | Pending |
 
 **Coverage:**
 - v1 requirements: 25 total
-- Mapped to phases: 0 (pending roadmap)
-- Unmapped: 25 ⚠️
+- Mapped to phases: 25 ✓
+- Unmapped: 0 ✓
 
 ---
 *Requirements defined: 2026-06-02*
-*Last updated: 2026-06-02 after initial definition*
+*Last updated: 2026-06-02 after roadmap creation (traceability populated, 25/25 mapped)*
