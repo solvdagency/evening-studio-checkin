@@ -11,12 +11,7 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import type { Booking, DesignerId } from "../types.ts";
-import {
-  availableMinutes,
-  bookedMinutes,
-  classifyDay,
-  computeDesignerDay,
-} from "../capacity.ts";
+import { availableMinutes, bookedMinutes, classifyDay, computeDesignerDay } from "../capacity.ts";
 
 const DESIGNER = "designer-1" as DesignerId;
 
