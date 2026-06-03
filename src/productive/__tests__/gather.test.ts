@@ -154,6 +154,35 @@ function confirmedBooking(
   };
 }
 
+/**
+ * A /bookings entry whose `person` relationship is NOT included (the exact
+ * 02-04 include-set failure mode). designerId resolves to "" → the row must
+ * NOT count its designer as assessed (CR-02).
+ */
+function bookingWithMissingPerson(id: string, minutes: number, day: string): unknown {
+  return {
+    id,
+    type: "bookings",
+    attributes: {
+      booking_method_id: 1,
+      time: minutes,
+      total_time: minutes,
+      percentage: null,
+      started_on: day,
+      ended_on: day,
+      draft: false,
+      canceled: false,
+      total_working_days: 1,
+    },
+    relationships: {
+      person: { meta: { included: false } }, // person link absent → designerId ""
+      service: { data: { id: "svc-" + id, type: "services" } },
+      event: { data: null },
+      task: { meta: { included: false } },
+    },
+  };
+}
+
 describe("gather (composition root — pull → validate → map → assess → assemble)", () => {
   it("happy path: returns a well-formed result with empty sourceErrors", async () => {
     const out = await gather(
@@ -380,6 +409,71 @@ describe("gather (composition root — pull → validate → map → assess → 
     assert.ok(out.sourceErrors.some((e) => /allocations/.test(e)));
     // Confirmed bookings still present (the fixture has work bookings).
     assert.ok(out.assessedDesigners.length === DESIGNER_PERSON_IDS.length);
+  });
+
+  it("CR-02: a row with a missing person link does not count its designer as assessed → report.missingDesigners (T-02-15)", async () => {
+    const TARGET = "2026-06-04";
+    const roster = DESIGNER_PERSON_IDS.map((id) => id as DesignerId);
+    const reached = DESIGNER_PERSON_IDS[0]; // Liam 686717 — has a resolved row
+    // Only ONE designer (index 0) has a row with a resolved person id. The pull
+    // also returned a row whose person link is missing (resolves to ""), which
+    // must NOT make any other designer look assessed-but-empty.
+    const out = await gather(
+      depsWith({
+        "/bookings": OK({
+          data: [
+            confirmedBooking("100", reached, 300, TARGET), // resolved → reached assessed
+            bookingWithMissingPerson("999", 240, TARGET), // person-less → contributes to nobody
+          ],
+          included: [],
+        }),
+        "/workflow_statuses": OK(workflowStatusesPage()),
+      }),
+    );
+    // The person-less row is dropped and recorded (not silently attributed to "").
+    assert.ok(
+      out.sourceErrors.some((e) => /no rostered person/.test(e)),
+      "person-less row recorded as a sourceError",
+    );
+    // Only the reached designer is assessed; the other two never resolved a row.
+    assert.deepEqual(out.assessedDesigners, [reached]);
+
+    const report = computeStudioReport({
+      now: NOW,
+      holidays: out.holidays,
+      roster,
+      bookings: out.bookings,
+      absences: out.absences,
+      assessedDesigners: out.assessedDesigners,
+    });
+    // The two designers the pull never reached are reported missing, not silently
+    // present-but-empty — the partial-result guard holds.
+    const expectedMissing = roster.filter((id) => id !== reached);
+    assert.deepEqual([...report.missingDesigners].sort(), [...expectedMissing].sort());
+  });
+
+  it("CR-02: a designer reached with ZERO bookings is still assessed (reached, not missing)", async () => {
+    // All three designers are reached via allocations (one resolved row each),
+    // even though none has a confirmed booking. Reached ⟺ a resolved row exists
+    // across bookings AND allocations, NOT whether they had confirmed work.
+    const TARGET = "2026-06-04";
+    const out = await gather(
+      depsWith({
+        "/bookings": OK({ data: [], included: [] }),
+        "/allocations": OK({
+          data: DESIGNER_PERSON_IDS.map((pid, i) =>
+            allocation("alloc" + i, pid, "service", 60, TARGET),
+          ),
+          included: [],
+        }),
+        "/workflow_statuses": OK(workflowStatusesPage()),
+      }),
+    );
+    assert.deepEqual(out.sourceErrors, []);
+    assert.deepEqual(
+      [...out.assessedDesigners].sort(),
+      [...DESIGNER_PERSON_IDS].sort(),
+    );
   });
 
   it("never throws even when every source fails (degrade contract)", async () => {

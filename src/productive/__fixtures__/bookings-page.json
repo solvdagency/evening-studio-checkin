@@ -49,8 +49,9 @@
           "data": null
         },
         "person": {
-          "meta": {
-            "included": false
+          "data": {
+            "id": "686717",
+            "type": "people"
           }
         },
         "creator": {
@@ -160,8 +161,9 @@
           "data": null
         },
         "person": {
-          "meta": {
-            "included": false
+          "data": {
+            "id": "686712",
+            "type": "people"
           }
         },
         "creator": {
@@ -265,8 +267,9 @@
           "data": null
         },
         "person": {
-          "meta": {
-            "included": false
+          "data": {
+            "id": "686716",
+            "type": "people"
           }
         },
         "creator": {
@@ -376,8 +379,9 @@
           "data": null
         },
         "person": {
-          "meta": {
-            "included": false
+          "data": {
+            "id": "686717",
+            "type": "people"
           }
         },
         "creator": {
@@ -481,8 +485,9 @@
           "data": null
         },
         "person": {
-          "meta": {
-            "included": false
+          "data": {
+            "id": "686712",
+            "type": "people"
           }
         },
         "creator": {
@@ -592,8 +597,9 @@
           "data": null
         },
         "person": {
-          "meta": {
-            "included": false
+          "data": {
+            "id": "686716",
+            "type": "people"
           }
         },
         "creator": {
