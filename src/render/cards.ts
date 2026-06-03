@@ -135,7 +135,7 @@ export interface Button {
  * designer. Planner decision (mirrors the 03-RESEARCH leaveNotes/holiday approach):
  * keep this presentation-only detail in RenderContext so src/domain stays untouched.
  * The renderer reads `tentativeHours` as a pre-rounded display figure — it does NOT
- * derive it from `tentativeMin` (trust rule).
+ * derive it from any exact-minute field (trust rule).
  */
 export interface TentativeNote {
   /** Pre-rounded additive tentative hours, display-only (e.g. 3.5 → "3.5h"). */
