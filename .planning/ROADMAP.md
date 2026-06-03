@@ -97,8 +97,8 @@ Plans:
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
-- [ ] 03-02-PLAN.md — Remaining always-post variants: degraded, per-designer-miss, holiday, closure, full/half-day leave (MSG-04/05/07, REL-01)
-- [ ] 03-03-PLAN.md — Google Chat webhook transport (postToChat, non-throwing, URL never leaked, 32 KB guard) (REL-02)
+- [x] 03-02-PLAN.md — Remaining always-post variants: degraded, per-designer-miss, holiday, closure, full/half-day leave (MSG-04/05/07, REL-01)
+- [x] 03-03-PLAN.md — Google Chat webhook transport (postToChat, non-throwing, URL never leaked, 32 KB guard) (REL-02)
 
 **Wave 3** *(blocked on Wave 2 + Wave 3 transport)*
 
@@ -157,7 +157,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 |-------|----------------|--------|-----------|
 | 1. Core Math & Clock | 3/3 | Complete   | 2026-06-02 |
 | 2. Productive Pull & Briefed Discovery | 4/4 | Complete   | 2026-06-03 |
-| 3. Template Renderer & Chat Delivery | 1/4 | In Progress|  |
+| 3. Template Renderer & Chat Delivery | 3/4 | In Progress|  |
 | 4. Calendar & Meeting Reconciliation | 0/TBD | Not started | - |
 | 5. LLM Renderer (optional) | 0/TBD | Not started | - |
 | 6. Hardening | 0/TBD | Not started | - |
