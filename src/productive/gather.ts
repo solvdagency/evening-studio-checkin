@@ -296,7 +296,11 @@ function tentativeAllocationToRawBooking(
       // tentative SIGNAL itself is the set-difference (computed by the caller),
       // not this attribute (supersedes the old D-07 draft assumption).
       draft: true,
-      canceled: false,
+      // Carry the TRUE canceled value through (CR-01) so the mapper's own
+      // `canceled===true` skip is a second line of defense even if a canceled
+      // allocation ever reaches here. The gather loop already skips canceled
+      // allocations before synthesis, so in practice this is always false.
+      canceled: parsed.attributes.canceled === true,
     },
     // Force a `service` linkage so the mapper classifies it as WORK (not absence).
     // Event-type allocations are filtered out before reaching here.
@@ -398,6 +402,7 @@ export async function gather(deps: GatherDeps): Promise<GatherResult> {
     `filter[person_id]=${personFilter}` +
     `&filter[after]=${targetKey}` +
     `&filter[before]=${lastKey}` +
+    `&filter[canceled]=false` + // mirror the /bookings filter (CR-01)
     `&include=person,service,event`;
   const allocationsResult = await fetchPages("/allocations", allocationsQuery);
   if (!allocationsResult.ok) {
@@ -411,6 +416,11 @@ export async function gather(deps: GatherDeps): Promise<GatherResult> {
         continue;
       }
       const a = parsed.data;
+      // CR-01: never trust the server filter alone — a canceled allocation is
+      // absent from the (canceled-filtered) /bookings set, so the set-difference
+      // below would wrongly resurrect it as live tentative work, inflating the
+      // shaky figure. Skip it here regardless of what the API filter returned.
+      if (a.attributes.canceled === true) continue;
       if (confirmedIds.has(a.id)) continue; // present in /bookings → confirmed, not tentative
       if (a.attributes.booking_type !== "service") continue; // ignore tentative absences (scope boundary)
       rawBookings.push(tentativeAllocationToRawBooking(a));

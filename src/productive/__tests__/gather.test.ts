@@ -94,6 +94,7 @@ function allocation(
   bookingType: "service" | "event",
   minutes: number,
   day: string,
+  canceled: boolean = false,
 ): unknown {
   return {
     id,
@@ -107,6 +108,7 @@ function allocation(
       ended_on: day,
       total_working_days: 1,
       booking_type: bookingType,
+      canceled,
     },
     relationships: {
       person: { data: { id: personId, type: "people" } },
@@ -318,6 +320,35 @@ describe("gather (composition root — pull → validate → map → assess → 
     assert.equal(dr!.shaky, true);
     assert.equal(dr!.status, "underbooked");
     assert.equal(dr!.openMin, 450); // full open gap — tentative does not close it
+  });
+
+  it("CR-01: a CANCELED allocation-only record is NOT synthesized as tentative work; a non-canceled one still is", async () => {
+    const TARGET = "2026-06-04";
+    const person = DESIGNER_PERSON_IDS[1]; // Anisha 686712
+    // id "400" is allocation-only AND canceled → must NOT become tentative work.
+    // id "500" is allocation-only and NOT canceled → must become tentative work.
+    const out = await gather(
+      depsWith({
+        "/bookings": OK({ data: [], included: [] }), // zero confirmed
+        "/allocations": OK({
+          data: [
+            allocation("400", person, "service", 300, TARGET, true), // canceled → phantom, exclude
+            allocation("500", person, "service", 210, TARGET, false), // live tentative → include
+          ],
+          included: [],
+        }),
+        "/workflow_statuses": OK(workflowStatusesPage()),
+      }),
+    );
+    assert.deepEqual(out.sourceErrors, []);
+
+    const targetBookings = out.bookings.filter((b) => b.date === TARGET);
+    const tentative = targetBookings.filter((b) => b.isTentative);
+
+    // Only the non-canceled allocation (500 → 210 min) survives; the canceled
+    // 300 min must not inflate the tentative/shaky figure.
+    assert.equal(tentative.length, 1);
+    assert.equal(tentative.reduce((s, b) => s + b.minutes, 0), 210);
   });
 
   it("GAP-CLOSURE: an allocation-only EVENT (absence) is IGNORED (no synthesized tentative absence)", async () => {

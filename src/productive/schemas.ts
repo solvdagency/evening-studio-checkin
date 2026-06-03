@@ -153,6 +153,15 @@ export const AllocationAttributes = z.object({
   total_working_days: z.number().nullable().optional(),
   /** "service" = work, "event" = absence (a REAL attribute on /allocations). */
   booking_type: z.string(),
+  /**
+   * Canceled allocations must be excluded or they resurrect as phantom tentative
+   * work (CR-01): /bookings is pulled with filter[canceled]=false, so a canceled
+   * allocation is absent from the confirmed set and the set-difference would wrongly
+   * synthesize it as live tentative time. The raw JSON:API attribute name is
+   * `canceled`, matching /bookings. Kept defensive (defaults false if the API omits
+   * it) so we never crash, but a present `true` is propagated so gather skips it.
+   */
+  canceled: z.boolean().optional().default(false),
 });
 
 /**
