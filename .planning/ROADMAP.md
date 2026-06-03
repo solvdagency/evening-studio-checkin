@@ -67,7 +67,7 @@ Plans:
 
 **Wave 3** *(blocked on Wave 2 completion)*
 
-- [ ] 02-03-PLAN.md — Briefed discovery (dynamic position map) + BriefFlag emission (BRIEF-01/02/03), live-confirmed
+- [x] 02-03-PLAN.md — Briefed discovery (dynamic position map) + BriefFlag emission (BRIEF-01/02/03), live-confirmed
 
 **Wave 4** *(blocked on Wave 3 completion)*
 
@@ -143,7 +143,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Core Math & Clock | 3/3 | Complete   | 2026-06-02 |
-| 2. Productive Pull & Briefed Discovery | 2/4 | In Progress|  |
+| 2. Productive Pull & Briefed Discovery | 3/4 | In Progress|  |
 | 3. Template Renderer & Chat Delivery | 0/TBD | Not started | - |
 | 4. Calendar & Meeting Reconciliation | 0/TBD | Not started | - |
 | 5. LLM Renderer (optional) | 0/TBD | Not started | - |
