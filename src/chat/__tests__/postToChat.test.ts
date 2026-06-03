@@ -48,11 +48,11 @@ function stubFetch(
   impl: (url: string, init?: unknown) => Promise<unknown>,
 ): { fetch: typeof fetch; calls: Array<{ url: string; init?: unknown }> } {
   const calls: Array<{ url: string; init?: unknown }> = [];
-  const fetch = (async (url: string, init?: unknown) => {
+  const stub = (async (url: string, init?: unknown) => {
     calls.push({ url, init });
     return impl(url, init);
   }) as unknown as typeof fetch;
-  return { fetch, calls };
+  return { fetch: stub, calls };
 }
 
 describe("postToChat", () => {
