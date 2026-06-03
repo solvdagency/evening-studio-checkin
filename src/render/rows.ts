@@ -62,7 +62,7 @@ function statusLine(d: DesignerResult, escapedName: string): string {
     return `🟠 ${name} — <font color="${BRAND_COLORS.over}">${oneDecimal(Math.abs(d.openHours))}h over</font>`;
   }
   if (d.status === "off") {
-    return `⚪ ${name} — ${muted("on leave")}`;
+    return `⚪ ${name} — ${muted("on leave / Full day off.")}`;
   }
   return `🟢 ${name} — <font color="${BRAND_COLORS.full}">full day</font>`;
 }
@@ -73,11 +73,29 @@ function bookedLine(d: DesignerResult): string {
 }
 
 /**
+ * Build the minimal 🤖 "couldn't read" row for a designer the data pull did NOT
+ * cover (D-19). We never fake an empty/zero figure — the row says only that the
+ * person was unreadable this run. Uses the open/degraded red so it reads as a thing
+ * to notice, not a settled state. The verdict stays nameless (verdict.ts).
+ */
+function missingDesignerRow(escapedName: string): { decoratedText: DecoratedText } {
+  return {
+    decoratedText: {
+      text: `🤖 <b>${escapedName}</b> — <font color="${BRAND_COLORS.open}">couldn't read</font>`,
+      wrapText: true,
+    },
+  };
+}
+
+/**
  * Build the single decoratedText row for one designer. Lines, in order:
  *   1. status line (emoji + bold name + coloured status)
  *   2. greyed booked detail (omitted only for an on-leave "off" day — D-22 minimal)
  *   3. ⚠️ tentative line if a tentative note exists (D-14/D-15, additive, NO job code)
  *   4. 📄 brief line(s) for each brief flag on this designer (D-16, CODE + hours)
+ *
+ * A designer in `missingDesigners` (D-19) short-circuits to the minimal 🤖 row —
+ * its figures are untrusted this run and are never shown.
  */
 export function buildRow(
   d: DesignerResult,
@@ -85,14 +103,32 @@ export function buildRow(
     designerNames: Record<string, string>;
     briefFlags: BriefFlag[];
     tentativeNotes: Record<string, TentativeNote>;
+    leaveNotes?: Record<string, string>;
+    missingDesigners?: ReadonlyArray<DesignerResult["designerId"]>;
   },
 ): { decoratedText: DecoratedText } {
   const escapedName = escapeHtml(ctx.designerNames[d.designerId] ?? String(d.designerId));
+
+  // 🤖 couldn't-read row (D-19) — never fake a figure for an unread designer.
+  if (ctx.missingDesigners?.includes(d.designerId)) {
+    return missingDesignerRow(escapedName);
+  }
+
   const lines: string[] = [statusLine(d, escapedName)];
 
-  // On-leave "off" day stays minimal (D-22): status line only, no booked detail.
-  if (d.status !== "off") {
-    lines.push(bookedLine(d));
+  // On-leave "off" day stays minimal (D-22): the locked "/ Full day off." line and
+  // nothing more — no booked detail, no flags.
+  if (d.status === "off") {
+    return { decoratedText: { text: lines.join("<br>"), wrapText: true } };
+  }
+
+  lines.push(bookedLine(d));
+
+  // Half-day / partial leave (D-22): a normal availability row PLUS a greyed leave
+  // note carried in RenderContext (Open Item 2) — the domain stays untouched.
+  const leaveNote = ctx.leaveNotes?.[d.designerId];
+  if (leaveNote) {
+    lines.push(muted(escapeHtml(leaveNote)));
   }
 
   // ⚠️ tentative (on top) — additive, never folded into booked/open (D-15 / MSG-07).

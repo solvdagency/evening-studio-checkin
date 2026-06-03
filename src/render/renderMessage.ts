@@ -16,6 +16,7 @@
 
 import type {
   CardsV2Payload,
+  GoogleCard,
   RenderContext,
   RenderMessage,
   Section,
@@ -25,7 +26,7 @@ import type { StudioReport } from "../domain/report.ts";
 import { AVATAR_PNG_URL, BRAND_COLORS, PRODUCTIVE_DEEPLINK_TEMPLATE } from "../config.ts";
 import { isBusy, selectVariant } from "./variants.ts";
 import { buildVerdict, CLEAN_STATUS_LINE } from "./verdict.ts";
-import { buildRow } from "./rows.ts";
+import { buildRow, escapeHtml } from "./rows.ts";
 import { buildWeekBar } from "./weekBar.ts";
 
 /** Substitute the target day into the locked Productive deep-link (D-24). */
@@ -56,12 +57,65 @@ function weekBarSection(report: StudioReport): Section {
   };
 }
 
+/** The card header — fixed title + avatar, subtitle/targetDate from ctx. */
+function cardHeader(ctx: RenderContext): GoogleCard["header"] {
+  return {
+    title: "Solvd Studio Check-in",
+    subtitle: ctx.header.subtitle,
+    imageUrl: AVATAR_PNG_URL,
+    imageType: "CIRCLE",
+  };
+}
+
+/** Wrap an ordered list of sections into the top-level cardsV2 payload. */
+function payloadFrom(ctx: RenderContext, sections: Section[]): CardsV2Payload {
+  return {
+    cardsV2: [{ cardId: "studio-checkin", card: { header: cardHeader(ctx), sections } }],
+  };
+}
+
+/**
+ * The degraded variant (D-18 / REL-01): a source was unreachable, so the figures
+ * are untrusted this run. Render header + a verdict/body section ONLY — no rows, no
+ * week bar, no button. The source name is data-driven from ctx.sourceErrors (so a
+ * future Calendar source reads "Couldn't reach Calendar"), escaped before insertion.
+ * Never throws — it always returns a complete, postable payload (REL-01).
+ */
+function renderDegraded(ctx: RenderContext): CardsV2Payload {
+  const source = escapeHtml(ctx.sourceErrors.join(" and "));
+  const body =
+    "No booking figures this run. I'll have them tomorrow evening — worth a check in Productive yourself in the meantime.";
+  const widgets: Widget[] = [
+    { textParagraph: { text: `<b>🤖 Couldn't reach ${source} tonight.</b>` } },
+    { textParagraph: { text: `<font color="${BRAND_COLORS.muted}">${body}</font>` } },
+  ];
+  return payloadFrom(ctx, [{ widgets }]);
+}
+
+/**
+ * The holiday (D-20) and closure (D-21) variants: header + a single warm
+ * textParagraph with the locked copy and the date label interpolated + escaped.
+ * No rows, no week bar, no button.
+ */
+function renderHoliday(ctx: RenderContext): CardsV2Payload {
+  const dateLabel = escapeHtml(ctx.holidayTomorrow?.dateLabel ?? "");
+  const text = `🎉 Public holiday tomorrow — ${dateLabel}. No check-in needed. Enjoy…`;
+  return payloadFrom(ctx, [{ widgets: [{ textParagraph: { text } }] }]);
+}
+
+function renderClosure(ctx: RenderContext): CardsV2Payload {
+  const backDayLabel = escapeHtml(ctx.closureTomorrow?.backDayLabel ?? "");
+  const text = `📦 Studio's out tomorrow — team offsite. No check-in needed. Back ${backDayLabel}.`;
+  return payloadFrom(ctx, [{ widgets: [{ textParagraph: { text } }] }]);
+}
+
 export const renderTemplate: RenderMessage = (report, ctx) => {
-  // This plan implements only the "card" variant; 03-02 owns the others.
+  // Ordered cascade (variants.ts): holiday → closure → degraded → card. The
+  // always-posts variants short-circuit before the figures-bearing card.
   const variant = selectVariant(report, ctx);
-  if (variant !== "card") {
-    throw new Error(`variant "${variant}" is handled in plan 03-02`);
-  }
+  if (variant === "holiday") return renderHoliday(ctx);
+  if (variant === "closure") return renderClosure(ctx);
+  if (variant === "degraded") return renderDegraded(ctx);
 
   const sections: Section[] = [];
 
@@ -78,11 +132,21 @@ export const renderTemplate: RenderMessage = (report, ctx) => {
   sections.push({ widgets: verdictWidgets });
 
   // 2 — per-designer rows (busy nights only), divider-separated (D-09 / D-17).
+  // A 🤖 per-designer miss (D-19) renders inside this normal card path, NOT as a
+  // top-level variant — missingDesigners + leaveNotes are passed through to buildRow.
   if (busy) {
     const rowWidgets: Widget[] = [];
     report.designers.forEach((d, i) => {
       if (i > 0) rowWidgets.push({ divider: {} });
-      rowWidgets.push(buildRow(d, ctx));
+      rowWidgets.push(
+        buildRow(d, {
+          designerNames: ctx.designerNames,
+          briefFlags: ctx.briefFlags,
+          tentativeNotes: ctx.tentativeNotes,
+          leaveNotes: ctx.leaveNotes,
+          missingDesigners: report.missingDesigners,
+        }),
+      );
     });
     sections.push({ widgets: rowWidgets });
   }
@@ -93,21 +157,5 @@ export const renderTemplate: RenderMessage = (report, ctx) => {
   // 4 — week-bar footer.
   sections.push(weekBarSection(report));
 
-  const payload: CardsV2Payload = {
-    cardsV2: [
-      {
-        cardId: "studio-checkin",
-        card: {
-          header: {
-            title: "Solvd Studio Check-in",
-            subtitle: ctx.header.subtitle,
-            imageUrl: AVATAR_PNG_URL,
-            imageType: "CIRCLE",
-          },
-          sections,
-        },
-      },
-    ],
-  };
-  return payload;
+  return payloadFrom(ctx, sections);
 };
