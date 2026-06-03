@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: executing
-stopped_at: Completed 02-01-PLAN.md
-last_updated: "2026-06-03T10:43:37.822Z"
+status: verifying
+stopped_at: Completed 02-04-PLAN.md (code complete; SC-4 UI hand-check awaiting user)
+last_updated: "2026-06-03T11:00:00.000Z"
 last_activity: 2026-06-03
 progress:
   total_phases: 6
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 7
-  completed_plans: 6
-  percent: 17
+  completed_plans: 7
+  percent: 33
 ---
 
 # Project State
@@ -27,10 +27,10 @@ See: .planning/PROJECT.md (updated 2026-06-02)
 
 Phase: 02 (productive-pull-briefed-discovery) — EXECUTING
 Plan: 4 of 4
-Status: Ready to execute
+Status: Phase complete — ready for verification
 Last activity: 2026-06-03
 
-Progress: [█████████░] 86%
+Progress: [██████████] 100%
 
 ## Performance Metrics
 
@@ -58,6 +58,7 @@ Progress: [█████████░] 86%
 | Phase 02-productive-pull-briefed-discovery P01 | 8min | 4 tasks | 10 files |
 | Phase 02 P02 | 12min | 2 tasks | 4 files |
 | Phase 02 P03 | 6min | 3 tasks | 4 files |
+| Phase 02 P04 | 25min | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -78,6 +79,9 @@ Recent decisions affecting current work:
 - [Phase ?]: X-Organization-Id confirmed live = 34092 (bare numeric); canonical for all Productive calls
 - [Phase ?]: Live /bookings has no booking_type/approval_status attributes; work-vs-absence = service vs event relationship; tentative = draft (D-07)
 - [Phase ?]: Productive boundary = non-throwing Result<T> client + tolerant zod safeParse against a real captured fixture
+- [Phase 2]: gather is the ingestion twin of computeStudioReport — one composition root, degrades via sourceErrors, never throws; assessedDesigners carries only designers a successful pull reached (T-02-15)
+- [Phase 2]: gather /bookings include MUST carry person,service,event in addition to the brief chain — the task-only set drops every booking live (silent empty pull); caught by the SC-4 live gate
+- [Phase 2]: no-task bookings fail-safe to internal (suppressed) since isClient is only knowable via task→project→project_type_id; avoids false client flags on internal work
 
 ### Pending Todos
 
@@ -102,6 +106,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-06-03T10:43:37.817Z
-Stopped at: Completed 02-01-PLAN.md
-Resume file: None
+Last session: 2026-06-03T11:00:00.000Z
+Stopped at: Completed 02-04-PLAN.md (code complete; SC-4 UI hand-check awaiting user)
+Resume file: SC-4 live hand-check — user to confirm 2026-06-04 figures + brief flags vs the Productive UI

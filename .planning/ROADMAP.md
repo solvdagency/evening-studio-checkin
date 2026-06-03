@@ -14,7 +14,7 @@ The build goes inside-out, deterministic-first. We start at the trust boundary �
 Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Core Math & Clock** - Pure, unit-tested capacity arithmetic and working-day logic with no external dependencies (completed 2026-06-02)
-- [ ] **Phase 2: Productive Pull & Briefed Discovery** - Live Productive data into typed objects; discover and confirm the real "briefed" mapping
+- [x] **Phase 2: Productive Pull & Briefed Discovery** - Live Productive data into typed objects; discover and confirm the real "briefed" mapping (completed 2026-06-03)
 - [ ] **Phase 3: Template Renderer & Chat Delivery** - Shippable v1: on-brand Cards v2 message, scheduled weekday posting, always-post and degraded mode (no LLM, no Calendar)
 - [ ] **Phase 4: Calendar & Meeting Reconciliation** - Read designer calendars and reconcile ad-hoc meetings against bookings, behind a real-evening pilot gate
 - [ ] **Phase 5: LLM Renderer (optional)** - Swappable LLM renderer for prose and fuzzy meeting judgment, with templated fallback; cuttable
@@ -71,7 +71,7 @@ Plans:
 
 **Wave 4** *(blocked on Wave 3 completion)*
 
-- [ ] 02-04-PLAN.md — gather composition root + live hand-check vs Productive UI (SC-4)
+- [x] 02-04-PLAN.md — gather composition root + live hand-check vs Productive UI (SC-4)
 
 **Dependencies (external)**: Productive.io API access with `X-Auth-Token` + `X-Organization-Id` (the Productive integration is available to run the discovery spike).
 
@@ -143,7 +143,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Core Math & Clock | 3/3 | Complete   | 2026-06-02 |
-| 2. Productive Pull & Briefed Discovery | 3/4 | In Progress|  |
+| 2. Productive Pull & Briefed Discovery | 4/4 | Complete   | 2026-06-03 |
 | 3. Template Renderer & Chat Delivery | 0/TBD | Not started | - |
 | 4. Calendar & Meeting Reconciliation | 0/TBD | Not started | - |
 | 5. LLM Renderer (optional) | 0/TBD | Not started | - |
