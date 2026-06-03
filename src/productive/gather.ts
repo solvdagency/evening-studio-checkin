@@ -287,9 +287,18 @@ export async function gather(deps: GatherDeps): Promise<GatherResult> {
   });
 
   // (2) Pull bookings for the whole window with the live-confirmed include set.
+  //     The include MUST carry person/service/event as well as the brief chain:
+  //     - `service` vs `event` is the work-vs-absence split (D-11); WITHOUT them
+  //       in `include` the relationships come back `{ meta: { included: false } }`
+  //       and EVERY booking is dropped by the mapper (live 02-04 probe — the bug
+  //       this set fixes). `person` resolves the designerId for roster matching
+  //       (02-02 flag) — without it designerId is empty and no booking attributes
+  //       to a rostered designer.
+  //     - `task,task.workflow_status,task.project,task.project.company` resolves
+  //       the brief chain in the same call (02-03 live-confirmed).
   const personFilter = DESIGNER_PERSON_IDS.join(",");
   const include =
-    "task,task.workflow_status,task.project,task.project.company";
+    "person,service,event,task,task.workflow_status,task.project,task.project.company";
   const bookingsQuery =
     `filter[person_id]=${personFilter}` +
     `&filter[after]=${targetKey}` +
