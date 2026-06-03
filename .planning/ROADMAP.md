@@ -93,7 +93,7 @@ Plans:
 Plans:
 **Wave 1**
 
-- [ ] 03-01-PLAN.md — Render contract (Cards v2 types + RenderMessage interface) + busy/clean/overbooked card core, pinned to JSON fixtures (MSG-01/02/03/06/07)
+- [x] 03-01-PLAN.md — Render contract (Cards v2 types + RenderMessage interface) + busy/clean/overbooked card core, pinned to JSON fixtures (MSG-01/02/03/06/07)
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
@@ -157,7 +157,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 |-------|----------------|--------|-----------|
 | 1. Core Math & Clock | 3/3 | Complete   | 2026-06-02 |
 | 2. Productive Pull & Briefed Discovery | 4/4 | Complete   | 2026-06-03 |
-| 3. Template Renderer & Chat Delivery | 0/4 | Planned | - |
+| 3. Template Renderer & Chat Delivery | 1/4 | In Progress|  |
 | 4. Calendar & Meeting Reconciliation | 0/TBD | Not started | - |
 | 5. LLM Renderer (optional) | 0/TBD | Not started | - |
 | 6. Hardening | 0/TBD | Not started | - |
