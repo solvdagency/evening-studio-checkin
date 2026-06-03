@@ -1,0 +1,27 @@
+name: Evening Studio Check-in
+
+on:
+  schedule:
+    # 4:30pm Mon–Fri in studio time (Australia/Sydney), DST-aware via the native
+    # timezone field (GitHub Actions, GA Mar 2026). The composition root also
+    # carries a luxon weekday guard as defence-in-depth (SCHED-01).
+    - cron: "30 16 * * 1-5"
+      timezone: "Australia/Sydney"
+  # SCHED-02 — manual trigger from the Actions tab (bypasses the time window so a
+  # test run fires any time on a weekday).
+  workflow_dispatch: {}
+
+jobs:
+  checkin:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - run: npm ci
+      - run: node --import tsx src/index.ts
+        env:
+          GCHAT_WEBHOOK_URL: ${{ secrets.GCHAT_WEBHOOK_URL }}
+          PRODUCTIVE_AUTH_TOKEN: ${{ secrets.PRODUCTIVE_AUTH_TOKEN }}
+          PRODUCTIVE_ORG_ID: ${{ secrets.PRODUCTIVE_ORG_ID }}
