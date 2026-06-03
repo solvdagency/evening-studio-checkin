@@ -125,6 +125,56 @@ export const WorkflowStatusResource = z.object({
 });
 
 /**
+ * Raw `/allocations` attributes (GAP-CLOSURE — live-confirmed against org 34092).
+ *
+ * `/allocations` is the SUPERSET of `/bookings`: it returns confirmed time AND
+ * tentative/unconfirmed time, sharing identical resource ids with `/bookings`
+ * for the confirmed records. The set-difference (present-in-allocations-but-not-
+ * in-bookings) is the live-confirmed tentative signal — NOT the `draft` attribute,
+ * which returns 0 rows in this org (supersedes the old D-07 draft assumption).
+ *
+ * Two shape differences from a /bookings resource:
+ *  - `booking_type` IS a real attribute here ("service" = work, "event" = absence),
+ *    whereas a /bookings resource has no booking_type attribute (work-vs-absence is
+ *    its service/event relationship). We capture it so gather can map only
+ *    service-type tentative records (absences come from the confirmed bookings pull).
+ *  - allocations carry NO task/project relationship, so tentative items can never be
+ *    brief-assessed (consistent with D-08 — only confirmed client bookings flag).
+ * The figure fields mirror /bookings (only one is populated per booking_method_id),
+ * and the relationships are the tolerant JSON:API shape ({data}|{meta:included}).
+ */
+export const AllocationAttributes = z.object({
+  booking_method_id: z.number(),
+  time: z.number().nullable(),
+  total_time: z.number().nullable(),
+  percentage: z.number().nullable(),
+  started_on: z.string(),
+  ended_on: z.string(),
+  total_working_days: z.number().nullable().optional(),
+  /** "service" = work, "event" = absence (a REAL attribute on /allocations). */
+  booking_type: z.string(),
+});
+
+/**
+ * An `/allocations` resource. `relationships` is `.loose()` (allocations return
+ * person/service/event/client/responsible and we only name the work-vs-absence
+ * split + person here); there is deliberately NO task/project relationship to
+ * resolve. Used by gather's tentative set-difference pull (GAP-CLOSURE).
+ */
+export const AllocationResource = z.object({
+  id: z.string(),
+  type: z.literal("allocations"),
+  attributes: AllocationAttributes,
+  relationships: z
+    .object({
+      person: Relationship,
+      service: Relationship,
+      event: Relationship,
+    })
+    .loose(),
+});
+
+/**
  * D-06 internal-vs-client signal: a small, tolerant `/projects` resource schema.
  * The individual project attributes are NOT load-bearing here, so `attributes`
  * is a loose/passthrough object. The load-bearing field is the `company`

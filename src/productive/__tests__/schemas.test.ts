@@ -19,7 +19,7 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { dirname, join } from "node:path";
 
-import { JsonApiPage, BookingResource } from "../schemas.ts";
+import { JsonApiPage, BookingResource, AllocationResource } from "../schemas.ts";
 import { getJson } from "../client.ts";
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -89,6 +89,75 @@ describe("BookingResource schema (corrected field names — Pitfall 1)", () => {
       relationships: {},
     };
     assert.equal(BookingResource.safeParse(old).success, false);
+  });
+});
+
+describe("AllocationResource schema (tentative-capture boundary — GAP-CLOSURE)", () => {
+  it("accepts a live-shaped /allocations record (service work, un-included person)", () => {
+    // Mirrors the LIVE allocation confirmed against org 34092 (allocation
+    // 31811360 = Anisha, 2026-06-04, 210 min, client Dairy Farmers). Allocations
+    // expose booking_type ("service"|"event") as a real ATTRIBUTE (unlike
+    // /bookings, where work-vs-absence is the service/event relationship), and
+    // carry NO task/project relationship. Un-included relationships arrive as
+    // { meta: { included: false } } — same JSON:API shape as bookings.
+    const good = {
+      id: "31811360",
+      type: "allocations",
+      attributes: {
+        booking_method_id: 1,
+        time: 210,
+        total_time: 210,
+        percentage: null,
+        started_on: "2026-06-04",
+        ended_on: "2026-06-04",
+        total_working_days: 1,
+        booking_type: "service",
+      },
+      relationships: {
+        person: { data: { id: "686712", type: "people" } },
+        service: { data: { id: "9001", type: "services" } },
+        event: { data: null },
+        client: { meta: { included: false } },
+        responsible: { meta: { included: false } },
+      },
+    };
+    assert.equal(AllocationResource.safeParse(good).success, true);
+  });
+
+  it("accepts an absence-type allocation (booking_type 'event')", () => {
+    const event = {
+      id: "42",
+      type: "allocations",
+      attributes: {
+        booking_method_id: 1,
+        time: 450,
+        total_time: 450,
+        percentage: null,
+        started_on: "2026-06-04",
+        ended_on: "2026-06-04",
+        total_working_days: 1,
+        booking_type: "event",
+      },
+      relationships: {
+        person: { data: { id: "686712", type: "people" } },
+        event: { data: { id: "777", type: "events" } },
+      },
+    };
+    assert.equal(AllocationResource.safeParse(event).success, true);
+  });
+
+  it("rejects a record missing required figure fields (degrades, never throws)", () => {
+    const bad = {
+      id: "1",
+      type: "allocations",
+      attributes: {
+        // booking_method_id missing → must fail (degrade to a skip, not a crash)
+        started_on: "2026-06-04",
+        ended_on: "2026-06-04",
+      },
+      relationships: {},
+    };
+    assert.equal(AllocationResource.safeParse(bad).success, false);
   });
 });
 
