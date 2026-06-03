@@ -47,7 +47,12 @@ Plans:
   2. A documented, named mapping for "briefed" (custom field / task status / linked-task presence) is confirmed against what PMs see in the live Productive UI for real bookings — not assumed
   3. For each target-day booking the system reports whether a task is linked and whether it is briefed per that confirmed mapping, and surfaces missing-task / not-briefed bookings by job/task (never by PM) as an existence check only
   4. Running the gather-plus-analyze pipeline against real Productive data produces capacity numbers and brief flags that a hand-check against the Productive UI agrees with
-**Plans**: TBD
+**Plans**:  4 plans
+Plans:
+- [ ] 02-01-PLAN.md — Productive client + zod boundary + live auth probe (org-id confirmation)
+- [ ] 02-02-PLAN.md — Per-day minutes mapping (D-09) + NSW holiday set → Booking/Absence into Phase 1
+- [ ] 02-03-PLAN.md — Briefed discovery (dynamic position map) + BriefFlag emission (BRIEF-01/02/03), live-confirmed
+- [ ] 02-04-PLAN.md — gather composition root + live hand-check vs Productive UI (SC-4)
 **Dependencies (external)**: Productive.io API access with `X-Auth-Token` + `X-Organization-Id` (the Productive integration is available to run the discovery spike).
 
 ### Phase 3: Template Renderer & Chat Delivery
@@ -106,7 +111,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Core Math & Clock | 3/3 | Complete   | 2026-06-02 |
-| 2. Productive Pull & Briefed Discovery | 0/TBD | Not started | - |
+| 2. Productive Pull & Briefed Discovery | 0/4 | Planned | - |
 | 3. Template Renderer & Chat Delivery | 0/TBD | Not started | - |
 | 4. Calendar & Meeting Reconciliation | 0/TBD | Not started | - |
 | 5. LLM Renderer (optional) | 0/TBD | Not started | - |
