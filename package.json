@@ -20,10 +20,13 @@
   },
   "homepage": "https://github.com/solvdagency/evening-studio-checkin#readme",
   "dependencies": {
-    "luxon": "^3.7.2"
+    "date-holidays": "^3.30.2",
+    "luxon": "^3.7.2",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@types/luxon": "^3.7.1",
+    "dotenv": "^17.4.2",
     "prettier": "^3.8.3",
     "tsx": "^4.22.4",
     "typescript": "~5.9.3"
