@@ -16,9 +16,16 @@
  * Suppression (no flag emitted):
  *  - tentative bookings (draft=true) — a PM hasn't locked the work, so "not briefed"
  *    would be premature noise (D-05). Tracked for context only.
- *  - internal/non-client bookings — the booking's project has no client `company`
- *    relationship (D-06). Internal work still counts toward hours upstream; only the
- *    brief flag is suppressed. company-absence is the load-bearing signal.
+ *  - internal/non-client bookings — `isClient=false` (D-06). Internal work still
+ *    counts toward hours upstream; only the brief flag is suppressed.
+ *    LIVE-CONFIRMED SIGNAL (02-03 Task 3, corrects RESEARCH A2/A3): for SOLVD the
+ *    company-ABSENCE signal does NOT work — the known internal booking ("Liams
+ *    Booking Time for Ai", project "Solvd Ai") IS linked to a company (SOLVD
+ *    Agency's own record). The reliable signal is the project's `project_type_id`:
+ *    live data shows internal=1, client=2 (the disputed enum direction, resolved
+ *    live). The chain is task → project → project_type_id (NOT service → project —
+ *    services link via `deal`, not `project`). The gather step (02-04) resolves
+ *    this and passes the boolean `isClient` here, keeping this module pure.
  *  - non-target-day bookings — brief checks apply only to the target day (D-08);
  *    the wider window feeds the rest-of-week rollup, not brief flags.
  *
@@ -64,7 +71,12 @@ export interface AssessBookingInput {
   bookingId: string;
   /** Tentative ⟺ Productive `draft===true` (D-07). Tentative → never flagged (D-05). */
   isTentative: boolean;
-  /** True when the booking's project has a client `company` relationship (D-06). */
+  /**
+   * True for client work, false for internal/overhead (D-06). LIVE-CONFIRMED:
+   * derive from the project's `project_type_id` (internal=1, client=2 live), via
+   * the task → project chain — NOT company-absence, which is unreliable for SOLVD
+   * (internal projects carry SOLVD's own company). Resolved by the gather step.
+   */
   isClient: boolean;
   /** True when the booking covers the target day — brief checks are target-day only (D-08). */
   isTargetDay: boolean;
