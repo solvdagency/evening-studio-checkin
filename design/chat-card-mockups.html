@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en-AU">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Solvd Studio Check-in — round 15 (tentative wording)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Roboto+Mono:wght@500&display=swap" rel="stylesheet" />
+<style>
+  :root{ --ink:#202124; --muted:#5f6368; --line:#e4e6e9; --red:#d93025; --green:#188038; --chatbg:#f1f3f4; }
+  *{box-sizing:border-box;}
+  body{margin:0;background:#fafafa;color:var(--ink);font-family:"Roboto","Helvetica Neue",Arial,sans-serif;-webkit-font-smoothing:antialiased;}
+  .page{max-width:860px;margin:0 auto;padding:32px 24px 80px;}
+  h1.title{font-size:22px;font-weight:500;margin:0 0 4px;}
+  p.sub{color:var(--muted);margin:0 0 24px;font-size:14px;}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:28px;align-items:start;}
+  @media (max-width:720px){.row2{grid-template-columns:1fr;max-width:420px;}}
+  .surface{background:var(--chatbg);border-radius:12px;padding:14px;}
+  .card{background:#fff;border:1px solid var(--line);border-radius:8px;overflow:hidden;width:100%;box-shadow:0 1px 3px rgba(60,64,67,.10);}
+  .card-header{display:flex;align-items:center;gap:11px;padding:13px 15px;}
+  .avatar{width:38px;height:38px;border-radius:50%;flex:none;background:#0A0A0A;display:flex;align-items:center;justify-content:center;}
+  .avatar svg{width:20px;height:20px;fill:#fff;}
+  .h-title{font-size:14px;font-weight:500;}
+  .h-sub{font-size:12px;color:var(--ink);margin-top:1px;font-weight:500;}
+  .h-sub .day{color:var(--muted);font-weight:400;}
+  .section{padding:8px 15px 13px;}
+  .section + .section{border-top:1px solid var(--line);padding-top:11px;}
+  .footsec{padding:11px 15px 15px;border-top:1px solid var(--line);background:#fbfbfb;}
+  .lead{font-size:14px;font-weight:500;line-height:1.35;}
+  .red{color:var(--red);font-weight:500;} .green{color:var(--green);font-weight:500;} .grey{color:var(--muted);}
+  .divider{height:1px;background:var(--line);margin:9px 0;border:0;}
+  .dt{display:flex;gap:10px;padding:6px 0;}
+  .dt .ic{flex:none;width:18px;text-align:center;font-size:12px;line-height:20px;}
+  .dt .col{flex:1;min-width:0;}
+  .dt .l1{font-size:13.5px;line-height:1.45;} .dt .l1 .nm{font-weight:500;}
+  .dt .l2{font-size:13.5px;line-height:1.45;color:var(--muted);}
+  .dt .sub{font-size:13px;line-height:1.5;color:#202124;}
+  .dt .sub .code{color:var(--muted);}
+  .flabel{font-size:12.5px;color:var(--muted);margin-bottom:5px;}
+  .bar{font-family:"Roboto Mono",ui-monospace,monospace;font-size:13px;letter-spacing:2px;color:var(--ink);}
+  .bar .e{color:#c9ccd1;}
+  .barcaption{font-size:12.5px;color:var(--muted);margin-top:4px;font-family:"Roboto",sans-serif;}
+  .btnrow{padding:5px 15px 13px;}
+  .btn{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:500;color:#1a73e8;border:1px solid var(--line);border-radius:18px;padding:6px 14px;}
+  .btn svg{width:12px;height:12px;}
+  .panel{background:#fff;border:1px solid var(--line);border-radius:12px;padding:18px 20px;margin-top:30px;}
+  .panel h3{font-size:14px;font-weight:500;margin:0 0 12px;}
+  .opt{display:flex;gap:12px;align-items:baseline;padding:8px 0;border-bottom:1px solid #f0f0f0;font-size:13.5px;}
+  .opt:last-child{border-bottom:0;}
+  .opt .k{width:96px;flex:none;color:var(--muted);font-size:12px;}
+  .note{font-size:12px;color:var(--muted);margin-top:10px;line-height:1.5;}
+</style>
+</head>
+<body>
+<svg style="position:absolute;width:0;height:0" aria-hidden="true">
+  <symbol id="ast" viewBox="0 0 500 500"><path d="M500,207.04h-100.94c-16.73,0-25.11-20.23-13.28-32.06l71.38-71.38-60.76-60.76-71.37,71.37c-11.83,11.83-32.06,3.45-32.06-13.28V0h-85.92v100.94c0,16.73-20.23,25.11-32.06,13.28L103.6,42.84l-60.76,60.76,71.38,71.38c11.83,11.83,3.45,32.06-13.28,32.06H0v85.92h100.94c16.73,0,25.11,20.23,13.28,32.06l-71.38,71.38,60.76,60.76,71.38-71.38c11.83-11.83,32.06-3.45,32.06,13.28v100.94h85.92v-100.94c0-16.73,20.23-25.11,32.06-13.28l71.37,71.37,60.76-60.76-71.38-71.38c-11.83-11.83-3.45-32.06,13.28-32.06h100.94v-85.92Z"/></symbol>
+  <symbol id="lnk" viewBox="0 0 24 24"><path d="M7 17L17 7M17 7H8M17 7V16" fill="none" stroke="#1a73e8" stroke-width="2.5"/></symbol>
+</svg>
+
+<div class="page">
+  <h1 class="title">Tentative line — qualifier in brackets</h1>
+  <p class="sub">Default in the card: <b>“3.5h tentative (on top)”</b>. Other bracketed wordings below — pick one.</p>
+
+  <div class="row2">
+    <div class="surface"><div class="card">
+      <div class="card-header"><div class="avatar"><svg><use href="#ast"/></svg></div><div><div class="h-title">Solvd Studio Check-in</div><div class="h-sub">Tomorrow <span class="day">· Thursday 4 June</span></div></div></div>
+      <div class="section"><div class="lead">Two designers have open time tomorrow.</div></div>
+      <div class="section">
+        <div class="dt"><div class="ic">🔴</div><div class="col">
+          <div class="l1"><span class="nm">Anisha Gittins</span> — <span class="red">7.5h open</span></div>
+          <div class="l2">Nothing booked</div>
+          <div class="sub">⚠️ 3.5h tentative (on top) · <span class="code">Dairy Farmers</span></div>
+        </div></div>
+        <hr class="divider" />
+        <div class="dt"><div class="ic">🔴</div><div class="col">
+          <div class="l1"><span class="nm">Ella Wright</span> — <span class="red">3.0h open</span></div>
+          <div class="l2">4.5h booked</div>
+          <div class="sub">📄 Brief empty · <span class="code">STR_050 · 4.5h</span></div>
+        </div></div>
+        <hr class="divider" />
+        <div class="dt"><div class="ic">🟢</div><div class="col"><div class="l1"><span class="nm">Liam Mills</span> — <span class="green">full day</span></div><div class="l2">7.5h booked</div></div></div>
+      </div>
+      <div class="btnrow"><span class="btn">Open in Productive <svg><use href="#lnk"/></svg></span></div>
+      <div class="footsec"><div class="flabel">Remaining studio time this week</div><div class="bar">●●●<span class="e">●●●●●●●</span></div><div class="barcaption">12h booked · 33h open</div></div>
+    </div></div>
+
+    <div class="panel">
+      <h3>Bracketed wording options</h3>
+      <div class="opt"><span class="k">on top</span><span>⚠️ 3.5h tentative <b>(on top)</b> · <span class="grey">Dairy Farmers</span></span></div>
+      <div class="opt"><span class="k">as well</span><span>⚠️ 3.5h tentative <b>(as well)</b> · <span class="grey">Dairy Farmers</span></span></div>
+      <div class="opt"><span class="k">as well as</span><span>⚠️ 3.5h tentative <b>(as well as booked)</b> · <span class="grey">Dairy Farmers</span></span></div>
+      <div class="opt"><span class="k">extra</span><span>⚠️ 3.5h tentative <b>(extra)</b> · <span class="grey">Dairy Farmers</span></span></div>
+      <div class="opt"><span class="k">not counted</span><span>⚠️ 3.5h tentative <b>(not counted)</b> · <span class="grey">Dairy Farmers</span></span></div>
+      <div class="opt"><span class="k">separate</span><span>⚠️ 3.5h tentative <b>(separate)</b> · <span class="grey">Dairy Farmers</span></span></div>
+      <div class="opt"><span class="k">unconfirmed</span><span>⚠️ 3.5h tentative <b>(unconfirmed)</b> · <span class="grey">Dairy Farmers</span></span></div>
+      <p class="note">Pick one and I'll set it as the standard tentative line everywhere.</p>
+    </div>
+  </div>
+</div>
+</body>
+</html>
