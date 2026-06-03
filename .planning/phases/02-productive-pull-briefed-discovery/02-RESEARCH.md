@@ -485,19 +485,19 @@ export interface BriefFlag {
 | A7 | `include=task,task.workflow_status,service,event` is accepted in one call (nested 2-level include) | Pattern 4 | If Productive caps include depth, split into follow-up `/tasks?include=workflow_status` call. Verify live; cost is one extra call. |
 | A8 | `Content-Type: application/vnd.api+json` on GETs is accepted/ignored | Auth headers | Minor; most JSON:API servers accept omitting it on GET. |
 
-## Open Questions
+## Open Questions (RESOLVED — see execution gates)
 
-1. **Which exact `X-Organization-Id` value works?**
+1. **Which exact `X-Organization-Id` value works?** — RESOLVED: 02-01 live auth probe task.
    - What we know: org id is the `34092` prefix of slug `34092-solvd-agency`.
    - What's unclear: bare number vs slug (docs silent).
    - Recommendation: first execution task is a 200/403 probe against `/people/686717`.
 
-2. **Does `include` support the 2-level `task.workflow_status` nesting in one call?**
+2. **Does `include` support the 2-level `task.workflow_status` nesting in one call?** — RESOLVED: 02-03 include-depth verification task.
    - What we know: Productive supports JSON:API side-loading and nested includes; the docs example shows `include=company,project`.
    - What's unclear: whether 2-level nesting is capped.
    - Recommendation: try the combined include; fall back to a follow-up `/tasks?filter[id]=any_of(...)&include=workflow_status` call for the distinct task ids. Either way, fetch `/workflow_statuses` separately for the Briefed positions (the workflow relationship on a status is `included:false`).
 
-3. **Does "working days in range" for method-3 exclude holidays?**
+3. **Does "working days in range" for method-3 exclude holidays?** — RESOLVED: 02-02 mappers task.
    - What we know: D-09 divides total_time by working days; the clock has `isWorkingDay`.
    - Recommendation: exclude weekends AND holidays for consistency with the clock; document; flag if a real method-3 booking spans a holiday.
 
@@ -570,3 +570,4 @@ export interface BriefFlag {
 
 **Research date:** 2026-06-03
 **Valid until:** ~2026-07-03 (Productive API stable; re-verify the X-Organization-Id probe and D-06 enum live at execution regardless of date).
+</content>
