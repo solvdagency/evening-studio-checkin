@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: planning
-stopped_at: Phase 3 context gathered (Chat card design locked)
-last_updated: "2026-06-03T13:36:31.918Z"
+stopped_at: Phase 3 UI-SPEC approved
+last_updated: "2026-06-03T22:03:20.492Z"
 last_activity: 2026-06-03
 progress:
   total_phases: 6
@@ -108,6 +108,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-06-03T13:36:31.908Z
-Stopped at: Phase 3 context gathered (Chat card design locked)
-Resume file: .planning/phases/03-template-renderer-chat-delivery/03-CONTEXT.md
+Last session: 2026-06-03T22:03:20.482Z
+Stopped at: Phase 3 UI-SPEC approved
+Resume file: .planning/phases/03-template-renderer-chat-delivery/03-UI-SPEC.md
