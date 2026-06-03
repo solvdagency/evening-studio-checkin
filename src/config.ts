@@ -28,6 +28,18 @@ export const PRODUCTIVE_BASE_URL = "https://api.productive.io/api/v2" as const;
 export const DESIGNER_PERSON_IDS = ["686717", "686712", "686716"] as const;
 
 /**
+ * Display names for the three monitored designers, keyed by Productive person id
+ * (D-14, 03-CONTEXT specifics line 120). The renderer reads names from HERE — the
+ * card never shows a name sourced from the API (the API is for figures only). The
+ * composition root (src/index.ts) passes this into RenderContext.designerNames.
+ */
+export const DESIGNER_NAMES = {
+  "686717": "Liam Mills",
+  "686712": "Anisha Gittins",
+  "686716": "Ella Wright",
+} as const;
+
+/**
  * Holiday region for the injected HolidaySet (D-13). `date-holidays` is
  * constructed as `new Holidays(country, state)` — AU / NSW for SOLVD's studio.
  * Public holidays come from the library; studio-specific closures are listed
