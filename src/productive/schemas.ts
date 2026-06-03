@@ -17,20 +17,39 @@
 import { z } from "zod";
 
 /**
- * A JSON:API relationship linkage: `{ data: {id,type} | null }`. Optional at the
- * field level so a missing relationship (e.g. a booking with no `task`) parses.
+ * A JSON:API relationship as Productive actually returns it (confirmed against a
+ * live /bookings response, Task 4). A relationship is EITHER a linkage
+ * `{ data: {id,type} | null }` when the related resource is sideloaded/linked, OR
+ * a not-included marker `{ meta: { included: false } }` when it was not requested
+ * in `include`. The schema must tolerate both, or a populated booking with
+ * un-included relationships (person/creator/etc.) fails to parse. `.loose()` keeps
+ * any extra relationship keys (Productive returns ~15 per booking). Optional at the
+ * field level so a missing relationship parses too.
  */
 export const Relationship = z
   .object({
-    data: z.object({ id: z.string(), type: z.string() }).nullable(),
+    data: z.object({ id: z.string(), type: z.string() }).nullable().optional(),
+    meta: z.object({ included: z.boolean() }).loose().optional(),
   })
+  .loose()
   .optional();
 
 /**
- * Raw `/bookings` attributes. Corrected names: `booking_method_id`, `draft`,
- * `canceled`. Numeric figure fields are nullable (only one is populated per
- * `booking_method_id`); `approval_status` is the secondary absence-approval axis
- * (D-07 — not the work-tentative signal).
+ * Raw `/bookings` attributes (confirmed against a live response, Task 4).
+ * Corrected names: `booking_method_id`, `draft`, `canceled`. Numeric figure
+ * fields are nullable (only one is populated per `booking_method_id`).
+ *
+ * Two CONTEXT/research assumptions were corrected against live data:
+ *  - There is NO `booking_type` ATTRIBUTE. Work-vs-absence (D-11) is determined by
+ *    which RELATIONSHIP is populated: `service` (work) vs `event` (absence). The
+ *    `filter[booking_type]` query param still works server-side; it is just not an
+ *    attribute on the resource.
+ *  - There is NO `approval_status` integer attribute. The live model uses
+ *    `approved` / `rejected` booleans (D-07 says this axis is NOT the work-tentative
+ *    signal anyway — tentative ⟺ `draft`). Both are kept OPTIONAL/tolerant so the
+ *    schema neither requires a field the API omits nor breaks if Productive re-adds one.
+ * `total_working_days` is sideloaded by the API (handy for the D-09 method-3 divisor)
+ * and is kept optional. Extra attributes are tolerated by zod's default object parse.
  */
 export const BookingAttributes = z.object({
   booking_method_id: z.number(),
@@ -41,21 +60,29 @@ export const BookingAttributes = z.object({
   ended_on: z.string(),
   draft: z.boolean(),
   canceled: z.boolean(),
-  booking_type: z.string(),
-  approval_status: z.number().nullable(),
+  approved: z.boolean().optional(),
+  rejected: z.boolean().optional(),
+  total_working_days: z.number().nullable().optional(),
 });
 
-/** A `/bookings` resource: id, type "bookings", attributes, and the relationships used. */
+/**
+ * A `/bookings` resource. `relationships` is a loose object: Productive returns
+ * ~15 relationship keys per booking and we only name the four this phase uses;
+ * `.loose()` keeps the rest so a new relationship never breaks the parse. Work
+ * vs absence is read from `service` vs `event` here, not from an attribute.
+ */
 export const BookingResource = z.object({
   id: z.string(),
   type: z.literal("bookings"),
   attributes: BookingAttributes,
-  relationships: z.object({
-    person: Relationship,
-    task: Relationship,
-    service: Relationship,
-    event: Relationship,
-  }),
+  relationships: z
+    .object({
+      person: Relationship,
+      task: Relationship,
+      service: Relationship,
+      event: Relationship,
+    })
+    .loose(),
 });
 
 /**

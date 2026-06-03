@@ -1,91 +1,1559 @@
 {
   "data": [
     {
-      "id": "10000001",
+      "id": "32028464",
       "type": "bookings",
       "attributes": {
-        "booking_method_id": 1,
-        "time": 240,
-        "total_time": null,
-        "percentage": null,
-        "started_on": "2026-06-03",
-        "ended_on": "2026-06-03",
-        "draft": false,
-        "canceled": false,
-        "booking_type": "service",
-        "approval_status": null
-      },
-      "relationships": {
-        "person": { "data": { "id": "686717", "type": "people" } },
-        "task": { "data": { "id": "5000001", "type": "tasks" } },
-        "service": { "data": { "id": "7000001", "type": "services" } },
-        "event": { "data": null }
-      }
-    },
-    {
-      "id": "10000002",
-      "type": "bookings",
-      "attributes": {
-        "booking_method_id": 3,
+        "hours": null,
         "time": null,
-        "total_time": 480,
-        "percentage": null,
-        "started_on": "2026-06-03",
-        "ended_on": "2026-06-04",
-        "draft": false,
-        "canceled": false,
-        "booking_type": "service",
-        "approval_status": null
-      },
-      "relationships": {
-        "person": { "data": { "id": "686716", "type": "people" } },
-        "task": { "data": null },
-        "service": { "data": { "id": "7000002", "type": "services" } },
-        "event": { "data": null }
-      }
-    },
-    {
-      "id": "10000003",
-      "type": "bookings",
-      "attributes": {
-        "booking_method_id": 1,
-        "time": 450,
-        "total_time": null,
-        "percentage": null,
         "started_on": "2026-06-04",
         "ended_on": "2026-06-04",
-        "draft": false,
+        "note": null,
+        "total_time": 450,
+        "total_working_days": 1,
+        "percentage": null,
+        "created_at": "2026-05-26T04:54:25.264+02:00",
+        "updated_at": "2026-05-26T04:54:25.264+02:00",
+        "people_custom_fields": {
+          "77692": 0.9
+        },
+        "approved": true,
+        "approved_at": "2026-05-26T04:54:25.264+02:00",
+        "rejected": false,
+        "rejected_reason": null,
+        "rejected_at": null,
         "canceled": false,
-        "booking_type": "event",
-        "approval_status": 2
+        "canceled_at": null,
+        "booking_method_id": 3,
+        "autotracking": false,
+        "draft": false,
+        "custom_fields": null,
+        "external_id": null,
+        "last_activity_at": "2026-05-26T04:54:25.000+02:00",
+        "stage_type": 2
       },
       "relationships": {
-        "person": { "data": { "id": "686712", "type": "people" } },
-        "task": { "data": null },
-        "service": { "data": null },
-        "event": { "data": { "id": "9000001", "type": "events" } }
+        "organization": {
+          "data": {
+            "type": "organizations",
+            "id": "34092"
+          }
+        },
+        "service": {
+          "data": {
+            "type": "services",
+            "id": "14396819"
+          }
+        },
+        "event": {
+          "data": null
+        },
+        "person": {
+          "meta": {
+            "included": false
+          }
+        },
+        "creator": {
+          "meta": {
+            "included": false
+          }
+        },
+        "updater": {
+          "meta": {
+            "included": false
+          }
+        },
+        "approver": {
+          "meta": {
+            "included": false
+          }
+        },
+        "rejecter": {
+          "meta": {
+            "included": false
+          }
+        },
+        "canceler": {
+          "meta": {
+            "included": false
+          }
+        },
+        "origin": {
+          "meta": {
+            "included": false
+          }
+        },
+        "task": {
+          "data": {
+            "type": "tasks",
+            "id": "17993738"
+          }
+        },
+        "approval_statuses": {
+          "meta": {
+            "included": false
+          }
+        },
+        "custom_field_people": {
+          "meta": {
+            "included": false
+          }
+        },
+        "custom_field_attachments": {
+          "meta": {
+            "included": false
+          }
+        },
+        "attachments": {
+          "meta": {
+            "included": false
+          }
+        }
+      }
+    },
+    {
+      "id": "32168917",
+      "type": "bookings",
+      "attributes": {
+        "hours": 6,
+        "time": 360,
+        "started_on": "2026-06-03",
+        "ended_on": "2026-06-03",
+        "note": "",
+        "total_time": 360,
+        "total_working_days": 1,
+        "percentage": null,
+        "created_at": "2026-06-01T05:46:43.026+02:00",
+        "updated_at": "2026-06-03T02:00:08.505+02:00",
+        "people_custom_fields": {
+          "77692": 0.9
+        },
+        "approved": true,
+        "approved_at": "2026-06-01T05:46:43.026+02:00",
+        "rejected": false,
+        "rejected_reason": null,
+        "rejected_at": null,
+        "canceled": false,
+        "canceled_at": null,
+        "booking_method_id": 1,
+        "autotracking": false,
+        "draft": false,
+        "custom_fields": null,
+        "external_id": null,
+        "last_activity_at": "2026-06-03T01:59:57.000+02:00",
+        "stage_type": 2
+      },
+      "relationships": {
+        "organization": {
+          "data": {
+            "type": "organizations",
+            "id": "34092"
+          }
+        },
+        "service": {
+          "data": {
+            "type": "services",
+            "id": "14380517"
+          }
+        },
+        "event": {
+          "data": null
+        },
+        "person": {
+          "meta": {
+            "included": false
+          }
+        },
+        "creator": {
+          "meta": {
+            "included": false
+          }
+        },
+        "updater": {
+          "meta": {
+            "included": false
+          }
+        },
+        "approver": {
+          "meta": {
+            "included": false
+          }
+        },
+        "rejecter": {
+          "meta": {
+            "included": false
+          }
+        },
+        "canceler": {
+          "meta": {
+            "included": false
+          }
+        },
+        "origin": {
+          "meta": {
+            "included": false
+          }
+        },
+        "approval_statuses": {
+          "meta": {
+            "included": false
+          }
+        },
+        "custom_field_people": {
+          "meta": {
+            "included": false
+          }
+        },
+        "custom_field_attachments": {
+          "meta": {
+            "included": false
+          }
+        },
+        "attachments": {
+          "meta": {
+            "included": false
+          }
+        }
+      }
+    },
+    {
+      "id": "32221462",
+      "type": "bookings",
+      "attributes": {
+        "hours": null,
+        "time": null,
+        "started_on": "2026-06-03",
+        "ended_on": "2026-06-03",
+        "note": null,
+        "total_time": 30,
+        "total_working_days": 1,
+        "percentage": null,
+        "created_at": "2026-06-03T00:35:49.947+02:00",
+        "updated_at": "2026-06-03T00:35:49.947+02:00",
+        "people_custom_fields": {
+          "77692": 0.9
+        },
+        "approved": true,
+        "approved_at": "2026-06-03T00:35:49.947+02:00",
+        "rejected": false,
+        "rejected_reason": null,
+        "rejected_at": null,
+        "canceled": false,
+        "canceled_at": null,
+        "booking_method_id": 3,
+        "autotracking": false,
+        "draft": false,
+        "custom_fields": null,
+        "external_id": null,
+        "last_activity_at": "2026-06-03T00:35:49.000+02:00",
+        "stage_type": 2
+      },
+      "relationships": {
+        "organization": {
+          "data": {
+            "type": "organizations",
+            "id": "34092"
+          }
+        },
+        "service": {
+          "data": {
+            "type": "services",
+            "id": "14359751"
+          }
+        },
+        "event": {
+          "data": null
+        },
+        "person": {
+          "meta": {
+            "included": false
+          }
+        },
+        "creator": {
+          "meta": {
+            "included": false
+          }
+        },
+        "updater": {
+          "meta": {
+            "included": false
+          }
+        },
+        "approver": {
+          "meta": {
+            "included": false
+          }
+        },
+        "rejecter": {
+          "meta": {
+            "included": false
+          }
+        },
+        "canceler": {
+          "meta": {
+            "included": false
+          }
+        },
+        "origin": {
+          "meta": {
+            "included": false
+          }
+        },
+        "task": {
+          "data": {
+            "type": "tasks",
+            "id": "18155823"
+          }
+        },
+        "approval_statuses": {
+          "meta": {
+            "included": false
+          }
+        },
+        "custom_field_people": {
+          "meta": {
+            "included": false
+          }
+        },
+        "custom_field_attachments": {
+          "meta": {
+            "included": false
+          }
+        },
+        "attachments": {
+          "meta": {
+            "included": false
+          }
+        }
+      }
+    },
+    {
+      "id": "32221880",
+      "type": "bookings",
+      "attributes": {
+        "hours": 1,
+        "time": 60,
+        "started_on": "2026-06-03",
+        "ended_on": "2026-06-03",
+        "note": "",
+        "total_time": 60,
+        "total_working_days": 1,
+        "percentage": null,
+        "created_at": "2026-06-03T01:03:18.071+02:00",
+        "updated_at": "2026-06-03T01:03:44.358+02:00",
+        "people_custom_fields": {
+          "77692": 0.9
+        },
+        "approved": true,
+        "approved_at": "2026-06-03T01:03:18.071+02:00",
+        "rejected": false,
+        "rejected_reason": null,
+        "rejected_at": null,
+        "canceled": false,
+        "canceled_at": null,
+        "booking_method_id": 1,
+        "autotracking": false,
+        "draft": false,
+        "custom_fields": null,
+        "external_id": null,
+        "last_activity_at": "2026-06-03T01:03:33.000+02:00",
+        "stage_type": 2
+      },
+      "relationships": {
+        "organization": {
+          "data": {
+            "type": "organizations",
+            "id": "34092"
+          }
+        },
+        "service": {
+          "data": {
+            "type": "services",
+            "id": "14561153"
+          }
+        },
+        "event": {
+          "data": null
+        },
+        "person": {
+          "meta": {
+            "included": false
+          }
+        },
+        "creator": {
+          "meta": {
+            "included": false
+          }
+        },
+        "updater": {
+          "meta": {
+            "included": false
+          }
+        },
+        "approver": {
+          "meta": {
+            "included": false
+          }
+        },
+        "rejecter": {
+          "meta": {
+            "included": false
+          }
+        },
+        "canceler": {
+          "meta": {
+            "included": false
+          }
+        },
+        "origin": {
+          "meta": {
+            "included": false
+          }
+        },
+        "approval_statuses": {
+          "meta": {
+            "included": false
+          }
+        },
+        "custom_field_people": {
+          "meta": {
+            "included": false
+          }
+        },
+        "custom_field_attachments": {
+          "meta": {
+            "included": false
+          }
+        },
+        "attachments": {
+          "meta": {
+            "included": false
+          }
+        }
+      }
+    },
+    {
+      "id": "32225306",
+      "type": "bookings",
+      "attributes": {
+        "hours": null,
+        "time": null,
+        "started_on": "2026-06-03",
+        "ended_on": "2026-06-04",
+        "note": null,
+        "total_time": 480,
+        "total_working_days": 2,
+        "percentage": null,
+        "created_at": "2026-06-03T05:25:33.336+02:00",
+        "updated_at": "2026-06-03T05:25:33.336+02:00",
+        "people_custom_fields": {
+          "77692": 0.9
+        },
+        "approved": true,
+        "approved_at": "2026-06-03T05:25:33.336+02:00",
+        "rejected": false,
+        "rejected_reason": null,
+        "rejected_at": null,
+        "canceled": false,
+        "canceled_at": null,
+        "booking_method_id": 3,
+        "autotracking": false,
+        "draft": false,
+        "custom_fields": null,
+        "external_id": null,
+        "last_activity_at": "2026-06-03T05:25:33.000+02:00",
+        "stage_type": 2
+      },
+      "relationships": {
+        "organization": {
+          "data": {
+            "type": "organizations",
+            "id": "34092"
+          }
+        },
+        "service": {
+          "data": {
+            "type": "services",
+            "id": "14428831"
+          }
+        },
+        "event": {
+          "data": null
+        },
+        "person": {
+          "meta": {
+            "included": false
+          }
+        },
+        "creator": {
+          "meta": {
+            "included": false
+          }
+        },
+        "updater": {
+          "meta": {
+            "included": false
+          }
+        },
+        "approver": {
+          "meta": {
+            "included": false
+          }
+        },
+        "rejecter": {
+          "meta": {
+            "included": false
+          }
+        },
+        "canceler": {
+          "meta": {
+            "included": false
+          }
+        },
+        "origin": {
+          "meta": {
+            "included": false
+          }
+        },
+        "task": {
+          "data": {
+            "type": "tasks",
+            "id": "18157763"
+          }
+        },
+        "approval_statuses": {
+          "meta": {
+            "included": false
+          }
+        },
+        "custom_field_people": {
+          "meta": {
+            "included": false
+          }
+        },
+        "custom_field_attachments": {
+          "meta": {
+            "included": false
+          }
+        },
+        "attachments": {
+          "meta": {
+            "included": false
+          }
+        }
+      }
+    },
+    {
+      "id": "32229005",
+      "type": "bookings",
+      "attributes": {
+        "hours": null,
+        "time": null,
+        "started_on": "2026-06-04",
+        "ended_on": "2026-06-04",
+        "note": null,
+        "total_time": 30,
+        "total_working_days": 1,
+        "percentage": null,
+        "created_at": "2026-06-03T09:23:12.945+02:00",
+        "updated_at": "2026-06-03T09:23:12.945+02:00",
+        "people_custom_fields": {
+          "77692": 0.9
+        },
+        "approved": true,
+        "approved_at": "2026-06-03T09:23:12.945+02:00",
+        "rejected": false,
+        "rejected_reason": null,
+        "rejected_at": null,
+        "canceled": false,
+        "canceled_at": null,
+        "booking_method_id": 3,
+        "autotracking": false,
+        "draft": false,
+        "custom_fields": null,
+        "external_id": null,
+        "last_activity_at": "2026-06-03T09:23:12.000+02:00",
+        "stage_type": 2
+      },
+      "relationships": {
+        "organization": {
+          "data": {
+            "type": "organizations",
+            "id": "34092"
+          }
+        },
+        "service": {
+          "data": {
+            "type": "services",
+            "id": "14359751"
+          }
+        },
+        "event": {
+          "data": null
+        },
+        "person": {
+          "meta": {
+            "included": false
+          }
+        },
+        "creator": {
+          "meta": {
+            "included": false
+          }
+        },
+        "updater": {
+          "meta": {
+            "included": false
+          }
+        },
+        "approver": {
+          "meta": {
+            "included": false
+          }
+        },
+        "rejecter": {
+          "meta": {
+            "included": false
+          }
+        },
+        "canceler": {
+          "meta": {
+            "included": false
+          }
+        },
+        "origin": {
+          "meta": {
+            "included": false
+          }
+        },
+        "task": {
+          "data": {
+            "type": "tasks",
+            "id": "18160726"
+          }
+        },
+        "approval_statuses": {
+          "meta": {
+            "included": false
+          }
+        },
+        "custom_field_people": {
+          "meta": {
+            "included": false
+          }
+        },
+        "custom_field_attachments": {
+          "meta": {
+            "included": false
+          }
+        },
+        "attachments": {
+          "meta": {
+            "included": false
+          }
+        }
       }
     }
   ],
   "included": [
     {
-      "id": "5000001",
-      "type": "tasks",
+      "id": "14396819",
+      "type": "services",
       "attributes": {
-        "title": "R1 EDM Design",
-        "description": "BACKGROUND: launch campaign EDM for the spring drop.",
-        "workflow_status_id": 101563,
-        "workflow_id": 5001
+        "name": "Liam time",
+        "position": 1,
+        "deleted_at": null,
+        "external_id": null,
+        "description": "<p>Liam time</p>",
+        "time_tracking_enabled": true,
+        "expense_tracking_enabled": false,
+        "booking_tracking_enabled": true,
+        "origin_service_id": null,
+        "initial_service_id": 14396819,
+        "editor_config": {},
+        "custom_fields": null,
+        "unapproved_time": 0,
+        "worked_time": 0,
+        "estimated_time": 0,
+        "budgeted_time": 0,
+        "rolled_over_time": 0,
+        "booked_time": 2250,
+        "unit_id": 1,
+        "future_booked_time": 2250,
+        "limitation_type": "no_limitation",
+        "currency": "AUD",
+        "currency_default": "AUD",
+        "currency_normalized": "AUD"
       },
       "relationships": {
-        "workflow_status": { "data": { "id": "101563", "type": "workflow_statuses" } }
+        "organization": {
+          "data": {
+            "type": "organizations",
+            "id": "34092"
+          }
+        },
+        "service_type": {
+          "meta": {
+            "included": false
+          }
+        },
+        "deal": {
+          "meta": {
+            "included": false
+          }
+        },
+        "person": {
+          "meta": {
+            "included": false
+          }
+        },
+        "section": {
+          "meta": {
+            "included": false
+          }
+        },
+        "custom_field_people": {
+          "meta": {
+            "included": false
+          }
+        },
+        "custom_field_attachments": {
+          "meta": {
+            "included": false
+          }
+        }
+      }
+    },
+    {
+      "id": "17993738",
+      "type": "tasks",
+      "attributes": {
+        "title": "Liams Booking Time for Ai - Q2, 2026",
+        "description": "",
+        "number": "2",
+        "task_number": "2",
+        "private": false,
+        "due_date": "2026-06-30",
+        "start_date": "2026-05-01",
+        "closed_at": null,
+        "created_at": "2026-05-26T03:30:56.259+02:00",
+        "updated_at": "2026-05-26T08:20:01.951+02:00",
+        "repeat_schedule_id": null,
+        "repeat_on_interval": null,
+        "repeat_on_monthday": null,
+        "repeat_on_weekday": [],
+        "repeat_on_date": null,
+        "repeat_origin_id": null,
+        "email_key": "e7a938f745801f00d4c1d6f014f4a2ea",
+        "custom_fields": null,
+        "todo_count": null,
+        "open_todo_count": null,
+        "subtask_count": null,
+        "open_subtask_count": null,
+        "creation_method_id": 1,
+        "todo_assignee_ids": [],
+        "task_dependency_count": 0,
+        "type_id": 1,
+        "blocking_dependency_count": 0,
+        "waiting_on_dependency_count": 0,
+        "linked_dependency_count": 0,
+        "placement": 1080000,
+        "subtask_placement": null,
+        "bookings_count": 4,
+        "closed": false,
+        "due_time": null,
+        "tag_list": [],
+        "last_activity_at": "2026-05-26T08:19:51.000+02:00",
+        "initial_estimate": null,
+        "remaining_time": null,
+        "billable_time": null,
+        "worked_time": null,
+        "deleted_at": null
+      },
+      "relationships": {
+        "organization": {
+          "data": {
+            "type": "organizations",
+            "id": "34092"
+          }
+        },
+        "project": {
+          "meta": {
+            "included": false
+          }
+        },
+        "creator": {
+          "meta": {
+            "included": false
+          }
+        },
+        "assignee": {
+          "meta": {
+            "included": false
+          }
+        },
+        "last_actor": {
+          "meta": {
+            "included": false
+          }
+        },
+        "task_list": {
+          "meta": {
+            "included": false
+          }
+        },
+        "parent_task": {
+          "meta": {
+            "included": false
+          }
+        },
+        "workflow_status": {
+          "meta": {
+            "included": false
+          }
+        },
+        "service": {
+          "meta": {
+            "included": false
+          }
+        },
+        "repeated_task": {
+          "meta": {
+            "included": false
+          }
+        },
+        "template_object": {
+          "meta": {
+            "included": false
+          }
+        },
+        "attachments": {
+          "meta": {
+            "included": false
+          }
+        },
+        "custom_field_people": {
+          "meta": {
+            "included": false
+          }
+        },
+        "custom_field_attachments": {
+          "meta": {
+            "included": false
+          }
+        },
+        "todos": {
+          "meta": {
+            "included": false
+          }
+        },
+        "subtasks": {
+          "meta": {
+            "included": false
+          }
+        },
+        "task_dependencies": {
+          "meta": {
+            "included": false
+          }
+        }
+      }
+    },
+    {
+      "id": "14380517",
+      "type": "services",
+      "attributes": {
+        "name": "Design and Layout",
+        "position": 4,
+        "deleted_at": null,
+        "external_id": null,
+        "description": null,
+        "time_tracking_enabled": true,
+        "expense_tracking_enabled": false,
+        "booking_tracking_enabled": true,
+        "origin_service_id": null,
+        "initial_service_id": 14380517,
+        "editor_config": {},
+        "custom_fields": {
+          "144382": "341634"
+        },
+        "unapproved_time": 0,
+        "worked_time": 0,
+        "estimated_time": 240,
+        "budgeted_time": 240,
+        "rolled_over_time": 0,
+        "booked_time": 480,
+        "unit_id": 1,
+        "future_booked_time": 360,
+        "limitation_type": "no_limitation",
+        "currency": "AUD",
+        "currency_default": "AUD",
+        "currency_normalized": "AUD"
+      },
+      "relationships": {
+        "organization": {
+          "data": {
+            "type": "organizations",
+            "id": "34092"
+          }
+        },
+        "service_type": {
+          "meta": {
+            "included": false
+          }
+        },
+        "deal": {
+          "meta": {
+            "included": false
+          }
+        },
+        "person": {
+          "meta": {
+            "included": false
+          }
+        },
+        "section": {
+          "meta": {
+            "included": false
+          }
+        },
+        "custom_field_people": {
+          "meta": {
+            "included": false
+          }
+        },
+        "custom_field_attachments": {
+          "meta": {
+            "included": false
+          }
+        }
+      }
+    },
+    {
+      "id": "14359751",
+      "type": "services",
+      "attributes": {
+        "name": "Design and Layout",
+        "position": 8,
+        "deleted_at": null,
+        "external_id": null,
+        "description": null,
+        "time_tracking_enabled": true,
+        "expense_tracking_enabled": false,
+        "booking_tracking_enabled": true,
+        "origin_service_id": null,
+        "initial_service_id": 14359751,
+        "editor_config": {},
+        "custom_fields": {
+          "144382": "341634"
+        },
+        "unapproved_time": 0,
+        "worked_time": 0,
+        "estimated_time": 120,
+        "budgeted_time": 120,
+        "rolled_over_time": 0,
+        "booked_time": 60,
+        "unit_id": 1,
+        "future_booked_time": 60,
+        "limitation_type": "no_limitation",
+        "currency": "AUD",
+        "currency_default": "AUD",
+        "currency_normalized": "AUD"
+      },
+      "relationships": {
+        "organization": {
+          "data": {
+            "type": "organizations",
+            "id": "34092"
+          }
+        },
+        "service_type": {
+          "meta": {
+            "included": false
+          }
+        },
+        "deal": {
+          "meta": {
+            "included": false
+          }
+        },
+        "person": {
+          "meta": {
+            "included": false
+          }
+        },
+        "section": {
+          "meta": {
+            "included": false
+          }
+        },
+        "custom_field_people": {
+          "meta": {
+            "included": false
+          }
+        },
+        "custom_field_attachments": {
+          "meta": {
+            "included": false
+          }
+        }
+      }
+    },
+    {
+      "id": "18155823",
+      "type": "tasks",
+      "attributes": {
+        "title": "Collect Props from attic",
+        "description": "<p>Heya @[{\"type\":\"person\",\"id\":\"686717\",\"label\":\"Liam Mills\",\"avatar_url\":\"https://files.productive.io/people/avatars/35cb750c-e488-45e6-86b7-5c42af8f248c/thumb/aaa.jpg\",\"attachment_url\":null,\"is_done\":false}] </p><p>If you are in the office today, was hoping you could pop up into the attic to grab the Hunter Water props?</p><p>Should be a basket or similar or blue towels and bathroom type accessories? Potentially a hunter water bucket.</p><p></p><p>Tay and I are out this morning sourcing wardrobe and props but let us know if you have any questions!</p><p></p><p>Thanks!!</p>",
+        "number": "36",
+        "task_number": "36",
+        "private": false,
+        "due_date": "2026-06-03",
+        "start_date": "2026-06-03",
+        "closed_at": "2026-06-03T05:01:23.000+02:00",
+        "created_at": "2026-06-03T00:33:48.267+02:00",
+        "updated_at": "2026-06-03T05:01:33.775+02:00",
+        "repeat_schedule_id": null,
+        "repeat_on_interval": null,
+        "repeat_on_monthday": null,
+        "repeat_on_weekday": [],
+        "repeat_on_date": null,
+        "repeat_origin_id": null,
+        "email_key": "e49d48f46f32ba199b2d7d2453291adb",
+        "custom_fields": null,
+        "todo_count": null,
+        "open_todo_count": null,
+        "subtask_count": null,
+        "open_subtask_count": null,
+        "creation_method_id": 1,
+        "todo_assignee_ids": [],
+        "task_dependency_count": 0,
+        "type_id": 1,
+        "blocking_dependency_count": 0,
+        "waiting_on_dependency_count": 0,
+        "linked_dependency_count": 0,
+        "placement": 1534410,
+        "subtask_placement": null,
+        "bookings_count": 1,
+        "closed": true,
+        "due_time": null,
+        "tag_list": [],
+        "last_activity_at": "2026-06-03T05:01:23.000+02:00",
+        "initial_estimate": null,
+        "remaining_time": null,
+        "billable_time": null,
+        "worked_time": null,
+        "deleted_at": null
+      },
+      "relationships": {
+        "organization": {
+          "data": {
+            "type": "organizations",
+            "id": "34092"
+          }
+        },
+        "project": {
+          "meta": {
+            "included": false
+          }
+        },
+        "creator": {
+          "meta": {
+            "included": false
+          }
+        },
+        "assignee": {
+          "meta": {
+            "included": false
+          }
+        },
+        "last_actor": {
+          "meta": {
+            "included": false
+          }
+        },
+        "task_list": {
+          "meta": {
+            "included": false
+          }
+        },
+        "parent_task": {
+          "meta": {
+            "included": false
+          }
+        },
+        "workflow_status": {
+          "meta": {
+            "included": false
+          }
+        },
+        "service": {
+          "meta": {
+            "included": false
+          }
+        },
+        "repeated_task": {
+          "meta": {
+            "included": false
+          }
+        },
+        "template_object": {
+          "meta": {
+            "included": false
+          }
+        },
+        "attachments": {
+          "meta": {
+            "included": false
+          }
+        },
+        "custom_field_people": {
+          "meta": {
+            "included": false
+          }
+        },
+        "custom_field_attachments": {
+          "meta": {
+            "included": false
+          }
+        },
+        "todos": {
+          "meta": {
+            "included": false
+          }
+        },
+        "subtasks": {
+          "meta": {
+            "included": false
+          }
+        },
+        "task_dependencies": {
+          "meta": {
+            "included": false
+          }
+        }
+      }
+    },
+    {
+      "id": "14561153",
+      "type": "services",
+      "attributes": {
+        "name": "Design and Layout",
+        "position": 3,
+        "deleted_at": null,
+        "external_id": null,
+        "description": null,
+        "time_tracking_enabled": true,
+        "expense_tracking_enabled": false,
+        "booking_tracking_enabled": true,
+        "origin_service_id": null,
+        "initial_service_id": 14561153,
+        "editor_config": {},
+        "custom_fields": {
+          "144382": "341634"
+        },
+        "unapproved_time": 0,
+        "worked_time": 60,
+        "estimated_time": 120,
+        "budgeted_time": 120,
+        "rolled_over_time": 0,
+        "booked_time": 180,
+        "unit_id": 1,
+        "future_booked_time": 60,
+        "limitation_type": "no_limitation",
+        "currency": "AUD",
+        "currency_default": "AUD",
+        "currency_normalized": "AUD"
+      },
+      "relationships": {
+        "organization": {
+          "data": {
+            "type": "organizations",
+            "id": "34092"
+          }
+        },
+        "service_type": {
+          "meta": {
+            "included": false
+          }
+        },
+        "deal": {
+          "meta": {
+            "included": false
+          }
+        },
+        "person": {
+          "meta": {
+            "included": false
+          }
+        },
+        "section": {
+          "meta": {
+            "included": false
+          }
+        },
+        "custom_field_people": {
+          "meta": {
+            "included": false
+          }
+        },
+        "custom_field_attachments": {
+          "meta": {
+            "included": false
+          }
+        }
+      }
+    },
+    {
+      "id": "14428831",
+      "type": "services",
+      "attributes": {
+        "name": "Design and Layout",
+        "position": 3,
+        "deleted_at": null,
+        "external_id": null,
+        "description": null,
+        "time_tracking_enabled": true,
+        "expense_tracking_enabled": false,
+        "booking_tracking_enabled": true,
+        "origin_service_id": null,
+        "initial_service_id": 14428831,
+        "editor_config": {},
+        "custom_fields": {
+          "144382": "341634"
+        },
+        "unapproved_time": 0,
+        "worked_time": 330,
+        "estimated_time": 1440,
+        "budgeted_time": 1440,
+        "rolled_over_time": 0,
+        "booked_time": 1080,
+        "unit_id": 1,
+        "future_booked_time": 480,
+        "limitation_type": "no_limitation",
+        "currency": "AUD",
+        "currency_default": "AUD",
+        "currency_normalized": "AUD"
+      },
+      "relationships": {
+        "organization": {
+          "data": {
+            "type": "organizations",
+            "id": "34092"
+          }
+        },
+        "service_type": {
+          "meta": {
+            "included": false
+          }
+        },
+        "deal": {
+          "meta": {
+            "included": false
+          }
+        },
+        "person": {
+          "meta": {
+            "included": false
+          }
+        },
+        "section": {
+          "meta": {
+            "included": false
+          }
+        },
+        "custom_field_people": {
+          "meta": {
+            "included": false
+          }
+        },
+        "custom_field_attachments": {
+          "meta": {
+            "included": false
+          }
+        }
+      }
+    },
+    {
+      "id": "18157763",
+      "type": "tasks",
+      "attributes": {
+        "title": "STR_050 Federal Budget - Media Analysis",
+        "description": "<div>Brief Writer: Tasha<br>Priority: High<br>Review Date: 2026-06-04<br><br>Why are we here (the background):<br>Media Analysis report on Federal Budget: <a href=\"https://www.streem.com.au/hubfs/Budget%20AU%202026-2027/Streem%20Australian%20Federal%20Budget%202026-27%20Media%20Analysis%20Report.pdf\">https://www.streem.com.au/hubfs/Budget%20AU%202026-2027/Streem%20Australian%20Federal%20Budget%202026-27%20Media%20Analysis%20Report.pdf</a><br><br>translating dense analyst piece into linkedin social content <br><br>What do we need to create:<br>Specs like the listed examples in references please!<br><br>Footer or header small to show theme:<br>Federal Budget 2026–27 Media Analysis | Streem<br><br><br>Title slide: <br><br>Headline: We analysed the media coverage in the aftermath of the Budget. Here’s what we found.<br><br>Data vis:<br>A large swing-style gauge or before/after speedometer showing NSS moving from +16% pre-Budget to -28% post-Budget.<br>Pre-Budget NSS: +16%<br>Post-Budget NSS: -28%<br><br>[tiny data blurb \"Streem Data: Traditional media sentiment analysis. 9–17 May 2026]<br><br>Slide 2:<br><br>Headline:<br>Sentiment shifted sharply after Budget Day.<br><br>Data vis:<br>Use two vertical proportional  stacked sentiment bars comparing pre-Budget and post-Budget coverage. (page 5 sentiment charts is where data is from)<br><br>Pre-Budget:<br>Positive: 13%<br>Trending positive: 22%<br>Neutral: 46%<br>Trending negative: 13%<br>Negative: 6%<br><br>Post-Budget:<br>Positive: 3%<br>Trending positive: 15%<br>Neutral: 36%<br>Trending negative: 28%<br>Negative: 18%<br><br>supporting text: The drop was driven by a sharp rise in negative and trending negative coverage, which grew from 19% before Budget Day to 46% after.<br><br>arrow to l to next slide with \"So, what drove the drop?\"<br><br>Small NSS explainer at the bottom, <br><br>human-rated sentiment across tier one publications, Net Sentiment Score = Percentage of positive mentions minus percentage of negative mentions<br><br>[tiny data blurb \"Streem Data: Traditional media sentiment analysis. 9–17 May 2026]<br><br><br>Slide 3:<br>Headline:<br>Tax reform was the pressure point in the media narrative.<br><br>Data vis:<br>Simplified sentiment-by-theme chart from the report (page 6 top chart)<br><br>Focus themes:<br>Cost of Living & Tax Reforms<br>Housing Policies<br>Productivity & Investment<br>Social Services, Welfare & NDIS<br>Energy & Oil Policies<br><br>Make Cost of Living & Tax Reforms visually dominant, with negative and trending negative sentiment clearly highlighted. Show Housing Policies and Productivity & Investment as more positive by comparison.<br><br>Key callouts:<br>Cost of Living & Tax Reforms had the highest negative coverage volume.<br>Housing Policies and Productivity & Investment had the most positive coverage.<br><br>Slide 4:<br>Headline:<br>The criticism centred on impact, fairness and trust.<br><br>Data vis:<br>Create three annotated cards connected to the negative sentiment around Cost of Living & Tax Reforms.<br><br>Three small tiles showing the key themes behind negative tax reform coverage: CGT and negative gearing, cost of living and rent pressure, and election promise criticism.<br><br>card 1:<br>CGT and negative gearing<br><br>card 2:<br>Cost of living and rent pressure<br><br>card 3:<br>Election promise criticism<br><br>Supporting copy:<br>Coverage of capital gains tax and negative gearing drew criticism around housing supply, rent impacts, younger Australians’ ability to build wealth, and concerns from business owners and financial commentators.<br><br>Positive-leaning coverage framed the reforms as a move to rebalance the system and support first-home buyers.<br><br>Slide 5:<br><br>Headline:<br>Social discussion centred on the same pressure points, but with an increased focus on housing.<br><br>Data vis:<br>Ranked horizontal bar chart showing leading social media discussion topics.<br>Use these exact figures:<br>Housing: 1,546 posts<br>Capital Gains Tax: 1,085 posts<br>Cost of Living: 879 posts<br>Negative Gearing: 821 posts<br>Migration: 759 posts<br>Infrastructure: 316 posts<br>NDIS: 315 posts<br>Discretionary Trusts Tax: 218 posts<br>Fuel Security: 213 posts<br>Productivity: 204 posts<br><br>could be cool to visually group Capital Gains Tax, Cost of Living and Negative Gearing to show the concentration of attention around tax and household financial pressure.<br><br>Supporting copy:<br><br>Traditional media sentiment turned most sharply around cost of living and tax reform. On social, housing generated the highest discussion volume, followed by capital gains tax, cost of living and negative gearing.<br><br>Final CTA slide to download the full media analysis report 'Want to get granular? Read our full Media Analysis Report'<br><br>Design Direction:<br>We need to be careful around text sizing and thickness so it's legible on mobile, im seeing a lot of posts on LinkedIn that are hard to read.<br><br>References:<br>same specs as these, also cool looking design!<br><br><a href=\"https://www.linkedin.com/posts/brandwatch_social-signals-and-search-activity-7455224791684497408-yOOP?utm_source=share&utm_medium=member_desktop&rcm=ACoAACxrPDIBpnqW51peqY39l-0umJ8FDjAUCmk\">https://www.linkedin.com/posts/brandwatch_social-signals-and-search-activity-7455224791684497408-yOOP?utm_source=share&utm_medium=member_desktop&rcm=ACoAACxrPDIBpnqW51peqY39l-0umJ8FDjAUCmk</a><br><br><a href=\"https://www.linkedin.com/posts/gotracksuit_50-of-ads-are-less-engaging-than-activity-7452838735324430338-lXSp?utm_source=share&utm_medium=member_desktop&rcm=ACoAACxrPDIBpnqW51peqY39l-0umJ8FDjAUCmk\">https://www.linkedin.com/posts/gotracksuit_50-of-ads-are-less-engaging-than-activity-7452838735324430338-lXSp?utm_source=share&utm_medium=member_desktop&rcm=ACoAACxrPDIBpnqW51peqY39l-0umJ8FDjAUCmk</a><br><br><a href=\"https://www.linkedin.com/posts/absstats_72-of-australian-businesses-have-been-impacted-activity-7465562496679194624-BlUU?utm_source=share&utm_medium=member_desktop&rcm=ACoAACxrPDIBpnqW51peqY39l-0umJ8FDjAUCmk\">https://www.linkedin.com/posts/absstats_72-of-australian-businesses-have-been-impacted-activity-7465562496679194624-BlUU?utm_source=share&utm_medium=member_desktop&rcm=ACoAACxrPDIBpnqW51peqY39l-0umJ8FDjAUCmk</a><br><br>Other Relevant Info: </div>",
+        "number": "180",
+        "task_number": "180",
+        "private": false,
+        "due_date": "2026-06-04",
+        "start_date": "2026-06-03",
+        "closed_at": null,
+        "created_at": "2026-06-03T05:04:29.123+02:00",
+        "updated_at": "2026-06-03T05:29:33.477+02:00",
+        "repeat_schedule_id": null,
+        "repeat_on_interval": null,
+        "repeat_on_monthday": null,
+        "repeat_on_weekday": [],
+        "repeat_on_date": null,
+        "repeat_origin_id": null,
+        "email_key": "aa68c34c482068ca9facaf8c0355b3d7",
+        "custom_fields": null,
+        "todo_count": null,
+        "open_todo_count": null,
+        "subtask_count": null,
+        "open_subtask_count": null,
+        "creation_method_id": 1,
+        "todo_assignee_ids": [],
+        "task_dependency_count": 0,
+        "type_id": 1,
+        "blocking_dependency_count": 0,
+        "waiting_on_dependency_count": 0,
+        "linked_dependency_count": 0,
+        "placement": 2604000,
+        "subtask_placement": null,
+        "bookings_count": 1,
+        "closed": false,
+        "due_time": null,
+        "tag_list": [],
+        "last_activity_at": "2026-06-03T05:29:22.000+02:00",
+        "initial_estimate": null,
+        "remaining_time": null,
+        "billable_time": null,
+        "worked_time": null,
+        "deleted_at": null
+      },
+      "relationships": {
+        "organization": {
+          "data": {
+            "type": "organizations",
+            "id": "34092"
+          }
+        },
+        "project": {
+          "meta": {
+            "included": false
+          }
+        },
+        "creator": {
+          "meta": {
+            "included": false
+          }
+        },
+        "assignee": {
+          "meta": {
+            "included": false
+          }
+        },
+        "last_actor": {
+          "meta": {
+            "included": false
+          }
+        },
+        "task_list": {
+          "meta": {
+            "included": false
+          }
+        },
+        "parent_task": {
+          "meta": {
+            "included": false
+          }
+        },
+        "workflow_status": {
+          "meta": {
+            "included": false
+          }
+        },
+        "service": {
+          "meta": {
+            "included": false
+          }
+        },
+        "repeated_task": {
+          "meta": {
+            "included": false
+          }
+        },
+        "template_object": {
+          "meta": {
+            "included": false
+          }
+        },
+        "attachments": {
+          "meta": {
+            "included": false
+          }
+        },
+        "custom_field_people": {
+          "meta": {
+            "included": false
+          }
+        },
+        "custom_field_attachments": {
+          "meta": {
+            "included": false
+          }
+        },
+        "todos": {
+          "meta": {
+            "included": false
+          }
+        },
+        "subtasks": {
+          "meta": {
+            "included": false
+          }
+        },
+        "task_dependencies": {
+          "meta": {
+            "included": false
+          }
+        }
+      }
+    },
+    {
+      "id": "18160726",
+      "type": "tasks",
+      "attributes": {
+        "title": "Provide design files for ‘level 1 water restriction’ icon",
+        "description": "<p>Heya @[{\"type\":\"person\",\"id\":\"686716\",\"label\":\"Ella Wright\",\"avatar_url\":\"https://files.productive.io/people/avatars/2d8e7868-326d-4eed-9f63-c9271a166668/thumb/sgsdgg.jpg\",\"attachment_url\":null,\"is_done\":false}] </p><p></p><p>Hoping you can please provide the ‘Level 1’ icon design files for the updated icon that Dan has created in <a href=\"https://canva.link/egkv5ldoi01bp5s\" target=\"_blank\">THIS DECK.</a></p><p></p><p>Hoping to supply to the client so they can share with their graphic designer.</p><p></p><p>Thanks!</p>",
+        "number": "37",
+        "task_number": "37",
+        "private": false,
+        "due_date": "2026-06-04",
+        "start_date": "2026-06-04",
+        "closed_at": null,
+        "created_at": "2026-06-03T09:16:11.313+02:00",
+        "updated_at": "2026-06-03T09:27:27.712+02:00",
+        "repeat_schedule_id": null,
+        "repeat_on_interval": null,
+        "repeat_on_monthday": null,
+        "repeat_on_weekday": [],
+        "repeat_on_date": null,
+        "repeat_origin_id": null,
+        "email_key": "ef64b046fc27a09eb8fd7704f7042727",
+        "custom_fields": null,
+        "todo_count": null,
+        "open_todo_count": null,
+        "subtask_count": null,
+        "open_subtask_count": null,
+        "creation_method_id": 1,
+        "todo_assignee_ids": [],
+        "task_dependency_count": 0,
+        "type_id": 1,
+        "blocking_dependency_count": 0,
+        "waiting_on_dependency_count": 0,
+        "linked_dependency_count": 0,
+        "placement": 1341000,
+        "subtask_placement": null,
+        "bookings_count": 1,
+        "closed": false,
+        "due_time": null,
+        "tag_list": [],
+        "last_activity_at": "2026-06-03T09:27:17.000+02:00",
+        "initial_estimate": null,
+        "remaining_time": null,
+        "billable_time": null,
+        "worked_time": null,
+        "deleted_at": null
+      },
+      "relationships": {
+        "organization": {
+          "data": {
+            "type": "organizations",
+            "id": "34092"
+          }
+        },
+        "project": {
+          "meta": {
+            "included": false
+          }
+        },
+        "creator": {
+          "meta": {
+            "included": false
+          }
+        },
+        "assignee": {
+          "meta": {
+            "included": false
+          }
+        },
+        "last_actor": {
+          "meta": {
+            "included": false
+          }
+        },
+        "task_list": {
+          "meta": {
+            "included": false
+          }
+        },
+        "parent_task": {
+          "meta": {
+            "included": false
+          }
+        },
+        "workflow_status": {
+          "meta": {
+            "included": false
+          }
+        },
+        "service": {
+          "meta": {
+            "included": false
+          }
+        },
+        "repeated_task": {
+          "meta": {
+            "included": false
+          }
+        },
+        "template_object": {
+          "meta": {
+            "included": false
+          }
+        },
+        "attachments": {
+          "meta": {
+            "included": false
+          }
+        },
+        "custom_field_people": {
+          "meta": {
+            "included": false
+          }
+        },
+        "custom_field_attachments": {
+          "meta": {
+            "included": false
+          }
+        },
+        "todos": {
+          "meta": {
+            "included": false
+          }
+        },
+        "subtasks": {
+          "meta": {
+            "included": false
+          }
+        },
+        "task_dependencies": {
+          "meta": {
+            "included": false
+          }
+        }
       }
     }
   ],
+  "links": {
+    "first": "https://api.productive.io/api/v2/bookings?filter%5Bafter%5D=2026-06-03&filter%5Bbefore%5D=2026-06-05&filter%5Bcanceled%5D=false&filter%5Bperson_id%5D=686717%2C686712%2C686716&include=task%2Cservice%2Cevent&page%5Bnumber%5D=1&page%5Bsize%5D=200",
+    "last": "https://api.productive.io/api/v2/bookings?filter%5Bafter%5D=2026-06-03&filter%5Bbefore%5D=2026-06-05&filter%5Bcanceled%5D=false&filter%5Bperson_id%5D=686717%2C686712%2C686716&include=task%2Cservice%2Cevent&page%5Bnumber%5D=1&page%5Bsize%5D=200"
+  },
   "meta": {
     "current_page": 1,
     "total_pages": 1,
-    "total_count": 3,
-    "page_size": 200
+    "total_count": 6,
+    "page_size": 200,
+    "max_page_size": 200
   }
 }

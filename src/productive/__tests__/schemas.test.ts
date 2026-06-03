@@ -42,6 +42,9 @@ describe("JsonApiPage schema (boundary validation)", () => {
 
 describe("BookingResource schema (corrected field names — Pitfall 1)", () => {
   it("accepts a booking with the corrected names (booking_method_id/draft/canceled)", () => {
+    // Mirrors the LIVE shape confirmed in Task 4: no booking_type / approval_status
+    // attributes; work-vs-absence is the service/event relationship; un-included
+    // relationships arrive as { meta: { included: false } }.
     const good = {
       id: "1",
       type: "bookings",
@@ -54,10 +57,17 @@ describe("BookingResource schema (corrected field names — Pitfall 1)", () => {
         ended_on: "2026-06-03",
         draft: false,
         canceled: false,
-        booking_type: "service",
-        approval_status: null,
+        approved: true,
+        rejected: false,
+        total_working_days: 1,
       },
-      relationships: {},
+      relationships: {
+        service: { data: { id: "7", type: "services" } },
+        event: { data: null },
+        person: { meta: { included: false } },
+        task: { data: { id: "5", type: "tasks" } },
+        organization: { data: { id: "34092", type: "organizations" } },
+      },
     };
     assert.equal(BookingResource.safeParse(good).success, true);
   });
@@ -73,10 +83,8 @@ describe("BookingResource schema (corrected field names — Pitfall 1)", () => {
         percentage: null,
         started_on: "2026-06-03",
         ended_on: "2026-06-03",
-        is_draft: false, // OLD name — `draft` is now required, so this must fail
+        is_draft: false, // OLD name — `draft`/`canceled` are required, so this must fail
         is_canceled: false,
-        booking_type: "service",
-        approval_status: null,
       },
       relationships: {},
     };
