@@ -24,7 +24,7 @@ Requirements for the initial release. Each maps to roadmap phases.
 
 ### Briefs
 
-- [ ] **BRIEF-01**: For each booking on the target day, the check verifies a task is linked
+- [x] **BRIEF-01**: For each booking on the target day, the check verifies a task is linked
 - [ ] **BRIEF-02**: For each booking, the check verifies the task is marked "briefed" per the studio's actual Productive convention (mapping discovered against live data, not assumed)
 - [ ] **BRIEF-03**: Bookings missing a linked task or not marked briefed are flagged by job/task (never by PM), as an existence check only — no brief-quality analysis
 
@@ -104,7 +104,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | CAP-03 | Phase 1 | Complete |
 | CAP-04 | Phase 1 | Complete |
 | CAP-05 | Phase 1 | Complete |
-| BRIEF-01 | Phase 2 | Pending |
+| BRIEF-01 | Phase 2 | Complete |
 | BRIEF-02 | Phase 2 | Pending |
 | BRIEF-03 | Phase 2 | Pending |
 | MEET-01 | Phase 4 | Pending |

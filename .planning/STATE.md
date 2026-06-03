@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Phase 2 context gathered
-last_updated: "2026-06-03T09:53:59.301Z"
-last_activity: 2026-06-03 -- Phase 02 planning complete
+stopped_at: Completed 02-01-PLAN.md
+last_updated: "2026-06-03T10:28:09.148Z"
+last_activity: 2026-06-03
 progress:
   total_phases: 6
   completed_phases: 1
   total_plans: 7
-  completed_plans: 3
+  completed_plans: 4
   percent: 17
 ---
 
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-02)
 
 **Core value:** Every evening the team gets one clear, trustworthy heads-up of exactly what needs fixing before tomorrow — so the three designers start the day with full, briefed workloads instead of chasing the work themselves.
-**Current focus:** Phase 2 — productive pull & briefed discovery
+**Current focus:** Phase 02 — productive-pull-briefed-discovery
 
 ## Current Position
 
-Phase: 2
-Plan: Not started
+Phase: 02 (productive-pull-briefed-discovery) — EXECUTING
+Plan: 2 of 4
 Status: Ready to execute
-Last activity: 2026-06-03 -- Phase 02 planning complete
+Last activity: 2026-06-03
 
-Progress: [██████████] 100%
+Progress: [██████░░░░] 57%
 
 ## Performance Metrics
 
@@ -55,6 +55,7 @@ Progress: [██████████] 100%
 | Phase 01 P01 | 20 | 2 tasks | 6 files |
 | Phase 01 P02 | 3 | 2 tasks | 4 files |
 | Phase 01 P03 | 4 | 1 tasks | 2 files |
+| Phase 02-productive-pull-briefed-discovery P01 | 8min | 4 tasks | 10 files |
 
 ## Accumulated Context
 
@@ -72,6 +73,9 @@ Recent decisions affecting current work:
 - [Phase ?]: [Phase 1]: DesignerResult + DayStatus exported from capacity.ts as the stable contract for 01-03; overbooked openMin left unclamped (D-06); shaky orthogonal to status (D-05).
 - [Phase ?]: [Phase 1]: StudioReport is the top-level output contract (targetDay, window, designers, rollup, missingDesigners); computeStudioReport composes the clock window + per-designer capacity — Phase 2 feeds it, Phase 3 renders it (CAP-05).
 - [Phase ?]: [Phase 1]: Roster-gap uses an explicit assessedDesigners input signal (missingDesigners = roster minus assessedDesigners); omitting it means whole roster assessed, so an empty pull is present-but-empty not a gap (D-18/D-19).
+- [Phase ?]: X-Organization-Id confirmed live = 34092 (bare numeric); canonical for all Productive calls
+- [Phase ?]: Live /bookings has no booking_type/approval_status attributes; work-vs-absence = service vs event relationship; tentative = draft (D-07)
+- [Phase ?]: Productive boundary = non-throwing Result<T> client + tolerant zod safeParse against a real captured fixture
 
 ### Pending Todos
 
@@ -96,6 +100,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-06-03T09:10:41.202Z
-Stopped at: Phase 2 context gathered
-Resume file: .planning/phases/02-productive-pull-briefed-discovery/02-CONTEXT.md
+Last session: 2026-06-03T10:28:09.144Z
+Stopped at: Completed 02-01-PLAN.md
+Resume file: None
