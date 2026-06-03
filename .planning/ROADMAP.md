@@ -50,7 +50,7 @@ Plans:
 **Requirements**: BRIEF-01, BRIEF-02, BRIEF-03
 **Success Criteria** (what must be TRUE):
 
-  1. The Productive client pulls the three designers' bookings (including tentative/`draft`) and time-off (absence bookings) for the target window into validated, typed objects, paginating fully and never throwing across the boundary
+  1. The Productive client pulls the three designers' confirmed bookings (`/bookings`) AND tentative work (`/allocations` superset, set-differenced against confirmed — the live tentative signal, not `draft`) and time-off (absence bookings) for the target window into validated, typed objects, paginating fully and never throwing across the boundary
   2. A documented, named mapping for "briefed" (custom field / task status / linked-task presence) is confirmed against what PMs see in the live Productive UI for real bookings — not assumed
   3. For each target-day booking the system reports whether a task is linked and whether it is briefed per that confirmed mapping, and surfaces missing-task / not-briefed bookings by job/task (never by PM) as an existence check only
   4. Running the gather-plus-analyze pipeline against real Productive data produces capacity numbers and brief flags that a hand-check against the Productive UI agrees with
@@ -71,7 +71,7 @@ Plans:
 
 **Wave 4** *(blocked on Wave 3 completion)*
 
-- [x] 02-04-PLAN.md — gather composition root + live hand-check vs Productive UI (SC-4)
+- [x] 02-04-PLAN.md — gather composition root + live hand-check vs Productive UI (SC-4); GAP-CLOSURE: tentative `/allocations` capture (set-difference, supersedes D-07 draft) — live re-check matches expected
 
 **Dependencies (external)**: Productive.io API access with `X-Auth-Token` + `X-Organization-Id` (the Productive integration is available to run the discovery spike).
 

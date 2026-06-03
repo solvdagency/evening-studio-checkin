@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: verifying
-stopped_at: Completed 02-04-PLAN.md (code complete; SC-4 UI hand-check awaiting user)
-last_updated: "2026-06-03T11:00:00.000Z"
+stopped_at: 02-04 GAP-CLOSURE complete — tentative /allocations capture, live re-check matches expected
+last_updated: "2026-06-03T12:30:00.000Z"
 last_activity: 2026-06-03
 progress:
   total_phases: 6
@@ -77,7 +77,8 @@ Recent decisions affecting current work:
 - [Phase ?]: [Phase 1]: StudioReport is the top-level output contract (targetDay, window, designers, rollup, missingDesigners); computeStudioReport composes the clock window + per-designer capacity — Phase 2 feeds it, Phase 3 renders it (CAP-05).
 - [Phase ?]: [Phase 1]: Roster-gap uses an explicit assessedDesigners input signal (missingDesigners = roster minus assessedDesigners); omitting it means whole roster assessed, so an empty pull is present-but-empty not a gap (D-18/D-19).
 - [Phase ?]: X-Organization-Id confirmed live = 34092 (bare numeric); canonical for all Productive calls
-- [Phase ?]: Live /bookings has no booking_type/approval_status attributes; work-vs-absence = service vs event relationship; tentative = draft (D-07)
+- [Phase ?]: Live /bookings has no booking_type/approval_status attributes; work-vs-absence = service vs event relationship; tentative = draft (D-07) — SUPERSEDED, see GAP-CLOSURE below
+- [Phase 2 GAP-CLOSURE]: tentative ⟺ present in /allocations but ABSENT from /bookings (live-confirmed) — NOT draft===true (draft returns 0 rows in this org). Supersedes D-07. gather pulls /allocations (the superset), set-difference yields tentative work, mapped with forced draft:true so it flows UNCHANGED through capacity (tentativeMin/shaky, never closes the gap). Event-type allocation-only records ignored (no synthesized tentative absences). Live re-check 2026-06-04: Anisha 3.5h tentative/shaky/0 confirmed, Liam 7.5h ok, Ella 4.5h/3h open — matches expected exactly.
 - [Phase ?]: Productive boundary = non-throwing Result<T> client + tolerant zod safeParse against a real captured fixture
 - [Phase 2]: gather is the ingestion twin of computeStudioReport — one composition root, degrades via sourceErrors, never throws; assessedDesigners carries only designers a successful pull reached (T-02-15)
 - [Phase 2]: gather /bookings include MUST carry person,service,event in addition to the brief chain — the task-only set drops every booking live (silent empty pull); caught by the SC-4 live gate
@@ -106,6 +107,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-06-03T11:00:00.000Z
-Stopped at: Completed 02-04-PLAN.md (code complete; SC-4 UI hand-check awaiting user)
-Resume file: SC-4 live hand-check — user to confirm 2026-06-04 figures + brief flags vs the Productive UI
+Last session: 2026-06-03T12:30:00.000Z
+Stopped at: 02-04 GAP-CLOSURE complete — tentative /allocations capture wired, TDD, live re-check matches expected (Anisha 3.5h tentative/shaky)
+Resume file: None — Phase 2 ready for verification

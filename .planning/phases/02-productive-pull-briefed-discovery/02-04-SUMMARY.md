@@ -37,7 +37,9 @@ key-files:
   created:
     - src/productive/gather.ts
     - src/productive/__tests__/gather.test.ts
-  modified: []
+  modified:
+    - src/productive/schemas.ts
+    - src/productive/__tests__/schemas.test.ts
 
 key-decisions:
   - "LIVE BUG FIX: the gather /bookings include MUST carry person,service,event in addition to the brief chain. With task,task.* only, service/event/person arrive as { meta: { included: false } }, the mapper drops every booking (live pull returned 0 from a working 200), and designerId is empty. Corrected set resolves work-vs-absence, roster match, and the brief chain in one call."
@@ -55,6 +57,40 @@ completed: 2026-06-03
 ---
 
 # Phase 2 Plan 04: Gather Composition Root & Live End-to-End Summary
+
+## GAP-CLOSURE (post-SC-4): tentative time was invisible — now captured via /allocations
+
+The SC-4 live hand-check surfaced a correctness gap the fixture could not: the pipeline read **only `/bookings` (confirmed time)** and was **blind to TENTATIVE work**, which lives in `/allocations`. On the real target day Anisha had a 3.5h tentative allocation (allocation `31811360`, client Dairy Farmers) that the message would have entirely missed — she'd have shown 0h with no signal that work was pencilled in.
+
+### Decision revision (supersedes the old assumption — like 02-03's D-06 correction)
+- **OLD (D-07):** `isTentative ⟺ booking.draft === true`.
+- **NEW (live-confirmed):** `isTentative ⟺ the scheduled record is present in /allocations but ABSENT from /bookings` (scheduled-but-not-confirmed). The `draft` attribute is **NOT** the tentative signal in this org's data — `filter[draft]=true` returned 0 rows and an unfiltered `/bookings` pull omitted the tentative allocation entirely. `/bookings` and `/allocations` share identical resource ids for confirmed records; `/allocations` is the **superset**.
+
+### What was built (approved approach: "capture tentative, FLAG it, do NOT count it as booked")
+- New **`AllocationResource`** zod boundary schema (`src/productive/schemas.ts`) — `booking_type` is a real attribute here (`service`=work, `event`=absence); allocations carry **no task/project relationship** so tentative items are never brief-assessed (consistent with D-08).
+- `gather` now also pulls **`/allocations`** with the same `person_id` + target→rest-of-week window. It computes the set of confirmed booking ids, and for each allocation whose id is **absent** from that set AND whose `booking_type === "service"`, it synthesizes a tentative `RawBookingForMapping` (forced `draft:true`) that **reuses the existing per-day minutes logic** (`mapToBookingsAndAbsences`/`minutesOnDay`). These flow through the **unchanged** capacity machinery: they land in `tentativeMin`, set `shaky=true`, and **never** count as confirmed or close the open gap (Phase-1 D-04/D-05 — `src/domain/capacity.ts` untouched).
+- **Scope boundaries honored:** tentative `event`-type allocation-only records are **ignored** (no synthesized tentative absences — absences come from the confirmed `/bookings` event pull only). Brief assessment is **unchanged** — only confirmed client bookings flag (D-08); tentative items are never brief-flagged. An `/allocations` pull failure **degrades** (pushes a `sourceError`, continues confirmed-only) — never throws.
+
+### Live re-check (full `gather → computeStudioReport`, target day 2026-06-04) — MATCHES expected exactly
+Source errors: **none**. Assessed: all three. Missing: none. Brief flags: none.
+
+| Designer | Status | Available | Confirmed | Tentative | Open | Shaky |
+|----------|--------|-----------|-----------|-----------|------|-------|
+| Liam Mills (686717) | ok | 7.50h | 7.50h | 0.00h | 0.00h | false |
+| **Anisha Gittins (686712)** | **underbooked** | **7.50h** | **0.00h** | **3.50h (210 min)** | **7.50h** | **true** |
+| Ella Wright (686716) | underbooked | 7.50h | 4.50h | 0.00h | 3.00h | false |
+
+Anisha's tentative 3.5h is now visible and flagged shaky, while correctly **not** closing her open gap (still 7.5h open). Liam and Ella unchanged. This is the exact `<expected_live_result>`. The throwaway dotenv probe printed figures only (never the token / auth URL) and was deleted, not committed. No allocations fixture was captured — the inline offline gather/schema tests cover the shape and set-difference fully, and a captured page would risk leaking real client data.
+
+### GAP-CLOSURE commits
+- `09a7565` (feat) — `AllocationResource` zod schema (TDD: RED in schemas.test.ts → GREEN).
+- `ebe916a` (feat) — set-difference + tentative-mapping in gather.ts (TDD: 4 new offline gather tests RED → GREEN).
+
+Full suite **125/125** green; `tsc --noEmit` exit 0; `src/domain` boundary intact (no domain→productive import); `src/domain/capacity.ts` unchanged.
+
+---
+
+# Original 02-04 record
 
 **A single `gather()` call now pulls the three designers' bookings + absences over the target→Friday window, validates every response at the zod boundary, resolves the brief chain, and assembles exactly what Phase 3 needs — and the full pipeline runs end-to-end against LIVE Productive, producing real per-designer hours and correctly-briefed flags, while never throwing across the boundary.**
 
@@ -154,11 +190,11 @@ No new threat surface: gather adds outbound GETs (bookings, workflow_statuses) a
 
 ## Self-Check: PASSED
 
-- Files: src/productive/gather.ts, src/productive/__tests__/gather.test.ts — both FOUND.
-- Commits: 07ec385, 8f28974 — both present in git log.
-- Verification: full suite 118/118, `tsc --noEmit` exit 0, acceptance greps confirmed (ProjectResource.safeParse on the projects path, all key pieces composed, no reachable throw, sourceErrors present, `grep -rl productive src/domain` empty), live gather → computeStudioReport ran clean.
+- Files: src/productive/gather.ts, src/productive/__tests__/gather.test.ts, src/productive/schemas.ts, src/productive/__tests__/schemas.test.ts — all FOUND.
+- Commits: 07ec385, 8f28974 (original); 09a7565, ebe916a (GAP-CLOSURE) — all present in git log.
+- Verification: full suite 125/125, `tsc --noEmit` exit 0, `src/domain` boundary intact (`grep -rl productive src/domain` empty), `src/domain/capacity.ts` unchanged. Live gather → computeStudioReport re-run matched the expected target-day result exactly (Anisha tentative 3.5h/shaky, Liam 7.5h ok, Ella 4.5h/3h open).
 - Temp probe scripts removed; no secret values in committed files.
 
 ---
 *Phase: 02-productive-pull-briefed-discovery*
-*Completed: 2026-06-03 (SC-4 hand-check awaiting user confirmation)*
+*Completed: 2026-06-03 (SC-4 + GAP-CLOSURE tentative-capture verified live)*
