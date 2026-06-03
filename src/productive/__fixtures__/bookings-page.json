@@ -1,0 +1,91 @@
+{
+  "data": [
+    {
+      "id": "10000001",
+      "type": "bookings",
+      "attributes": {
+        "booking_method_id": 1,
+        "time": 240,
+        "total_time": null,
+        "percentage": null,
+        "started_on": "2026-06-03",
+        "ended_on": "2026-06-03",
+        "draft": false,
+        "canceled": false,
+        "booking_type": "service",
+        "approval_status": null
+      },
+      "relationships": {
+        "person": { "data": { "id": "686717", "type": "people" } },
+        "task": { "data": { "id": "5000001", "type": "tasks" } },
+        "service": { "data": { "id": "7000001", "type": "services" } },
+        "event": { "data": null }
+      }
+    },
+    {
+      "id": "10000002",
+      "type": "bookings",
+      "attributes": {
+        "booking_method_id": 3,
+        "time": null,
+        "total_time": 480,
+        "percentage": null,
+        "started_on": "2026-06-03",
+        "ended_on": "2026-06-04",
+        "draft": false,
+        "canceled": false,
+        "booking_type": "service",
+        "approval_status": null
+      },
+      "relationships": {
+        "person": { "data": { "id": "686716", "type": "people" } },
+        "task": { "data": null },
+        "service": { "data": { "id": "7000002", "type": "services" } },
+        "event": { "data": null }
+      }
+    },
+    {
+      "id": "10000003",
+      "type": "bookings",
+      "attributes": {
+        "booking_method_id": 1,
+        "time": 450,
+        "total_time": null,
+        "percentage": null,
+        "started_on": "2026-06-04",
+        "ended_on": "2026-06-04",
+        "draft": false,
+        "canceled": false,
+        "booking_type": "event",
+        "approval_status": 2
+      },
+      "relationships": {
+        "person": { "data": { "id": "686712", "type": "people" } },
+        "task": { "data": null },
+        "service": { "data": null },
+        "event": { "data": { "id": "9000001", "type": "events" } }
+      }
+    }
+  ],
+  "included": [
+    {
+      "id": "5000001",
+      "type": "tasks",
+      "attributes": {
+        "title": "R1 EDM Design",
+        "description": "BACKGROUND: launch campaign EDM for the spring drop.",
+        "workflow_status_id": 101563,
+        "workflow_id": 5001
+      },
+      "relationships": {
+        "workflow_status": { "data": { "id": "101563", "type": "workflow_statuses" } }
+      }
+    }
+  ],
+  "meta": {
+    "current_page": 1,
+    "total_pages": 1,
+    "total_count": 3,
+    "page_size": 200
+  }
+}
