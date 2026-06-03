@@ -228,6 +228,132 @@ describe("renderTemplate — per-designer miss (D-19 / MSG-07)", () => {
   });
 });
 
+describe("renderTemplate — holiday variant (D-20)", () => {
+  it("matches the locked holiday card JSON (warm message, no rows/bar/button)", () => {
+    const report: StudioReport = {
+      targetDay: "2026-06-08",
+      window: ["2026-06-08"],
+      designers: [],
+      rollup: { totalMin: 0, openMin: 0, totalHours: 0, openHours: 0 },
+      missingDesigners: [],
+    };
+
+    const out = renderTemplate(
+      report,
+      ctx({
+        holidayTomorrow: { dateLabel: "King's Birthday" },
+        header: { subtitle: "Tomorrow · Monday 8 June", targetDate: "2026-06-08" },
+      }),
+    );
+    assert.deepStrictEqual(out, loadFixture("holiday"));
+  });
+
+  it("holiday wins the cascade even when sourceErrors is also set (D-20 > D-18)", () => {
+    const report: StudioReport = {
+      targetDay: "2026-06-08",
+      window: ["2026-06-08"],
+      designers: [],
+      rollup: { totalMin: 0, openMin: 0, totalHours: 0, openHours: 0 },
+      missingDesigners: [],
+    };
+
+    const out = renderTemplate(
+      report,
+      ctx({
+        holidayTomorrow: { dateLabel: "King's Birthday" },
+        sourceErrors: ["Productive"],
+        header: { subtitle: "Tomorrow · Monday 8 June", targetDate: "2026-06-08" },
+      }),
+    );
+    assert.deepStrictEqual(out, loadFixture("holiday"));
+  });
+});
+
+describe("renderTemplate — closure variant (D-21)", () => {
+  it("matches the locked closure card JSON (offsite message, no rows/bar/button)", () => {
+    const report: StudioReport = {
+      targetDay: "2026-06-12",
+      window: ["2026-06-12"],
+      designers: [],
+      rollup: { totalMin: 0, openMin: 0, totalHours: 0, openHours: 0 },
+      missingDesigners: [],
+    };
+
+    const out = renderTemplate(
+      report,
+      ctx({
+        closureTomorrow: { backDayLabel: "Monday 15 June" },
+        header: { subtitle: "Tomorrow · Friday 12 June", targetDate: "2026-06-12" },
+      }),
+    );
+    assert.deepStrictEqual(out, loadFixture("closure"));
+  });
+});
+
+describe("renderTemplate — on-leave row (D-22 full day)", () => {
+  it("matches the locked on-leave card JSON (minimal ⚪ row, nothing more)", () => {
+    const report: StudioReport = {
+      targetDay: "2026-06-04",
+      window: ["2026-06-04"],
+      designers: [
+        designer({ designerId: ANISHA, status: "off", availableHours: 0, bookedHours: 0 }),
+        designer({
+          designerId: ELLA,
+          status: "underbooked",
+          confirmedMin: h(4.5),
+          openMin: h(3),
+          availableHours: 7.5,
+          bookedHours: 4.5,
+          openHours: 3.0,
+        }),
+        designer({ designerId: LIAM, status: "ok", confirmedMin: h(7.5), bookedHours: 7.5 }),
+      ],
+      rollup: { totalMin: h(15), openMin: h(3), totalHours: 15, openHours: 3 },
+      missingDesigners: [],
+    };
+
+    const out = renderTemplate(report, ctx({}));
+    assert.deepStrictEqual(out, loadFixture("on-leave"));
+  });
+});
+
+describe("renderTemplate — half-day leave row (D-22 partial)", () => {
+  it("matches the locked half-day-leave card JSON (normal row + leave note)", () => {
+    const report: StudioReport = {
+      targetDay: "2026-06-04",
+      window: ["2026-06-04"],
+      designers: [
+        designer({
+          designerId: ANISHA,
+          status: "ok",
+          availableHours: 4.0,
+          confirmedMin: h(4),
+          bookedHours: 4.0,
+          openHours: 0,
+        }),
+        designer({
+          designerId: ELLA,
+          status: "underbooked",
+          confirmedMin: h(4.5),
+          openMin: h(3),
+          availableHours: 7.5,
+          bookedHours: 4.5,
+          openHours: 3.0,
+        }),
+        designer({ designerId: LIAM, status: "ok", confirmedMin: h(7.5), bookedHours: 7.5 }),
+      ],
+      rollup: { totalMin: h(19), openMin: h(3), totalHours: 19, openHours: 3 },
+      missingDesigners: [],
+    };
+
+    const out = renderTemplate(
+      report,
+      ctx({ leaveNotes: { [ANISHA]: "On leave until midday · 4h booked" } }),
+    );
+    assert.deepStrictEqual(out, loadFixture("half-day-leave"));
+  });
+});
+
 describe("renderTemplate — HTML-escaping (T-03-01 / V5)", () => {
   it("escapes &, <, > in a dynamic client name before insertion", () => {
     const report: StudioReport = {

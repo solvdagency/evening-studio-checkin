@@ -1,0 +1,22 @@
+{
+  "cardsV2": [
+    {
+      "cardId": "studio-checkin",
+      "card": {
+        "header": {
+          "title": "Solvd Studio Check-in",
+          "subtitle": "Tomorrow · Monday 8 June",
+          "imageUrl": "https://raw.githubusercontent.com/solvdagency/evening-studio-checkin/main/assets/avatar-asterisk.png",
+          "imageType": "CIRCLE"
+        },
+        "sections": [
+          {
+            "widgets": [
+              { "textParagraph": { "text": "🎉 Public holiday tomorrow — King's Birthday. No check-in needed. Enjoy…" } }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

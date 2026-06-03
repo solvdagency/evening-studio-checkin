@@ -1,0 +1,22 @@
+{
+  "cardsV2": [
+    {
+      "cardId": "studio-checkin",
+      "card": {
+        "header": {
+          "title": "Solvd Studio Check-in",
+          "subtitle": "Tomorrow · Friday 12 June",
+          "imageUrl": "https://raw.githubusercontent.com/solvdagency/evening-studio-checkin/main/assets/avatar-asterisk.png",
+          "imageType": "CIRCLE"
+        },
+        "sections": [
+          {
+            "widgets": [
+              { "textParagraph": { "text": "📦 Studio's out tomorrow — team offsite. No check-in needed. Back Monday 15 June." } }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}
