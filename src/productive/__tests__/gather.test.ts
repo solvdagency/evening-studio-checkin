@@ -82,6 +82,76 @@ function depsWith(pages: Record<string, Result<Page>>): GatherDeps {
 const OK = (page: Page): Result<Page> => ({ ok: true, value: page });
 const ERR = (error: string): Result<Page> => ({ ok: false, error });
 
+/**
+ * Build a minimal allocations page. Each entry is a live-shaped /allocations
+ * record (booking_type is a real attribute; person via relationship). Used for
+ * the GAP-CLOSURE set-difference: present-in-allocations-but-absent-from-bookings
+ * ⟹ tentative.
+ */
+function allocation(
+  id: string,
+  personId: string,
+  bookingType: "service" | "event",
+  minutes: number,
+  day: string,
+): unknown {
+  return {
+    id,
+    type: "allocations",
+    attributes: {
+      booking_method_id: 1,
+      time: minutes,
+      total_time: minutes,
+      percentage: null,
+      started_on: day,
+      ended_on: day,
+      total_working_days: 1,
+      booking_type: bookingType,
+    },
+    relationships: {
+      person: { data: { id: personId, type: "people" } },
+      service:
+        bookingType === "service"
+          ? { data: { id: "svc-" + id, type: "services" } }
+          : { data: null },
+      event:
+        bookingType === "event"
+          ? { data: { id: "evt-" + id, type: "events" } }
+          : { data: null },
+    },
+  };
+}
+
+/** A confirmed /bookings page entry sharing the bookings/allocations id space. */
+function confirmedBooking(
+  id: string,
+  personId: string,
+  minutes: number,
+  day: string,
+): unknown {
+  return {
+    id,
+    type: "bookings",
+    attributes: {
+      booking_method_id: 1,
+      time: minutes,
+      total_time: minutes,
+      percentage: null,
+      started_on: day,
+      ended_on: day,
+      draft: false,
+      canceled: false,
+      total_working_days: 1,
+    },
+    relationships: {
+      person: { data: { id: personId, type: "people" } },
+      service: { data: { id: "svc-" + id, type: "services" } },
+      event: { data: null },
+      task: { meta: { included: false } },
+    },
+  };
+}
+
 describe("gather (composition root — pull → validate → map → assess → assemble)", () => {
   it("happy path: returns a well-formed result with empty sourceErrors", async () => {
     const out = await gather(
@@ -183,6 +253,102 @@ describe("gather (composition root — pull → validate → map → assess → 
     assert.deepEqual(report.missingDesigners, []);
     assert.equal(report.targetDay, "2026-06-04");
     assert.ok(typeof report.rollup.totalMin === "number");
+  });
+
+  it("GAP-CLOSURE: an allocation-only record becomes a tentative booking (NOT counted as confirmed)", async () => {
+    const TARGET = "2026-06-04";
+    const person = DESIGNER_PERSON_IDS[1]; // Anisha 686712
+    // id "100" is confirmed (in BOTH bookings + allocations) → 300 min confirmed.
+    // id "200" is allocation-ONLY (absent from /bookings) → tentative 210 min.
+    const out = await gather(
+      depsWith({
+        "/bookings": OK({
+          data: [confirmedBooking("100", person, 300, TARGET)],
+          included: [],
+        }),
+        "/allocations": OK({
+          data: [
+            allocation("100", person, "service", 300, TARGET), // same id → confirmed, skip
+            allocation("200", person, "service", 210, TARGET), // allocation-only → tentative
+          ],
+          included: [],
+        }),
+        "/workflow_statuses": OK(workflowStatusesPage()),
+      }),
+    );
+    assert.deepEqual(out.sourceErrors, []);
+
+    const targetBookings = out.bookings.filter((b) => b.date === TARGET);
+    const confirmed = targetBookings.filter((b) => !b.isTentative);
+    const tentative = targetBookings.filter((b) => b.isTentative);
+
+    // The shared id is confirmed once (not double-counted); 200 is tentative.
+    assert.equal(confirmed.reduce((s, b) => s + b.minutes, 0), 300);
+    assert.equal(tentative.reduce((s, b) => s + b.minutes, 0), 210);
+    assert.ok(tentative.length === 1);
+    assert.equal(tentative[0].isTentative, true);
+  });
+
+  it("GAP-CLOSURE: tentative time sets shaky + never closes the open gap (capacity machinery)", async () => {
+    const TARGET = "2026-06-04";
+    const person = DESIGNER_PERSON_IDS[1] as DesignerId; // Anisha 686712
+    const roster = [person];
+    const out = await gather(
+      depsWith({
+        "/bookings": OK({ data: [], included: [] }), // zero confirmed
+        "/allocations": OK({
+          data: [allocation("200", person, "service", 210, TARGET)], // 3.5h tentative
+          included: [],
+        }),
+        "/workflow_statuses": OK(workflowStatusesPage()),
+      }),
+    );
+    const report = computeStudioReport({
+      now: NOW,
+      holidays: out.holidays,
+      roster,
+      bookings: out.bookings,
+      absences: out.absences,
+      assessedDesigners: [person],
+    });
+    const dr = report.designers.find((d) => d.designerId === person);
+    assert.ok(dr, "designer result present");
+    assert.equal(dr!.confirmedMin, 0); // tentative NEVER counts as confirmed
+    assert.equal(dr!.tentativeMin, 210);
+    assert.equal(dr!.shaky, true);
+    assert.equal(dr!.status, "underbooked");
+    assert.equal(dr!.openMin, 450); // full open gap — tentative does not close it
+  });
+
+  it("GAP-CLOSURE: an allocation-only EVENT (absence) is IGNORED (no synthesized tentative absence)", async () => {
+    const TARGET = "2026-06-04";
+    const person = DESIGNER_PERSON_IDS[1]; // Anisha 686712
+    const out = await gather(
+      depsWith({
+        "/bookings": OK({ data: [], included: [] }),
+        "/allocations": OK({
+          data: [allocation("300", person, "event", 450, TARGET)], // event-type, allocation-only
+          included: [],
+        }),
+        "/workflow_statuses": OK(workflowStatusesPage()),
+      }),
+    );
+    // No tentative work synthesized AND no absence synthesized from an event allocation.
+    assert.deepEqual(out.bookings, []);
+    assert.deepEqual(out.absences, []);
+  });
+
+  it("GAP-CLOSURE: an allocations pull failure degrades (sourceError) — confirmed still flows, no throw", async () => {
+    const out = await gather(
+      depsWith({
+        "/bookings": OK(loadBookingsFixture()),
+        "/allocations": ERR("HTTP 500"),
+        "/workflow_statuses": OK(workflowStatusesPage()),
+      }),
+    );
+    assert.ok(out.sourceErrors.some((e) => /allocations/.test(e)));
+    // Confirmed bookings still present (the fixture has work bookings).
+    assert.ok(out.assessedDesigners.length === DESIGNER_PERSON_IDS.length);
   });
 
   it("never throws even when every source fails (degrade contract)", async () => {

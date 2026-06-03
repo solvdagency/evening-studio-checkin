@@ -47,6 +47,7 @@ import {
   BookingResource,
   WorkflowStatusResource,
   ProjectResource,
+  AllocationResource,
 } from "./schemas.ts";
 import {
   mapToBookingsAndAbsences,
@@ -260,6 +261,54 @@ function asRawBooking(parsed: ReturnType<typeof BookingResource.parse>): RawBook
 }
 
 /**
+ * GAP-CLOSURE — coerce a tentative (allocation-only, service-type) allocation into
+ * the mapper's RawBookingForMapping shape so it reuses the EXACT per-day minutes
+ * logic (minutesOnDay / booking_method / total_time / total_working_days) the
+ * confirmed bookings get. We force `draft: true` so mapToBookingsAndAbsences tags
+ * it `isTentative: true` — that is the contract the mapper reads to mark tentative
+ * work, and it flows untouched through the existing capacity machinery
+ * (tentativeMin / shaky / never closes the gap — Phase-1 D-04/D-05).
+ *
+ * Scope boundary (approved approach): only `booking_type === "service"` (work)
+ * allocations are synthesized. Tentative `event`-type allocation-only records are
+ * IGNORED here — absences come from the confirmed /bookings event pull only; we
+ * never synthesize a tentative absence.
+ */
+function tentativeAllocationToRawBooking(
+  parsed: ReturnType<typeof AllocationResource.parse>,
+): RawBookingForMapping {
+  const r = parsed.relationships as {
+    person?: { data?: { id: string; type: string } | null; meta?: unknown };
+    service?: { data?: { id: string; type: string } | null; meta?: unknown };
+    event?: { data?: { id: string; type: string } | null; meta?: unknown };
+  };
+  return {
+    id: parsed.id,
+    type: parsed.type,
+    attributes: {
+      booking_method_id: parsed.attributes.booking_method_id,
+      time: parsed.attributes.time,
+      total_time: parsed.attributes.total_time,
+      percentage: parsed.attributes.percentage,
+      started_on: parsed.attributes.started_on,
+      ended_on: parsed.attributes.ended_on,
+      // Forced true: the mapper reads `draft===true` to mark work tentative. The
+      // tentative SIGNAL itself is the set-difference (computed by the caller),
+      // not this attribute (supersedes the old D-07 draft assumption).
+      draft: true,
+      canceled: false,
+    },
+    // Force a `service` linkage so the mapper classifies it as WORK (not absence).
+    // Event-type allocations are filtered out before reaching here.
+    relationships: {
+      person: r.person,
+      service: r.service?.data?.id != null ? r.service : { data: { id: "alloc-" + parsed.id, type: "services" } },
+      event: undefined,
+    },
+  };
+}
+
+/**
  * Orchestrate the whole ingestion pipeline → GatherResult. Never throws: every
  * failure degrades into `sourceErrors`. See the module header for the trust
  * contract. Pure relative to its injected deps (no system clock, no hidden I/O).
@@ -329,6 +378,43 @@ export async function gather(deps: GatherDeps): Promise<GatherResult> {
     }).task;
     taskIdByBooking.set(parsed.data.id, relId(taskRel));
     rawBookings.push(asRawBooking(parsed.data));
+  }
+
+  // (3b) GAP-CLOSURE — capture TENTATIVE work via the /allocations superset.
+  //      The live hand-check (02-04 SC-4) proved the pipeline was blind to
+  //      tentative time: /bookings returns CONFIRMED records only, while
+  //      /allocations is the SUPERSET (confirmed + tentative/unconfirmed),
+  //      sharing identical resource ids with /bookings for the confirmed rows.
+  //      Tentative SIGNAL (live-confirmed, supersedes old D-07 draft assumption):
+  //      a scheduled record present in /allocations but ABSENT from /bookings is
+  //      tentative. We compute the confirmed-id set, then synthesize a tentative
+  //      RawBookingForMapping for each allocation-only SERVICE (work) record
+  //      (reusing the mapper's minutes logic). Event-type allocation-only records
+  //      are ignored — absences come from the confirmed pull only. A failed
+  //      allocations pull degrades (sourceError) and the run continues
+  //      confirmed-only; it NEVER crashes the gather (Pitfall 6).
+  const confirmedIds = new Set<string>(rawBookings.map((b) => b.id));
+  const allocationsQuery =
+    `filter[person_id]=${personFilter}` +
+    `&filter[after]=${targetKey}` +
+    `&filter[before]=${lastKey}` +
+    `&include=person,service,event`;
+  const allocationsResult = await fetchPages("/allocations", allocationsQuery);
+  if (!allocationsResult.ok) {
+    sourceErrors.push(`allocations pull failed: ${allocationsResult.error}`);
+    // Degrade: keep confirmed-only. Do NOT return — confirmed capacity stands.
+  } else {
+    for (const entry of allocationsResult.value.data) {
+      const parsed = AllocationResource.safeParse(entry);
+      if (!parsed.success) {
+        sourceErrors.push("an allocation entry failed validation (skipped)");
+        continue;
+      }
+      const a = parsed.data;
+      if (confirmedIds.has(a.id)) continue; // present in /bookings → confirmed, not tentative
+      if (a.attributes.booking_type !== "service") continue; // ignore tentative absences (scope boundary)
+      rawBookings.push(tentativeAllocationToRawBooking(a));
+    }
   }
 
   // (4) Resolve the brief chain. Workflow statuses are a separate call (a task
