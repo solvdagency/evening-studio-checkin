@@ -43,3 +43,45 @@ export const HOLIDAY_REGION = { country: "AU", state: "NSW" } as const;
  * Productive absence bookings (D-11), not here.
  */
 export const STUDIO_CLOSURES: readonly string[] = [];
+
+/**
+ * Hosted avatar PNG for the card header (D-04/D-07): the white brand asterisk on a
+ * black circle, exported to PNG (SVG support in Cards v2 is unreliable, D-04). The
+ * URL MUST be anonymously fetchable by Google's server-side image renderer — a
+ * public HTTPS PNG, verified in incognito (RESEARCH Pitfall 4). This is a documented
+ * PLACEHOLDER public raw URL; the actual PNG is exported, committed to assets/, and
+ * its real public host wired in plan 03-04 (which also confirms public reachability,
+ * re-hosting on a public bucket if the repo is private). Hardcoded committed constant,
+ * never user-supplied (threat T-03-03 mitigation).
+ */
+export const AVATAR_PNG_URL =
+  "https://raw.githubusercontent.com/solvdagency/evening-studio-checkin/main/assets/avatar-asterisk.png" as const;
+
+/**
+ * Deep-link template for the "Open in Productive" CTA (D-24). `{DATE}` is replaced
+ * with `report.targetDay` ("yyyy-MM-dd") by the renderer; `filter=NzQ5NTY2` is the
+ * design-team scheduling filter (`NzQ5NTY2` = base64 of `749566`, verified live).
+ * `34092-solvd-agency` is the SOLVD org slug. The path opens tomorrow's scheduling
+ * view grouped by people, scoped to the three monitored designers.
+ */
+export const PRODUCTIVE_DEEPLINK_TEMPLATE =
+  "https://app.productive.io/34092-solvd-agency/scheduling/bookings?date={DATE}&filter=NzQ5NTY2&groupBy=people" as const;
+
+/**
+ * The renderer's ENTIRE colour vocabulary — the five locked inline `<font color>`
+ * hex values (D-11/D-23). No other colours exist on the card surface: Cards v2
+ * forbids background/highlight (D-03) and custom fonts (D-02); brand yellow lives
+ * ONLY baked into the avatar PNG, never as card text (yellow-on-white fails WCAG).
+ *  - open   : status red — open time ("Xh open") and the 🤖 degraded state.
+ *  - full   : status green — full day.
+ *  - over   : amber-brown — overbooked only ("Xh over").
+ *  - muted  : grey — all greyed detail/flag text (booked/open detail, names, codes).
+ *  - openDots: open-dots grey — the EMPTY portion of the week-bar dot run only.
+ */
+export const BRAND_COLORS = {
+  open: "#d93025",
+  full: "#188038",
+  over: "#b06000",
+  muted: "#5f6368",
+  openDots: "#c9ccd1",
+} as const;
