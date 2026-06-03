@@ -88,8 +88,21 @@ Plans:
   3. The check always posts — a short positive note on clean nights and a fuller message on busy nights (length scales with severity)
   4. When a data source is unreachable the posted message names what it couldn't reach rather than skipping the night, and a failed run raises a human-visible alert
 
-**Plans**: TBD
+**Plans**: 4 plans
 **UI hint**: yes
+Plans:
+**Wave 1**
+
+- [ ] 03-01-PLAN.md — Render contract (Cards v2 types + RenderMessage interface) + busy/clean/overbooked card core, pinned to JSON fixtures (MSG-01/02/03/06/07)
+
+**Wave 2** *(blocked on Wave 1 completion)*
+
+- [ ] 03-02-PLAN.md — Remaining always-post variants: degraded, per-designer-miss, holiday, closure, full/half-day leave (MSG-04/05/07, REL-01)
+- [ ] 03-03-PLAN.md — Google Chat webhook transport (postToChat, non-throwing, URL never leaked, 32 KB guard) (REL-02)
+
+**Wave 3** *(blocked on Wave 2 + Wave 3 transport)*
+
+- [ ] 03-04-PLAN.md — Composition root + weekday guard + GitHub Actions cron/dispatch + avatar PNG + manual smoke checkpoint (SCHED-01/02, REL-01/02)
 
 ### Phase 4: Calendar & Meeting Reconciliation
 
@@ -144,7 +157,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 |-------|----------------|--------|-----------|
 | 1. Core Math & Clock | 3/3 | Complete   | 2026-06-02 |
 | 2. Productive Pull & Briefed Discovery | 4/4 | Complete   | 2026-06-03 |
-| 3. Template Renderer & Chat Delivery | 0/TBD | Not started | - |
+| 3. Template Renderer & Chat Delivery | 0/4 | Planned | - |
 | 4. Calendar & Meeting Reconciliation | 0/TBD | Not started | - |
 | 5. LLM Renderer (optional) | 0/TBD | Not started | - |
 | 6. Hardening | 0/TBD | Not started | - |
