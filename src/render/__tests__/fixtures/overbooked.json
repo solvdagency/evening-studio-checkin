@@ -1,0 +1,71 @@
+{
+  "cardsV2": [
+    {
+      "cardId": "studio-checkin",
+      "card": {
+        "header": {
+          "title": "Solvd Studio Check-in",
+          "subtitle": "Tomorrow · Thursday 4 June",
+          "imageUrl": "https://raw.githubusercontent.com/solvdagency/evening-studio-checkin/main/assets/avatar-asterisk.png",
+          "imageType": "CIRCLE"
+        },
+        "sections": [
+          {
+            "widgets": [
+              { "textParagraph": { "text": "<b>One designer's a bit over tomorrow.</b>" } }
+            ]
+          },
+          {
+            "widgets": [
+              {
+                "decoratedText": {
+                  "text": "🟠 <b>Anisha Gittins</b> — <font color=\"#b06000\">1.5h over</font><br><font color=\"#5f6368\">9.0h booked</font>",
+                  "wrapText": true
+                }
+              },
+              { "divider": {} },
+              {
+                "decoratedText": {
+                  "text": "🟢 <b>Ella Wright</b> — <font color=\"#188038\">full day</font><br><font color=\"#5f6368\">7.5h booked</font>",
+                  "wrapText": true
+                }
+              },
+              { "divider": {} },
+              {
+                "decoratedText": {
+                  "text": "🟢 <b>Liam Mills</b> — <font color=\"#188038\">full day</font><br><font color=\"#5f6368\">7.5h booked</font>",
+                  "wrapText": true
+                }
+              }
+            ]
+          },
+          {
+            "widgets": [
+              {
+                "buttonList": {
+                  "buttons": [
+                    {
+                      "text": "Open in Productive",
+                      "onClick": {
+                        "openLink": {
+                          "url": "https://app.productive.io/34092-solvd-agency/scheduling/bookings?date=2026-06-04&filter=NzQ5NTY2&groupBy=people"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "header": "Remaining studio time this week",
+            "widgets": [
+              { "textParagraph": { "text": "●●●●●●●●●●" } },
+              { "textParagraph": { "text": "<font color=\"#5f6368\">45h booked · 0h open</font>" } }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

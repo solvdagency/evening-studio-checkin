@@ -1,0 +1,48 @@
+{
+  "cardsV2": [
+    {
+      "cardId": "studio-checkin",
+      "card": {
+        "header": {
+          "title": "Solvd Studio Check-in",
+          "subtitle": "Tomorrow · Friday 5 June",
+          "imageUrl": "https://raw.githubusercontent.com/solvdagency/evening-studio-checkin/main/assets/avatar-asterisk.png",
+          "imageType": "CIRCLE"
+        },
+        "sections": [
+          {
+            "widgets": [
+              { "textParagraph": { "text": "<b>All sorted for tomorrow.</b>" } },
+              { "textParagraph": { "text": "<font color=\"#5f6368\">Three designers fully booked. Nothing to action.</font>" } }
+            ]
+          },
+          {
+            "widgets": [
+              {
+                "buttonList": {
+                  "buttons": [
+                    {
+                      "text": "Open in Productive",
+                      "onClick": {
+                        "openLink": {
+                          "url": "https://app.productive.io/34092-solvd-agency/scheduling/bookings?date=2026-06-05&filter=NzQ5NTY2&groupBy=people"
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "header": "Remaining studio time this week",
+            "widgets": [
+              { "textParagraph": { "text": "●●●●●●●●●<font color=\"#c9ccd1\">●</font>" } },
+              { "textParagraph": { "text": "<font color=\"#5f6368\">42h booked · 3h open</font>" } }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}
