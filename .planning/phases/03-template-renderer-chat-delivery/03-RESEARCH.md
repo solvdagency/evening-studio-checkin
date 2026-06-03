@@ -411,22 +411,25 @@ Dry-run the POST without network: inject the webhook URL and stub `fetch` (or ju
 | A3 | A public GitHub raw URL is anonymously fetchable by Google's image renderer | Pitfall 4 | If repo is private, avatar breaks — confirm repo visibility / use a public host. |
 | A4 | `chriseaton/google-chat-cards` exists on npm (mentioned only to reject it) | Alternatives | None — not being used. |
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **Is the target repo public or private?**
    - What we know: avatar `imageUrl` must be anonymously GET-able by Google.
    - What's unclear: repo visibility (the homepage URL suggests `github.com/solvdagency/evening-studio-checkin`).
    - Recommendation: if private, host the avatar PNG on a public bucket or a public assets repo; verify in incognito before relying on it.
+   - **RESOLVED:** The avatar must be served from a public URL. If the repo is private, host the PNG on a public bucket/CDN instead and point `AVATAR_PNG_URL` there. Decision carried in 03-04 Task 2 (confirm public reachability / re-host if private).
 
 2. **Exact dot-bar segment count / rounding rule for the fuel gauge (D-23).**
    - What we know: filled = booked, empty = open; caption shows both `{X}h booked · {Y}h open`; mockup shows a 10-dot bar (3 filled / 7 empty for 12h booked of ~45h total).
    - What's unclear: the precise dots-per-hour or fixed-10-dots-proportional rule.
    - Recommendation: fixed 10 dots, `filled = round(bookedMin / totalMin * 10)`, computed from `rollup.totalMin`/`openMin` (exact minutes), rendered display-only. Confirm the count rule with Liam in planning — it's a presentation detail, not locked verbatim.
+   - **RESOLVED:** Fixed 10 dots, `filled = round(bookedMin / totalMin * 10)` (`bookedMin = rollup.totalMin - rollup.openMin`), display-only — the one documented exception to the no-recompute rule. Implemented in 03-01 `weekBar.ts`.
 
 3. **Half-day leave row exact wording source (D-22).**
    - What we know: D-22 locks "On leave until midday · {X}h booked"; capacity treats partial leave as reduced `availableMin`.
    - What's unclear: there's no explicit "leave end time" in `DesignerResult` (only `availableMin`). Deriving "until midday" needs the absence detail, which `report` doesn't currently carry.
    - Recommendation: flag for planning — either pass absence detail through `RenderContext`, or render a simpler "Part-day leave · {X}h available" from `availableMin` if the exact time isn't available. This may need a small upstream data pass-through (note: that edges toward Phase-2 territory; keep it in `RenderContext` to avoid touching domain).
+   - **RESOLVED:** Carried via an optional `RenderContext.leaveNotes` map (keyed by designer) with a fallback when exact time is unavailable; the domain layer is untouched. Implemented in 03-02 Task 2.
 
 ## Environment Availability
 
