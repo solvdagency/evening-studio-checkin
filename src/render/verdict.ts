@@ -30,9 +30,12 @@ export function buildVerdict(report: StudioReport, ctx: RenderContext): string {
   const overbooked = report.designers.filter((d) => d.status === "overbooked").length;
   const briefCount = ctx.briefFlags.length;
 
-  // D-19 — could only read one designer tonight (nameless).
-  if (report.missingDesigners.length > 0 && report.missingDesigners.length === total - 1) {
-    return "I could only read one designer tonight.";
+  // D-19 — one or two designers were unreadable tonight (nameless; keyed off the
+  // count of missing designers, per UI-SPEC line 161 / plan 03-02 Task 1). The
+  // verdict counts the MISSING designers: 1 → "one designer", 2 → "two designers".
+  if (report.missingDesigners.length > 0) {
+    const word = report.missingDesigners.length === 1 ? "one designer" : "two designers";
+    return `I could only read ${word} tonight.`;
   }
 
   // Mixed — both an open gap and an overbook to sort.

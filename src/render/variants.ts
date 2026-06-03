@@ -39,6 +39,9 @@ export function selectVariant(report: StudioReport, ctx: RenderContext): Variant
 export function isBusy(report: StudioReport, ctx: RenderContext): boolean {
   return (
     report.designers.some((d) => d.status === "underbooked" || d.status === "overbooked") ||
-    ctx.briefFlags.length > 0
+    ctx.briefFlags.length > 0 ||
+    // A 🤖 per-designer miss (D-19) is a thing to notice — show the rows so the
+    // unreadable designer is named alongside the ones we could read.
+    report.missingDesigners.length > 0
   );
 }

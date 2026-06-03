@@ -151,7 +151,7 @@ export interface TentativeNote {
 export interface RenderContext {
   /** Display names keyed by DesignerId (from config, never the API). */
   designerNames: Record<string, string>;
-  /** Non-empty ⇒ degraded variant (D-18). Verbatim source labels e.g. "Productive". */
+  /** Non-empty ⇒ degraded variant (D-18). Verbatim source labels, e.g. the booking source. */
   sourceErrors: string[];
   /** Per-designer brief problems (D-16). Grouped under their designer in the row. */
   briefFlags: BriefFlag[];
@@ -161,6 +161,14 @@ export interface RenderContext {
   holidayTomorrow?: { dateLabel: string };
   /** Set when tomorrow is a studio closure/offsite (D-21). */
   closureTomorrow?: { backDayLabel: string };
+  /**
+   * Per-designer half-day / partial-leave note, keyed by DesignerId (D-22 / UI-SPEC
+   * Open Item 2). A "fully on leave" designer is the domain `status:"off"` row (no
+   * note needed); this carries the extra line for a PARTIAL leave — e.g.
+   * "On leave until midday · 4h booked" — so the exact absence wording lives here in
+   * RenderContext and `src/domain` stays untouched. Escaped before insertion.
+   */
+  leaveNotes?: Record<string, string>;
   /** Pre-formatted "Tomorrow · Thursday 4 June" subtitle + the yyyy-MM-dd deep-link date. */
   header: { subtitle: string; targetDate: string };
 }

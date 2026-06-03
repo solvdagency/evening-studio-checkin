@@ -1,0 +1,23 @@
+{
+  "cardsV2": [
+    {
+      "cardId": "studio-checkin",
+      "card": {
+        "header": {
+          "title": "Solvd Studio Check-in",
+          "subtitle": "Tomorrow · Thursday 4 June",
+          "imageUrl": "https://raw.githubusercontent.com/solvdagency/evening-studio-checkin/main/assets/avatar-asterisk.png",
+          "imageType": "CIRCLE"
+        },
+        "sections": [
+          {
+            "widgets": [
+              { "textParagraph": { "text": "<b>🤖 Couldn't reach Productive tonight.</b>" } },
+              { "textParagraph": { "text": "<font color=\"#5f6368\">No booking figures this run. I'll have them tomorrow evening — worth a check in Productive yourself in the meantime.</font>" } }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}
