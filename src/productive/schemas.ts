@@ -107,6 +107,24 @@ export const WorkflowStatusAttributes = z.object({
 });
 
 /**
+ * A `/workflow_statuses` resource. The `workflow` relationship linkage carries
+ * the workflow id the Briefed position is keyed by (D-03 — resolve per workflow).
+ * The relationship is `included: false` by default on a status, so the gather
+ * step requests `/workflow_statuses` directly (where each status DOES carry its
+ * `workflow` linkage) rather than relying on a deep nested include (RESEARCH A7).
+ */
+export const WorkflowStatusResource = z.object({
+  id: z.string(),
+  type: z.literal("workflow_statuses"),
+  attributes: WorkflowStatusAttributes,
+  relationships: z
+    .object({
+      workflow: Relationship,
+    })
+    .loose(),
+});
+
+/**
  * D-06 internal-vs-client signal: a small, tolerant `/projects` resource schema.
  * The individual project attributes are NOT load-bearing here, so `attributes`
  * is a loose/passthrough object. The load-bearing field is the `company`
