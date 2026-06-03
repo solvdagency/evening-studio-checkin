@@ -177,6 +177,57 @@ describe("renderTemplate — overbooked scenario (MSG-01/02)", () => {
   });
 });
 
+describe("renderTemplate — degraded scenario (REL-01 / D-18)", () => {
+  it("matches the locked degraded card JSON (source unreachable, no rows/bar)", () => {
+    const report: StudioReport = {
+      targetDay: "2026-06-04",
+      window: ["2026-06-04"],
+      designers: [],
+      rollup: { totalMin: 0, openMin: 0, totalHours: 0, openHours: 0 },
+      missingDesigners: [],
+    };
+
+    const out = renderTemplate(report, ctx({ sourceErrors: ["Productive"] }));
+    assert.deepStrictEqual(out, loadFixture("degraded"));
+  });
+
+  it("names the source verbatim from ctx.sourceErrors (data-driven, not hardcoded)", () => {
+    const report: StudioReport = {
+      targetDay: "2026-06-04",
+      window: ["2026-06-04"],
+      designers: [],
+      rollup: { totalMin: 0, openMin: 0, totalHours: 0, openHours: 0 },
+      missingDesigners: [],
+    };
+
+    const out = renderTemplate(report, ctx({ sourceErrors: ["Calendar"] }));
+    const verdict = out.cardsV2[0].card.sections[0].widgets[0];
+    assert.ok("textParagraph" in verdict);
+    assert.match(verdict.textParagraph.text, /Couldn't reach Calendar tonight\./);
+  });
+});
+
+describe("renderTemplate — per-designer miss (D-19 / MSG-07)", () => {
+  it("matches the locked couldnt-read-one card JSON (🤖 row + nameless verdict)", () => {
+    const report: StudioReport = {
+      targetDay: "2026-06-04",
+      window: ["2026-06-04"],
+      designers: [
+        // The missing designer still occupies a roster slot; its figures are
+        // ignored — the 🤖 row is keyed off missingDesigners.
+        designer({ designerId: ANISHA, status: "underbooked", openHours: 7.5, bookedHours: 0 }),
+        designer({ designerId: ELLA, status: "ok", confirmedMin: h(7.5), bookedHours: 7.5 }),
+        designer({ designerId: LIAM, status: "ok", confirmedMin: h(7.5), bookedHours: 7.5 }),
+      ],
+      rollup: { totalMin: h(45), openMin: h(7.5), totalHours: 45, openHours: 7.5 },
+      missingDesigners: [ANISHA],
+    };
+
+    const out = renderTemplate(report, ctx({}));
+    assert.deepStrictEqual(out, loadFixture("couldnt-read-one"));
+  });
+});
+
 describe("renderTemplate — HTML-escaping (T-03-01 / V5)", () => {
   it("escapes &, <, > in a dynamic client name before insertion", () => {
     const report: StudioReport = {
