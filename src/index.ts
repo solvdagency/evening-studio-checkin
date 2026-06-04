@@ -135,11 +135,37 @@ function buildRenderContext(
 }
 
 /**
+ * Injected dependencies for runNightly (the test seam). Each field defaults to
+ * the real implementation / the real env webhook, so `runNightly(now)` with no
+ * deps behaves exactly as before; a test passes stubs so NO network, Google,
+ * Productive, or process.env is touched.
+ *
+ * Determinism note (trust boundary, this module's header): deps carries NO clock.
+ * `now` stays the single injected clock — the import.meta.main entrypoint keeps
+ * the sole DateTime.now() read. The seam only swaps function references.
+ */
+export interface RunNightlyDeps {
+  gather: typeof gather;
+  gatherCalendar: typeof gatherCalendar;
+  postToChat: typeof postToChat;
+  webhookUrl: string;
+}
+
+/**
  * The nightly run. Returns a process exit code instead of calling
  * `process.exit` itself, so the orchestration is testable and the single exit
  * happens at the module bottom.
  */
-export async function runNightly(now: DateTime): Promise<number> {
+export async function runNightly(now: DateTime, deps?: Partial<RunNightlyDeps>): Promise<number> {
+  // Resolve injected deps, defaulting each to the real implementation / env
+  // webhook. No clock here — `now` is the only clock (trust boundary).
+  const resolvedDeps: RunNightlyDeps = {
+    gather: deps?.gather ?? gather,
+    gatherCalendar: deps?.gatherCalendar ?? gatherCalendar,
+    postToChat: deps?.postToChat ?? postToChat,
+    webhookUrl: deps?.webhookUrl ?? process.env.GCHAT_WEBHOOK_URL ?? "",
+  };
+
   // (1) Weekday guard (SCHED-01).
   if (shouldSkipForWeekend(now)) {
     console.log("weekend — skipping");
@@ -147,7 +173,7 @@ export async function runNightly(now: DateTime): Promise<number> {
   }
 
   // (2) Pull. gather never throws: any source failure lands in g.sourceErrors.
-  const g = await gather({ now });
+  const g = await resolvedDeps.gather({ now });
 
   // (3) Deterministic figures from the injected now (the report derives the
   //     target day itself, mirroring gather's derivation).
@@ -167,7 +193,7 @@ export async function runNightly(now: DateTime): Promise<number> {
   //      the run continues. reconcileMeetings is pure (no clock, no network, no
   //      hour math) — it reads the filtered events + the already-built per-designer
   //      booked-client sets + the committed alias/ignore config.
-  const cal = await gatherCalendar({ now });
+  const cal = await resolvedDeps.gatherCalendar({ now });
   const worthALook = reconcileMeetings(
     cal.eventsByDesigner,
     g.bookedClientsByDesignerDay,
@@ -192,7 +218,7 @@ export async function runNightly(now: DateTime): Promise<number> {
   // (6) The one outbound POST. The webhook URL is read here and passed straight
   //     in — never logged. A missing/empty URL deterministically yields a post
   //     failure below (REL-02), never a silent skip.
-  const posted = await postToChat(payload, process.env.GCHAT_WEBHOOK_URL ?? "");
+  const posted = await resolvedDeps.postToChat(payload, resolvedDeps.webhookUrl);
 
   // THE TWO-PATH RULE: a POST failure is NOT degraded-and-continue — it must
   // exit non-zero so GitHub's failed-run email fires (REL-02 / D-25). We log the
