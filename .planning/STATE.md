@@ -2,9 +2,9 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: executing
-stopped_at: Completed 06-01-PLAN.md
-last_updated: "2026-06-04T08:33:28.633Z"
+status: paused-at-checkpoint
+stopped_at: Paused at 06-03 human-verify checkpoint (Task 3)
+last_updated: "2026-06-04T09:10:00.000Z"
 last_activity: 2026-06-04
 progress:
   total_phases: 7
@@ -27,7 +27,12 @@ See: .planning/PROJECT.md (updated 2026-06-02)
 
 Phase: 06 (designer-working-day-availability) — EXECUTING
 Plan: 3 of 3
-Status: Ready to execute
+Status: PAUSED at 06-03 human-verify checkpoint (Task 3). Tasks 1 & 2 executed,
+committed, and green (full suite 303/303, tsc clean). Task 3 is a blocking
+checkpoint:human-verify — the operator (Liam) runs the live smoke check
+(`npx tsx --import dotenv/config src/index.ts` to the TEST Chat space) and approves
+via the orchestrator. Plan 06-03 is NOT complete and ROADMAP plan-progress is NOT
+marked complete pending that approval.
 Last activity: 2026-06-04
 
 Progress: [█████████░] 90%
@@ -138,6 +143,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-06-04T08:32:34.447Z
-Stopped at: Completed 06-01-PLAN.md
-Resume file: None
+Last session: 2026-06-04T09:10:00.000Z
+Stopped at: Paused at 06-03 human-verify checkpoint (Task 3) — awaiting operator smoke-check approval
+Resume file: .planning/phases/06-designer-working-day-availability/06-03-SUMMARY.md
