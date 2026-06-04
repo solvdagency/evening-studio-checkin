@@ -150,7 +150,16 @@ Plans:
   2. The optional LLM renderer writes the message prose and adjudicates fuzzy meeting reconciliation from pre-computed facts only, and the numbers in its output match the deterministic computed numbers exactly before anything is posted
   3. Any LLM failure (auth, timeout, schema, validation mismatch) falls back to the template renderer and posts, with a loud alert noting the LLM was skipped
 
-**Plans**: TBD
+**Plans**: 2 plans
+Plans:
+**Wave 1**
+
+- [ ] 05-01-PLAN.md — Prose-only LLM renderer behind the swappable contract + number-fidelity & fallback-integrity tests + flag-gated DI wiring (LLM-01)
+
+**Wave 2** *(blocked on Wave 1)*
+
+- [ ] 05-02-PLAN.md — Fuzzy keep/soften/drop meeting judgment behind a default-OFF toggle + offline flag-fairness eval over the Phase-4 labelled set (LLM-02)
+
 **Dependencies (external)**: Anthropic API key — a personal $5-credit key for development/testing, and an org-sanctioned key for production. Production cutover is gated on org approval of the sanctioned key; the Pro/Max subscription OAuth route is prohibited and must not be used. This entire phase is cuttable without affecting the shipped product.
 
 ### Phase 6: Hardening
@@ -177,5 +186,5 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | 2. Productive Pull & Briefed Discovery | 4/4 | Complete   | 2026-06-03 |
 | 3. Template Renderer & Chat Delivery | 4/4 | Complete   | 2026-06-04 |
 | 4. Calendar & Meeting Reconciliation | 4/4 | Complete   | 2026-06-04 |
-| 5. LLM Renderer (optional) | 0/TBD | Not started | - |
+| 5. LLM Renderer (optional) | 0/2 | Not started | - |
 | 6. Hardening | 0/TBD | Not started | - |
