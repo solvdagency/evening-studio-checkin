@@ -20,26 +20,35 @@ function booking(minutes: number, isTentative: boolean): Booking {
   return { designerId: DESIGNER, minutes, isTentative };
 }
 
-describe("availableMinutes (CAP-01 / D-02)", () => {
-  it("no absence -> full 450-minute day", () => {
-    assert.equal(availableMinutes(0), 450);
+describe("availableMinutes (CAP-06 / D-02 / D-03 — rostered-minutes basis)", () => {
+  it("full standard day, no absence -> 450 available", () => {
+    assert.equal(availableMinutes(450, 0), 450);
   });
 
-  it("2h absence (120min) -> 330 available (5.5h)", () => {
-    assert.equal(availableMinutes(120), 330);
+  it("standard day minus 2h absence (120min) -> 330 available (5.5h)", () => {
+    assert.equal(availableMinutes(450, 120), 330);
   });
 
-  it("full-day absence (450) -> floored at 0", () => {
-    assert.equal(availableMinutes(450), 0);
+  it("not rostered (0 rostered) -> 0 available regardless of absence", () => {
+    assert.equal(availableMinutes(0, 0), 0);
   });
 
-  it("over-full absence (600) -> floored at 0, never negative", () => {
-    assert.equal(availableMinutes(600), 0);
+  it("not rostered + absence still 0 available (floored)", () => {
+    assert.equal(availableMinutes(0, 120), 0);
+  });
+
+  it("over-full absence (600) on a 450 day -> floored at 0, never negative", () => {
+    assert.equal(availableMinutes(450, 600), 0);
+  });
+
+  it("non-finite rostered is coerced to 0 (defensive, never NaN — D-19)", () => {
+    assert.equal(availableMinutes(Number.NaN, 0), 0);
+    assert.equal(availableMinutes(Number.POSITIVE_INFINITY, 0), 0);
   });
 
   it("non-finite absence is treated defensively as 0 absence (D-19, never NaN)", () => {
-    assert.equal(availableMinutes(Number.NaN), 450);
-    assert.equal(availableMinutes(Number.POSITIVE_INFINITY), 450);
+    assert.equal(availableMinutes(450, Number.NaN), 450);
+    assert.equal(availableMinutes(450, Number.POSITIVE_INFINITY), 450);
   });
 });
 
@@ -82,8 +91,8 @@ describe("classifyDay (D-01 / D-03 / D-04 / D-06 / D-17)", () => {
 });
 
 describe("computeDesignerDay (composition + shaky + display rounding)", () => {
-  it("confirmed 0 + tentative 300 on a 450 day -> underbooked AND shaky, open stays 450", () => {
-    const r = computeDesignerDay(DESIGNER, [booking(300, true)], 0);
+  it("confirmed 0 + tentative 300 on a 450 rostered day -> underbooked AND shaky, open stays 450", () => {
+    const r = computeDesignerDay(DESIGNER, [booking(300, true)], 450, 0);
     assert.equal(r.status, "underbooked");
     assert.equal(r.shaky, true);
     assert.equal(r.openMin, 450);
@@ -93,33 +102,51 @@ describe("computeDesignerDay (composition + shaky + display rounding)", () => {
 
   it("shaky is orthogonal to status: an ok day can also be shaky", () => {
     // confirmed 450 (ok) + tentative 60 -> ok AND shaky
-    const r = computeDesignerDay(DESIGNER, [booking(450, false), booking(60, true)], 0);
+    const r = computeDesignerDay(DESIGNER, [booking(450, false), booking(60, true)], 450, 0);
     assert.equal(r.status, "ok");
     assert.equal(r.shaky, true);
   });
 
   it("shaky is false when there is no tentative time", () => {
-    const r = computeDesignerDay(DESIGNER, [booking(450, false)], 0);
+    const r = computeDesignerDay(DESIGNER, [booking(450, false)], 450, 0);
     assert.equal(r.shaky, false);
   });
 
-  it("a fully-off designer is classified off but still represented", () => {
-    const r = computeDesignerDay(DESIGNER, [], 450);
+  it("a fully-off designer (absence on a rostered day) is classified off but still represented", () => {
+    const r = computeDesignerDay(DESIGNER, [], 450, 450);
     assert.equal(r.status, "off");
     assert.equal(r.availableMin, 0);
     assert.equal(r.designerId, DESIGNER);
   });
 
+  it("a NOT-rostered day (0 rostered, 0 absence) is off, NOT underbooked (D-04)", () => {
+    const r = computeDesignerDay(DESIGNER, [], 0, 0);
+    assert.equal(r.status, "off");
+    assert.equal(r.availableMin, 0);
+  });
+
+  it("a NOT-rostered day stays off even with a zero booking present (D-04)", () => {
+    const r = computeDesignerDay(DESIGNER, [booking(0, false)], 0, 0);
+    assert.equal(r.status, "off");
+    assert.equal(r.availableMin, 0);
+  });
+
+  it("a real rostered day (450) with nothing booked is still underbooked, openMin 450 (no regression)", () => {
+    const r = computeDesignerDay(DESIGNER, [], 450, 0);
+    assert.equal(r.status, "underbooked");
+    assert.equal(r.openMin, 450);
+  });
+
   it("display rounding: availableMin 384 (6.4h) surfaces availableHours 6.5, exact min retained (D-16)", () => {
-    // 2h6m absence = 66min -> available 384min = 6.4h -> display 6.5h
-    const r = computeDesignerDay(DESIGNER, [], 66);
+    // rostered 450, 2h6m absence = 66min -> available 384min = 6.4h -> display 6.5h
+    const r = computeDesignerDay(DESIGNER, [], 450, 66);
     assert.equal(r.availableMin, 384);
     assert.equal(r.availableHours, 6.5);
   });
 
   it("bookedHours surfaces confirmed display hours; openHours rounds the open figure", () => {
     // confirmed 420min = 7.0h booked; open 30min = 0.5h
-    const r = computeDesignerDay(DESIGNER, [booking(420, false)], 0);
+    const r = computeDesignerDay(DESIGNER, [booking(420, false)], 450, 0);
     assert.equal(r.bookedHours, 7.0);
     assert.equal(r.openHours, 0.5);
   });
