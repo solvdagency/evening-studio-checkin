@@ -4,13 +4,13 @@ milestone: v1.0
 milestone_name: milestone
 status: executing
 stopped_at: Completed 04-02-PLAN.md
-last_updated: "2026-06-04T04:16:47.436Z"
+last_updated: "2026-06-04T04:24:14.268Z"
 last_activity: 2026-06-04
 progress:
   total_phases: 6
   completed_phases: 3
   total_plans: 15
-  completed_plans: 13
+  completed_plans: 14
   percent: 50
 ---
 
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-06-02)
 ## Current Position
 
 Phase: 04 (calendar-meeting-reconciliation) — EXECUTING
-Plan: 3 of 4
+Plan: 4 of 4
 Status: Ready to execute
 Last activity: 2026-06-04
 
-Progress: [█████████░] 87%
+Progress: [█████████░] 93%
 
 ## Performance Metrics
 
@@ -62,6 +62,7 @@ Progress: [█████████░] 87%
 | Phase 02 P04 | 25min | 2 tasks | 2 files |
 | Phase 04 P01 | 15 | 3 tasks | 12 files |
 | Phase 04 P02 | 8min | 3 tasks | 2 files |
+| Phase 04 P03 | 6min | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -90,6 +91,8 @@ Recent decisions affecting current work:
 - [Phase ?]: [Phase 4]: Calendar is a non-throwing additive source (gatherCalendar) mirroring productive/gather — per-designer degrade via sourceErrors, tolerant zod safeParse boundary, injected stubbable fetchEvents; googleapis ^173.
 - [Phase ?]: [Phase 4]: Labelling spike (D-09) committed — MEETING_IGNORE_LIST +travel time (pre-empts Stevedores false match); CLIENT_ALIAS_MAP = 8 confirmed companies; Problem/SOLVD now COUNTS as SOLVD Agency internal time; no bare Solvd/Thirdi alias; Streem != Stream Hill.
 - [Phase ?]: [Phase 4]: A2 carry-forward — no outOfOffice/all-day/declined-self events in the 28-day live window; those golden fixtures hand-built; plan 03 must still implement+test those filter paths.
+- [Phase 4]: Filters + reconciler are a PURE rules layer (filter.ts/reconcile.ts) — no domain/capacity import, no clock, no network (T-04-08); read only FilteredEvent + the pre-built Set<companyId> + CLIENT_ALIAS_MAP. 42 truth-table/golden tests; full suite 210 green.
+- [Phase 4]: matchTitleToClient is longest-alias-first with a double-match→null guard; reconcileMeetings stays SILENT on unmatched/ambiguous titles (D-04) and applies the ignore-list (via isCountingMeeting) before alias resolution. Both golden FDC cases resolve exactly (3 Jun covered, 26 May worth-a-look).
 
 ### Pending Todos
 
@@ -115,6 +118,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-06-04T04:16:47.425Z
+Last session: 2026-06-04T04:24:14.263Z
 Stopped at: Completed 04-02-PLAN.md
 Resume file: None
