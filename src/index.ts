@@ -7,6 +7,8 @@
  *
  *   gather(deps)              (src/productive/gather.ts) — pull + degrade-on-failure
  *     → computeStudioReport   (src/domain/report.ts)     — deterministic figures
+ *     → gatherCalendar(deps)  (src/calendar/gather.ts)   — additive source, degrades
+ *       → reconcileMeetings   (src/calendar/reconcile.ts)— pure 📅 worth-a-look list
  *       → renderTemplate      (src/render/renderMessage.ts) — Cards v2 payload
  *         → postToChat        (src/chat/postToChat.ts)    — the one outbound POST
  *
@@ -35,13 +37,21 @@ import { DateTime } from "luxon";
 import { STUDIO_ZONE } from "./domain/types.ts";
 import type { DesignerId } from "./domain/types.ts";
 import { gather } from "./productive/gather.ts";
+import { gatherCalendar } from "./calendar/gather.ts";
+import { reconcileMeetings } from "./calendar/reconcile.ts";
 import { computeStudioReport } from "./domain/report.ts";
 import type { StudioReportInput } from "./domain/report.ts";
 import { minutesToHours, roundToQuarterHour } from "./domain/round.ts";
 import { renderTemplate } from "./render/renderMessage.ts";
 import type { RenderContext } from "./render/cards.ts";
 import { postToChat } from "./chat/postToChat.ts";
-import { DESIGNER_PERSON_IDS, DESIGNER_NAMES, STUDIO_CLOSURES } from "./config.ts";
+import {
+  DESIGNER_PERSON_IDS,
+  DESIGNER_NAMES,
+  STUDIO_CLOSURES,
+  CLIENT_ALIAS_MAP,
+  MEETING_IGNORE_LIST,
+} from "./config.ts";
 
 /**
  * Pure weekday guard (SCHED-01, defence-in-depth). The cron is already weekday-
@@ -86,6 +96,7 @@ function buildRenderContext(
   sourceErrors: string[],
   briefFlags: RenderContext["briefFlags"],
   holidays: ReadonlySet<string>,
+  worthALook: RenderContext["worthALook"],
 ): RenderContext {
   // Tentative (shaky) hours surfaced from the deterministic report so a designer
   // with only tentative work doesn't read as fully open (live-corrected 2026-06-04).
@@ -105,6 +116,7 @@ function buildRenderContext(
     sourceErrors,
     briefFlags,
     tentativeNotes,
+    worthALook,
     header: {
       subtitle: subtitleFor(report.targetDay),
       targetDate: report.targetDay,
@@ -149,9 +161,32 @@ export async function runNightly(now: DateTime): Promise<number> {
   };
   const report = computeStudioReport(input);
 
-  // (4) Presentation context + (5) render the Cards v2 payload. A source failure
-  //     is already in g.sourceErrors → the renderer emits the degraded card.
-  const ctx = buildRenderContext(report, g.sourceErrors, g.briefFlags, g.holidays);
+  // (3b) Calendar — an ADDITIVE data source (Phase 4). Uses the SAME injected
+  //      `now` so calendar and Productive agree on the target day. gatherCalendar
+  //      never throws: a per-designer read failure lands in cal.sourceErrors and
+  //      the run continues. reconcileMeetings is pure (no clock, no network, no
+  //      hour math) — it reads the filtered events + the already-built per-designer
+  //      booked-client sets + the committed alias/ignore config.
+  const cal = await gatherCalendar({ now });
+  const worthALook = reconcileMeetings(
+    cal.eventsByDesigner,
+    g.bookedClientsByDesignerDay,
+    CLIENT_ALIAS_MAP,
+    MEETING_IGNORE_LIST,
+  );
+
+  // (4) Presentation context + (5) render the Cards v2 payload. ANY source failure
+  //     — Productive OR Calendar — is concatenated into the degrade list here, so a
+  //     calendar outage flows through the existing 🤖 degraded card and STILL posts
+  //     (REL-01). The two-path rule: calendar is a DATA source (degrade + exit 0),
+  //     never the POST-failure exit-1 branch below.
+  const ctx = buildRenderContext(
+    report,
+    [...g.sourceErrors, ...cal.sourceErrors],
+    g.briefFlags,
+    g.holidays,
+    worthALook,
+  );
   const payload = renderTemplate(report, ctx);
 
   // (6) The one outbound POST. The webhook URL is read here and passed straight
