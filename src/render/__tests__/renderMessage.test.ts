@@ -383,6 +383,90 @@ describe("renderTemplate — half-day leave row (D-22 partial)", () => {
   });
 });
 
+describe("renderTemplate — 📅 worth-a-look sub-line (D-14 / MEET-04 / MSG-06)", () => {
+  /** A busy report with the three designers so the rows section renders. */
+  function worthALookReport(): StudioReport {
+    return {
+      targetDay: "2026-06-04",
+      window: ["2026-06-04"],
+      designers: [
+        designer({
+          designerId: ANISHA,
+          status: "underbooked",
+          openHours: 7.5,
+          openMin: h(7.5),
+          bookedHours: 0,
+        }),
+        designer({
+          designerId: ELLA,
+          status: "underbooked",
+          confirmedMin: h(4.5),
+          openMin: h(3),
+          availableHours: 7.5,
+          bookedHours: 4.5,
+          openHours: 3.0,
+        }),
+        designer({ designerId: LIAM, status: "ok", confirmedMin: h(7.5), bookedHours: 7.5 }),
+      ],
+      rollup: { totalMin: h(45), openMin: h(10.5), totalHours: 45, openHours: 10.5 },
+      missingDesigners: [],
+    };
+  }
+
+  const FIX = loadFixture("worth-a-look") as {
+    worthALook: Record<string, Array<{ title: string; start: string; link: string }>>;
+  };
+
+  it("renders a soft, deep-linked 📅 line under the relevant designer", () => {
+    const out = renderTemplate(worthALookReport(), ctx({ worthALook: FIX.worthALook }));
+    // Liam (index 2) gets the FDC line.
+    const rowSection = out.cardsV2[0].card.sections[1];
+    const liamRow = rowSection.widgets[2];
+    assert.ok("decoratedText" in liamRow);
+    const text = liamRow.decoratedText.text;
+    assert.match(
+      text,
+      /📅 <a href="https:\/\/www\.google\.com\/calendar\/event\?eid=abc">FDC IPO Launch Check-In<\/a>/,
+    );
+    assert.match(text, /9:00am/);
+    assert.match(text, /worth a look/);
+  });
+
+  it("uses the soft 'worth a look' voice — never 'conflict'", () => {
+    const out = renderTemplate(worthALookReport(), ctx({ worthALook: FIX.worthALook }));
+    const json = JSON.stringify(out);
+    assert.ok(json.includes("worth a look"), "soft voice present");
+    assert.ok(!/conflict/i.test(json), "never asserts a conflict");
+  });
+
+  it("HTML-escapes the title and link (T-04-11) — a <script> title is never raw", () => {
+    const out = renderTemplate(worthALookReport(), ctx({ worthALook: FIX.worthALook }));
+    const rowSection = out.cardsV2[0].card.sections[1];
+    // Anisha (index 0) carries the XSS-shaped fixture entry.
+    const anishaRow = rowSection.widgets[0];
+    assert.ok("decoratedText" in anishaRow);
+    const text = anishaRow.decoratedText.text;
+    assert.match(text, /&lt;script&gt;/, "title is escaped");
+    assert.doesNotMatch(text, /<script>/, "no raw script tag injected");
+    assert.match(text, /eid=xss&amp;q=1/, "link & is escaped");
+  });
+
+  it("a designer with no worthALook entry renders no 📅 line", () => {
+    const out = renderTemplate(worthALookReport(), ctx({ worthALook: FIX.worthALook }));
+    const rowSection = out.cardsV2[0].card.sections[1];
+    // Ella (index 1) has no fixture entry.
+    const ellaRow = rowSection.widgets[1];
+    assert.ok("decoratedText" in ellaRow);
+    assert.doesNotMatch(ellaRow.decoratedText.text, /📅/);
+  });
+
+  it("an absent worthALook map is a no-op (no 📅 line anywhere)", () => {
+    const out = renderTemplate(worthALookReport(), ctx({}));
+    const json = JSON.stringify(out);
+    assert.ok(!json.includes("📅"), "no 📅 line when worthALook is absent");
+  });
+});
+
 describe("renderTemplate — HTML-escaping (T-03-01 / V5)", () => {
   it("escapes &, <, > in a dynamic client name before insertion", () => {
     const report: StudioReport = {

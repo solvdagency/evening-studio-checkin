@@ -1,0 +1,18 @@
+{
+  "worthALook": {
+    "686717": [
+      {
+        "title": "FDC IPO Launch Check-In",
+        "start": "9:00am",
+        "link": "https://www.google.com/calendar/event?eid=abc"
+      }
+    ],
+    "686712": [
+      {
+        "title": "Tom & <script>alert(1)</script>",
+        "start": "2:30pm",
+        "link": "https://www.google.com/calendar/event?eid=xss&q=1"
+      }
+    ]
+  }
+}
