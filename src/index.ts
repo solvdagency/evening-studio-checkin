@@ -43,7 +43,8 @@ import { computeStudioReport } from "./domain/report.ts";
 import type { StudioReportInput } from "./domain/report.ts";
 import { minutesToHours, roundToQuarterHour } from "./domain/round.ts";
 import { renderTemplate } from "./render/renderMessage.ts";
-import type { RenderContext } from "./render/cards.ts";
+import type { CardsV2Payload, RenderContext } from "./render/cards.ts";
+import { renderLlmOrTemplate } from "./llm/renderLlm.ts";
 import { postToChat } from "./chat/postToChat.ts";
 import {
   DESIGNER_PERSON_IDS,
@@ -157,6 +158,18 @@ export interface RunNightlyDeps {
   gatherCalendar: typeof gatherCalendar;
   postToChat: typeof postToChat;
   webhookUrl: string;
+  /**
+   * The card renderer (the LLM-01 swap seam). Defaults to the optional LLM prose
+   * renderer when `process.env.USE_LLM_RENDERER === "true"`, else the always-
+   * available deterministic `renderTemplate`. May be async (the LLM path is). An
+   * LLM failure degrades-and-posts inside the renderer (REL-01) — it never reaches
+   * the POST-failure exit-1 branch. With the flag unset, behaviour is byte-identical
+   * to today (renderTemplate is called directly).
+   */
+  renderMessage: (
+    report: ReturnType<typeof computeStudioReport>,
+    ctx: RenderContext,
+  ) => CardsV2Payload | Promise<CardsV2Payload>;
 }
 
 /**
@@ -172,6 +185,11 @@ export async function runNightly(now: DateTime, deps?: Partial<RunNightlyDeps>):
     gatherCalendar: deps?.gatherCalendar ?? gatherCalendar,
     postToChat: deps?.postToChat ?? postToChat,
     webhookUrl: deps?.webhookUrl ?? process.env.GCHAT_WEBHOOK_URL ?? "",
+    // LLM-01 swap: opt-in via USE_LLM_RENDERER. The LLM renderer self-falls-back to
+    // renderTemplate + degraded note on any failure, so this never throws (REL-01).
+    renderMessage:
+      deps?.renderMessage ??
+      (process.env.USE_LLM_RENDERER === "true" ? renderLlmOrTemplate : renderTemplate),
   };
 
   // (1) Weekday guard (SCHED-01).
@@ -234,7 +252,9 @@ export async function runNightly(now: DateTime, deps?: Partial<RunNightlyDeps>):
     worthALook,
     cal.sourceErrors.length > 0,
   );
-  const payload = renderTemplate(report, ctx);
+  // The injected renderer may be async (the LLM path). An LLM failure degrades and
+  // still returns a complete payload here (REL-01) — only the POST below can exit 1.
+  const payload = await resolvedDeps.renderMessage(report, ctx);
 
   // (6) The one outbound POST. The webhook URL is read here and passed straight
   //     in — never logged. A missing/empty URL deterministically yields a post
