@@ -117,8 +117,26 @@ Plans:
   3. Meetings that appear unaccounted for are surfaced as "worth a look" (visually distinguished), biased against false positives rather than asserted as definite conflicts
   4. In a real-evening pilot the team agrees with every flag the reconciliation raises before it is wired into daily posting
 
-**Plans**: TBD
-**Dependencies (external)**: Google Calendar via service account + domain-wide delegation with `calendar.readonly` — requires a Google Workspace admin to authorise the service account's client ID before this phase can complete. Surface and confirm this dependency at phase start.
+**Plans**: 4 plans
+**Mode:** mvp
+Plans:
+**Wave 1**
+
+- [ ] 04-01-PLAN.md — googleapis dep + calendar config + calendar read boundary (auth/schemas/client/gather) + booked-client set from Productive (Open Q1)
+
+**Wave 2** *(blocked on Wave 1)*
+
+- [ ] 04-02-PLAN.md — Live-data labelling spike (D-09): committed ignore-list + client-alias map + golden fixtures, with a human-labelling checkpoint
+
+**Wave 3** *(blocked on Wave 2)*
+
+- [ ] 04-03-PLAN.md — Pure mechanical filters + same-day same-client reconciler (TDD; the two golden cases)
+
+**Wave 4** *(blocked on Wave 3)*
+
+- [ ] 04-04-PLAN.md — 📅 "worth a look" sub-line + wire calendar gather/reconcile into runNightly (degrade path)
+
+**Dependencies (external)**: Google Calendar via service account + domain-wide delegation with `calendar.readonly` — live-validated 2026-06-04 (STATE.md); execution adds the `GOOGLE_SA_KEY` GitHub secret and the `googleapis ^173` dependency.
 
 ### Phase 5: LLM Renderer (optional)
 
@@ -158,6 +176,6 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | 1. Core Math & Clock | 3/3 | Complete   | 2026-06-02 |
 | 2. Productive Pull & Briefed Discovery | 4/4 | Complete   | 2026-06-03 |
 | 3. Template Renderer & Chat Delivery | 4/4 | Complete   | 2026-06-04 |
-| 4. Calendar & Meeting Reconciliation | 0/TBD | Not started | - |
+| 4. Calendar & Meeting Reconciliation | 0/4 | Not started | - |
 | 5. LLM Renderer (optional) | 0/TBD | Not started | - |
 | 6. Hardening | 0/TBD | Not started | - |
