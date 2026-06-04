@@ -204,39 +204,69 @@ export const ProjectResource = z.object({
 
 /**
  * A single `availabilities` period on a `/people` resource (plan 06-02, CAP-06).
- * Productive returns the designer's working-day pattern as an array of these on the
- * person ATTRIBUTES block: `[{ started_on, ended_on, working_hours, holiday_calendar_id }]`.
- * Boundary discipline (header lines 1-15): validate only the fields used, tolerate
- * extras (`.loose()`), and only ever `.safeParse` this — never `.parse`.
+ *
+ * LIVE SHAPE (confirmed against the real /people payload 2026-06-04, correcting the
+ * plan-06-02 assumption): each period is a positional TUPLE, NOT an object —
+ * `[started_on, ended_on, working_hours, holiday_calendar_id]`. The whole
+ * `availabilities` value is itself a JSON-encoded string (see PersonResource).
+ * We validate the tuple here and `.transform()` it into the named-field object the
+ * mapper consumes (mappers.ts RawAvailabilityForMapping), so all wire-shape handling
+ * stays at this boundary and `availabilityToWeekdayMinutes` keeps reading clean fields.
+ * Boundary discipline (header lines 1-15): validate only what's used, tolerate trailing
+ * fields (`.rest`), and only ever `.safeParse` this — never `.parse`.
  *  - `ended_on` is nullable (D-01): null = current/open-ended period.
  *  - `working_hours` is a numeric array; length is NOT pinned here (7 vs 14 is the
  *    mapper's job, D-08 — see mappers.ts availabilityToWeekdayMinutes).
- *  - `holiday_calendar_id` is captured-but-unused (the app keeps its own NSW set).
+ *  - `holiday_calendar_id` (tuple index 3) is captured-but-unused (own NSW set kept).
  */
 export const AvailabilityPeriod = z
-  .object({
-    started_on: z.string(),
-    ended_on: z.string().nullable(),
-    working_hours: z.array(z.number()),
-    holiday_calendar_id: z.number().nullable().optional(),
-  })
-  .loose();
+  .tuple([
+    z.string(), // [0] started_on
+    z.string().nullable(), // [1] ended_on (null = open-ended, D-01)
+    z.array(z.number()), // [2] working_hours (7- or 14-element; mapper handles, D-08)
+  ])
+  .rest(z.unknown()) // [3+] holiday_calendar_id and any future trailing fields — tolerated
+  .transform(([started_on, ended_on, working_hours, holiday_calendar_id]) => ({
+    started_on,
+    ended_on,
+    working_hours,
+    holiday_calendar_id: typeof holiday_calendar_id === "number" ? holiday_calendar_id : null,
+  }));
+
+/**
+ * Productive serialises `attributes.availabilities` as a JSON-encoded STRING
+ * (confirmed against the live /people payload 2026-06-04 — NOT a native array, which
+ * is what plan 06-02 first assumed and why every designer failed validation). Parse
+ * it here at the boundary: a non-string is passed through untouched, and malformed
+ * JSON is returned as-is so the downstream `z.array(AvailabilityPeriod)` fails the
+ * safeParse → that designer degrades to "couldn't read" (D-06), never a fabricated
+ * capacity.
+ */
+function parseAvailabilitiesJson(value: unknown): unknown {
+  if (typeof value !== "string") return value;
+  try {
+    return JSON.parse(value);
+  } catch {
+    return value;
+  }
+}
 
 /**
  * A `/people` resource carrying the designer's working-day availability (plan
  * 06-02, CAP-06). Mirrors `AllocationResource`'s id/type/attributes shape. The
  * load-bearing field is `attributes.availabilities`; the attributes object is
  * `.loose()` so every other person attribute (name, email, etc.) is tolerated and
- * never breaks the parse. `availabilities` is OPTIONAL so a person row missing it
- * still parses (the mapper then yields all-zero → that designer reads as missing,
- * D-06, never a fabricated capacity). safeParse-only (header lines 1-15).
+ * never breaks the parse. `availabilities` arrives as a JSON string (decoded by
+ * `parseAvailabilitiesJson`) of tuple periods; it is OPTIONAL so a person row
+ * missing it still parses (the mapper then yields all-zero → that designer reads as
+ * missing, D-06, never a fabricated capacity). safeParse-only (header lines 1-15).
  */
 export const PersonResource = z.object({
   id: z.string(),
   type: z.literal("people"),
   attributes: z
     .object({
-      availabilities: z.array(AvailabilityPeriod).optional(),
+      availabilities: z.preprocess(parseAvailabilitiesJson, z.array(AvailabilityPeriod)).optional(),
     })
     .loose(),
 });

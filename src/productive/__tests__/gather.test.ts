@@ -20,6 +20,7 @@ import { DateTime } from "luxon";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { gather, type GatherDeps } from "../gather.ts";
+import { PersonResource } from "../schemas.ts";
 import { computeStudioReport } from "../../domain/report.ts";
 import { STUDIO_ZONE } from "../../domain/types.ts";
 import type { DesignerId } from "../../domain/types.ts";
@@ -125,8 +126,11 @@ function allocation(
 /**
  * A /people resource carrying a designer's availabilities (plan 06-02). `wh` is
  * the working_hours array (7- or 14-element); an open-ended current period since
- * 2026-03-09 (mirrors the live shape). Pass `null` working_hours to emit an entry
- * with NO availabilities period (designer present, no rostered data).
+ * 2026-03-09. Mirrors the REAL live shape (confirmed 2026-06-04): `availabilities`
+ * is a JSON-encoded STRING of positional tuples
+ * `[started_on, ended_on, working_hours, holiday_calendar_id]`. Pass `null`
+ * working_hours to emit an entry with NO availabilities period (designer present,
+ * no rostered data).
  */
 function personResource(id: string, wh: number[] | null): unknown {
   return {
@@ -136,14 +140,7 @@ function personResource(id: string, wh: number[] | null): unknown {
       wh === null
         ? {}
         : {
-            availabilities: [
-              {
-                started_on: "2026-03-09",
-                ended_on: null,
-                working_hours: wh,
-                holiday_calendar_id: null,
-              },
-            ],
+            availabilities: JSON.stringify([["2026-03-09", null, wh, 35022]]),
           },
   };
 }
@@ -824,6 +821,47 @@ describe("gather (composition root — pull → validate → map → assess → 
       assert.deepEqual(out.assessedDesigners, []);
       // The degraded() early-return still exposes a safe rosteredMinutes (→ 0).
       assert.equal(out.rosteredMinutes(liam, TARGET), 0);
+    });
+  });
+
+  /**
+   * Regression guard (06-03 smoke check, 2026-06-04): the live /people payload
+   * serialises `availabilities` as a JSON-encoded STRING of positional tuples
+   * `[started_on, ended_on, working_hours, holiday_calendar_id]` — NOT the array of
+   * objects plan 06-02 first assumed. That mismatch made every designer fail
+   * validation in production while all unit fixtures passed. These cases pin the
+   * EXACT live wire shape so the boundary can never silently drift from it again.
+   */
+  describe("PersonResource — real live availabilities wire shape", () => {
+    // A verbatim copy of Anisha's live attributes.availabilities value (686712,
+    // captured 2026-06-04): a JSON string whose periods are positional tuples and
+    // whose current week is off Wed & Fri.
+    const LIVE_AVAILABILITIES_STRING =
+      '[["2024-03-27", "2025-07-01", [7.5, 7.5, 7.5, 7.5, 7.5, 0, 0, 7.5, 7.5, 7.5, 7.5, 7.5, 0, 0], 35022], ["2026-03-09", null, [7.5, 7.5, 0, 7.5, 0, 0, 0, 7.5, 7.5, 0, 7.5, 0, 0, 0], 35022]]';
+
+    it("parses the JSON-string-of-tuples and transforms to named-field periods", () => {
+      const parsed = PersonResource.safeParse({
+        id: "686712",
+        type: "people",
+        attributes: { first_name: "Anisha", availabilities: LIVE_AVAILABILITIES_STRING },
+      });
+      assert.ok(parsed.success, "live availabilities string must safeParse");
+      const periods = parsed.data.attributes.availabilities ?? [];
+      assert.equal(periods.length, 2);
+      const current = periods[periods.length - 1];
+      assert.equal(current.started_on, "2026-03-09");
+      assert.equal(current.ended_on, null);
+      assert.deepEqual(current.working_hours, [7.5, 7.5, 0, 7.5, 0, 0, 0, 7.5, 7.5, 0, 7.5, 0, 0, 0]);
+      assert.equal(current.holiday_calendar_id, 35022);
+    });
+
+    it("a non-JSON availabilities string fails safeParse (→ designer degrades, never fabricated)", () => {
+      const parsed = PersonResource.safeParse({
+        id: "686712",
+        type: "people",
+        attributes: { availabilities: "not json" },
+      });
+      assert.equal(parsed.success, false);
     });
   });
 });

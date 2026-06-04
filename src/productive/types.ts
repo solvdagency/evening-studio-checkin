@@ -79,11 +79,14 @@ export interface RawWorkflowStatusAttributes {
 }
 
 /**
- * Raw `/people` availabilities period (plan 06-02, CAP-06). One entry of the
- * `availabilities` array on a person resource's attributes block: the designer's
- * working-day pattern for an inclusive [started_on, ended_on] date range. Boundary
- * rule (header lines 1-11): stays INSIDE src/productive/ — the mapper converts it
- * to clean per-weekday minutes; this raw shape MUST NOT cross into src/domain.
+ * Raw `/people` availabilities period (plan 06-02, CAP-06). The designer's
+ * working-day pattern for an inclusive [started_on, ended_on] date range. NOTE: on
+ * the wire (confirmed live 2026-06-04) `attributes.availabilities` is a JSON-encoded
+ * STRING whose periods are positional tuples `[started_on, ended_on, working_hours,
+ * holiday_calendar_id]`; schemas.ts `AvailabilityPeriod` decodes + transforms each
+ * into THIS named-field object before the mapper sees it. Boundary rule (header
+ * lines 1-11): stays INSIDE src/productive/ — the mapper converts it to clean
+ * per-weekday minutes; this raw shape MUST NOT cross into src/domain.
  */
 export interface RawAvailability {
   /** Period start, "yyyy-MM-dd". */
