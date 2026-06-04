@@ -28,7 +28,7 @@ See: .planning/PROJECT.md (updated 2026-06-02)
 Phase: 05 (llm-renderer-optional) — EXECUTING
 Plan: 1 of 2
 Status: Executing Phase 05
-Last activity: 2026-06-04 -- Phase 05 execution started
+Last activity: 2026-06-04 -- Completed quick task 260604-nv0: matter-of-fact LLM header tone
 
 Progress: [██████████] 100%
 
@@ -120,6 +120,7 @@ None yet.
 | 260604-l0j | Calendar-only failure keeps Productive figures + clean note (no leaked key) | 2026-06-04 | afb98a5 | [260604-l0j-calendar-only-failure-keeps-productive-f](./quick/260604-l0j-calendar-only-failure-keeps-productive-f/) |
 | 260604-lco | 📅 line: plain text + duration + "not in Productive" (overrides MSG-06 deep-link) | 2026-06-04 | a36601e | [260604-lco-worth-a-look-line-plain-text-show-durati](./quick/260604-lco-worth-a-look-line-plain-text-show-durati/) |
 | fast | Mute the ⚠️ tentative line text to match the other grey sub-lines | 2026-06-04 | 2a3c2f9 | — |
+| 260604-nv0 | Matter-of-fact LLM header tone — drop "worth X" tails | 2026-06-04 | b1cee04 | [260604-nv0-matter-of-fact-llm-header-tone](./quick/260604-nv0-matter-of-fact-llm-header-tone/) |
 
 ## Deferred Items
 
