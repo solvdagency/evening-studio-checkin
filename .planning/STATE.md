@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: completed
+status: executing
 stopped_at: Phase 7 context gathered
-last_updated: "2026-06-04T10:33:45.193Z"
-last_activity: 2026-06-04 -- Phase 05 closed (LLM-02 approved)
+last_updated: "2026-06-04T10:51:54.432Z"
+last_activity: 2026-06-04
 progress:
   total_phases: 7
   completed_phases: 6
-  total_plans: 20
-  completed_plans: 20
+  total_plans: 22
+  completed_plans: 21
   percent: 86
 ---
 
@@ -21,25 +21,26 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-02)
 
 **Core value:** Every evening the team gets one clear, trustworthy heads-up of exactly what needs fixing before tomorrow — so the three designers start the day with full, briefed workloads instead of chasing the work themselves.
-**Current focus:** Phase 07 — Hardening (next; not started)
+**Current focus:** Phase 07 — hardening
 
 ## Current Position
 
-Phase: 05 (llm-renderer-optional) — COMPLETE (2/2)
-Plan: 2 of 2 done
-Status: 05-02 COMPLETE. Task 4 blocking flag-fairness checkpoint APPROVED — the operator
-ran `scripts/eval-llm-renderer.ts` live against haiku-4-5 with the dev key: PASS / exit 0,
-the one genuine client-work flag (`FDC IPO Launch Check-In`) kept, drops-of-genuine = 0,
-toggle ships OFF. LLM-02 validated. Suite 319 green, tsc clean, toggle OFF = byte-identical
-to Slice 1. Phase 5 closed; the only remaining phase is Phase 7 (Hardening), which is
-independent of Phases 4/5 and not yet planned.
-Follow-up logged (do NOT act now): `labelled-events.json` has only 1 genuine case, so the
-harness has not yet exercised soften/drop on borderline/overhead meetings — expand the
-labelled set with 2-3 borderline cases and re-run the eval BEFORE the
-`USE_LLM_MEETING_JUDGMENT` toggle is ever enabled in production.
-Last activity: 2026-06-04 -- Phase 05 closed (LLM-02 approved)
+Phase: 07 (hardening) — EXECUTING
+Plan: 2 of 2
+Status: Plan 07-01 complete; ready to execute 07-02
+Plan 07-01 (marker / run-log module) DONE: `src/run/marker.ts` + tests shipped via TDD
+(RED 19ede48 → GREEN 94cfb23). Delivers the idempotency-marker / structured-run-log
+primitives behind an injectable fs seam — markerDateKey (single-clock, no live read),
+markerPath (.runs/<date>.json), readMarker (existence-only), writeMarker (Result-shaped,
+never-throws, D-07-fail), buildRunLog (redacted, D-08). NOT yet wired into runNightly
+(src/index.ts untouched) — that is 07-02. Full suite 328 green, tsc clean; the
+`DateTime.now(` and secret-name grep gates both pass (0 hits).
+NOTE: REL-03 stays Pending — 07-01 is only the primitives; 07-02 wires the scheduled-only
+guard + post-success write + nightly.yml commit step, which is what closes REL-03 and fixes
+its Phase-6→Phase-7 traceability mapping.
+Last activity: 2026-06-04 -- Plan 07-01 complete
 
-Progress: [████████▌ ] 86%
+Progress: [██████████] 95%
 
 ## Performance Metrics
 
@@ -75,6 +76,7 @@ Progress: [████████▌ ] 86%
 | Phase 04 P04 | 3min | 2 tasks | 6 files |
 | Phase 06 P01 | 3min | 2 tasks tasks | 5 files files |
 | Phase 06 P02 | 9min | 2 tasks | 7 files |
+| Phase 07 P01 | 2min | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -115,6 +117,7 @@ Recent decisions affecting current work:
 - [Phase 05-02]: Ships behind `USE_LLM_MEETING_JUDGMENT`, DEFAULT OFF — with it off the card is byte-identical to Slice-1-only; judgment only applies when BOTH USE_LLM_RENDERER and USE_LLM_MEETING_JUDGMENT are on. Cleanly separable from Slice 1.
 - [Phase 05-02]: `soften` carries the RAW model line into the worth-a-look title; escaping happens once at the renderer boundary (rows.ts escapeHtml, T-05-07) — `applyVerdicts` deliberately does NOT pre-escape (avoids double-escape; deviates from the literal plan must_have wording).
 - [Phase 05-02]: The never-drop-a-genuine-flag rule has two halves — STRUCTURAL (flagFairness.test.ts, network-free, in CI: a genuine flag survives no-verdict/keep/unknown-id) + BEHAVIOURAL (scripts/eval-llm-renderer.ts, dev key, OFF-CI: hard-fails if the model EMITS a drop for a genuine-labelled meeting). LLM-02 trusted only after the operator runs the harness and approves.
+- [Phase 07-01]: Idempotency marker + structured run log are ONE committed `.runs/<studio-local-date>.json` (D-01). `src/run/marker.ts` derives the date key from the injected `now` only (no live clock read, D-03 single-clock boundary), exposes an injectable `MarkerFs` seam mirroring `RunNightlyDeps` default-to-real DI, `writeMarker` is Result-shaped and never throws (D-07-fail), and `buildRunLog` carries only counts/booleans/date/enum + an already-redacted `postOutcome` (D-08). Primitives only — wiring into `runNightly` + nightly.yml is 07-02; REL-03 stays Pending until then.
 
 ### Pending Todos
 
@@ -151,6 +154,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-06-04T10:33:45.181Z
-Stopped at: Phase 7 context gathered
-Resume file: .planning/phases/07-hardening/07-CONTEXT.md
+Last session: 2026-06-04T10:51:00.000Z
+Stopped at: Completed 07-01-PLAN.md (marker / run-log module)
+Resume file: .planning/phases/07-hardening/07-02-PLAN.md
