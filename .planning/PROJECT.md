@@ -8,6 +8,16 @@ A nightly automation for a design/marketing agency's creative studio. Every week
 
 Every evening the team gets one clear, trustworthy heads-up of exactly what needs fixing before tomorrow — so the three designers start the day with full, briefed workloads instead of chasing the work themselves.
 
+## Current State
+
+**Shipped: v1.0 (MVP) — 2026-06-04.** All 7 phases complete (22 plans, 25/25 requirements, full suite 334 green, `tsc` clean). The nightly automation is feature-complete: deterministic capacity/brief math, live Productive pull with the discovered "briefed" mapping, per-designer working-day availability, Google Calendar meeting reconciliation, an on-brand Cards v2 message with scheduled weekday posting + degraded mode, an optional default-OFF LLM prose/fuzzy-meeting layer, and idempotency + structured run logging. Milestone audit: `tech_debt` (no blockers). See [`milestones/v1.0-ROADMAP.md`](milestones/v1.0-ROADMAP.md) and [`v1.0-MILESTONE-AUDIT.md`](v1.0-MILESTONE-AUDIT.md).
+
+**Carried-forward tech debt (none blocking):** Phase 4 live-run validation; Phase 5 eval-fixture expansion before enabling the meeting-judgment toggle in prod; Phase 6 D-06 degrade-path refinement.
+
+## Next Milestone Goals
+
+None defined yet. Likely candidates from the v2 backlog: Gmail as a secondary delivery channel (GMAIL-01), brief-*quality* analysis (BQ-01), resourcing-health history/trends (HIST-01). Run `/gsd:new-milestone` to define fresh requirements and a roadmap (phase numbering continues from 8).
+
 ## Requirements
 
 ### Validated

@@ -2,9 +2,9 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: milestone-complete
-stopped_at: Phase 07 complete & verified (2/2 criteria); all 7 phases done — v1.0 feature-complete
-last_updated: "2026-06-04T11:55:00.000Z"
+status: shipped
+stopped_at: v1.0 SHIPPED & archived (tag v1.0, local) — milestones/v1.0-ROADMAP.md; audit tech_debt, no blockers
+last_updated: "2026-06-04T12:10:00.000Z"
 last_activity: 2026-06-04
 progress:
   total_phases: 7
