@@ -755,7 +755,7 @@ describe("gather (composition root — pull → validate → map → assess → 
       assert.deepEqual([...report.missingDesigners].sort(), [...roster].sort());
     });
 
-    it("a single person entry failing validation → only that designer omitted, others assessed", async () => {
+    it("a single person entry failing validation → that designer omitted (per-designer couldn't-read), others assessed, NO whole-card degrade (D-06)", async () => {
       // Anisha's entry is malformed (working_hours is not an array of numbers).
       const out = await gather(
         depsWith({
@@ -771,10 +771,32 @@ describe("gather (composition root — pull → validate → map → assess → 
           "/workflow_statuses": OK(workflowStatusesPage()),
         }),
       );
-      assert.ok(out.sourceErrors.some((e) => /availabilit|person/i.test(e)));
+      // D-06: a per-designer availability miss must NOT add a figures-degrade
+      // sourceError — that would trip the whole-card 🤖 degrade (variants.ts) and
+      // hide the per-designer couldn't-read row. The /people pull SUCCEEDED; only
+      // one designer's data was unreadable, so the others' figures stay trustworthy.
+      assert.ok(
+        !out.sourceErrors.some((e) => /availabilit|person/i.test(e)),
+        "a per-designer availability miss must not add a figures-degrade sourceError (D-06)",
+      );
       // Liam & Ella assessed; Anisha omitted (her availability failed validation).
       assert.deepEqual([...out.assessedDesigners].sort(), [liam, ella].sort());
       assert.ok(!out.assessedDesigners.includes(anisha));
+      // Anisha surfaces as a per-designer "couldn't read" row (missingDesigners),
+      // NOT degraded away — the rest of the card renders normally.
+      const report = computeStudioReport({
+        now: NOW,
+        holidays: out.holidays,
+        roster: [liam, anisha, ella],
+        bookings: out.bookings,
+        absences: out.absences,
+        rosteredMinutes: out.rosteredMinutes,
+        assessedDesigners: out.assessedDesigners,
+      });
+      assert.ok(
+        report.missingDesigners.includes(anisha),
+        "Anisha rendered as a per-designer couldn't-read row, not degraded away (D-06)",
+      );
     });
 
     it("a designer present but with NO covering period → rosteredMinutes 0, omitted from assessed (D-06)", async () => {

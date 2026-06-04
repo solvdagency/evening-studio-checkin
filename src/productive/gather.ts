@@ -606,7 +606,13 @@ export async function gather(deps: GatherDeps): Promise<GatherResult> {
     for (const entry of peopleResult.value.data) {
       const parsed = PersonResource.safeParse(entry);
       if (!parsed.success) {
-        sourceErrors.push("a person availability entry failed validation (skipped)");
+        // D-06: a SINGLE designer's unreadable availability is NOT a figures
+        // degrade — the /people pull itself succeeded and the other designers'
+        // numbers stay trustworthy. Omit only this one (→ missingDesigners →
+        // per-designer "couldn't read" row). Logged to the Actions console for
+        // observability; deliberately NOT pushed to sourceErrors (that would trip
+        // the whole-card 🤖 degrade in variants.ts and hide the per-designer row).
+        console.warn("a person availability entry failed validation (skipped)");
         continue;
       }
       const personId = parsed.data.id as DesignerId;
@@ -620,7 +626,10 @@ export async function gather(deps: GatherDeps): Promise<GatherResult> {
       // read" rather than silently inventing a 7-day-off week. A designer who is
       // genuinely rostered at least one day has a non-zero entry and is recorded.
       if (weekdayMinutes.every((m) => m === 0)) {
-        sourceErrors.push("a designer has no readable working-day availability (skipped)");
+        // D-06: same as the parse-failure case above — one designer with no
+        // usable rostered data is omitted (→ per-designer "couldn't read" row),
+        // NOT a whole-card degrade. Console-only; never a figures sourceError.
+        console.warn("a designer has no readable working-day availability (skipped)");
         continue;
       }
       availabilityByDesigner.set(personId, weekdayMinutes);
