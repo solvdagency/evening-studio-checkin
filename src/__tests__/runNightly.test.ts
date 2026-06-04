@@ -271,6 +271,105 @@ describe("runNightly — orchestration paths (REL-01 / REL-02 / MEET-04)", () =>
     }
   });
 
+  it("(f) routine-not-rostered: a 0-rostered designer renders 'off' with 'not in <Weekday>' wording, NOT 'on leave / Full day off.' (D-04/D-05)", async () => {
+    const post = makePostStub({ ok: true, value: undefined });
+
+    // Anisha rostered 0 on the target day (a routine non-working day); Liam & Ella
+    // standard 7.5h. No absences — so Anisha's "off" is routine, not booked leave.
+    const gatherOffAnisha = (): GatherResult => ({
+      ...stubGatherResult(),
+      rosteredMinutes: (designerId: DesignerId) => (designerId === ANISHA ? 0 : 450),
+    });
+
+    const code = await runNightly(NOW, {
+      gather: async () => gatherOffAnisha(),
+      gatherCalendar: async () => ({
+        eventsByDesigner: { [LIAM]: [], [ANISHA]: [], [ELLA]: [] },
+        sourceErrors: [],
+      }),
+      postToChat: post.postToChat,
+      webhookUrl: STUB_WEBHOOK,
+    });
+
+    assert.equal(code, 0, "the run posts and returns 0");
+    assert.equal(post.calls.length, 1, "posted exactly once");
+    const json = JSON.stringify(post.calls[0].payload);
+    // The target day for Wed 3 Jun is Thu 4 Jun → "not in Thursday".
+    assert.ok(
+      json.includes("not in Thursday"),
+      "a routine non-working day reads 'not in <Weekday>'",
+    );
+    assert.ok(
+      !json.includes("on leave / Full day off."),
+      "a routine non-working day is NOT the literal 'on leave / Full day off.' wording",
+    );
+    assert.ok(json.includes("⚪"), "the off row keeps the ⚪ marker");
+  });
+
+  it("(g) availability-unreadable: a designer in missingDesigners still renders the 🤖 \"couldn't read\" row (D-06, no regression)", async () => {
+    const post = makePostStub({ ok: true, value: undefined });
+
+    // Anisha omitted from assessedDesigners (availability unreadable) → she lands in
+    // report.missingDesigners and must render the existing 🤖 row.
+    const gatherMissingAnisha = (): GatherResult => ({
+      ...stubGatherResult(),
+      assessedDesigners: [LIAM, ELLA],
+    });
+
+    const code = await runNightly(NOW, {
+      gather: async () => gatherMissingAnisha(),
+      gatherCalendar: async () => ({
+        eventsByDesigner: { [LIAM]: [], [ANISHA]: [], [ELLA]: [] },
+        sourceErrors: [],
+      }),
+      postToChat: post.postToChat,
+      webhookUrl: STUB_WEBHOOK,
+    });
+
+    assert.equal(code, 0, "the run posts and returns 0 (never skip a night)");
+    assert.equal(post.calls.length, 1, "posted exactly once");
+    const json = JSON.stringify(post.calls[0].payload);
+    assert.ok(json.includes("🤖"), "the availability-unreadable designer renders the 🤖 row");
+    assert.ok(json.includes("couldn't read"), "the 🤖 row carries the \"couldn't read\" copy");
+    // It is the NORMAL card (figures intact), not the top-level degraded variant.
+    assert.ok(
+      json.includes("Open in Productive"),
+      "it is the normal figures-bearing card, not the degraded variant",
+    );
+  });
+
+  it("(h) all-designers-unreadable: a whole-roster availability miss still posts a card with 🤖 rows, returns 0 (REL-01)", async () => {
+    const post = makePostStub({ ok: true, value: undefined });
+
+    // Every designer omitted from assessedDesigners (e.g. a whole /people failure)
+    // → all three land in missingDesigners. The figures-bearing card STILL posts
+    // with three 🤖 rows; it does NOT hit the top-level degraded card.
+    const gatherAllMissing = (): GatherResult => ({
+      ...stubGatherResult(),
+      assessedDesigners: [],
+    });
+
+    const code = await runNightly(NOW, {
+      gather: async () => gatherAllMissing(),
+      gatherCalendar: async () => ({
+        eventsByDesigner: { [LIAM]: [], [ANISHA]: [], [ELLA]: [] },
+        sourceErrors: [],
+      }),
+      postToChat: post.postToChat,
+      webhookUrl: STUB_WEBHOOK,
+    });
+
+    assert.equal(code, 0, "the run posts and returns 0 (never skip a night)");
+    assert.equal(post.calls.length, 1, "posted exactly once");
+    const json = JSON.stringify(post.calls[0].payload);
+    const robotCount = (json.match(/🤖/g) ?? []).length;
+    assert.equal(robotCount, 3, "all three designers render a 🤖 \"couldn't read\" row");
+    assert.ok(
+      json.includes("Open in Productive"),
+      "it is the normal figures-bearing card (figures intact), not the degraded variant",
+    );
+  });
+
   it("(d) productive failure still posts the 🤖 degraded card and returns 0 (REL-01)", async () => {
     const post = makePostStub({ ok: true, value: undefined });
 
