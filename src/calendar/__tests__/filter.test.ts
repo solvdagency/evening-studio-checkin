@@ -58,9 +58,7 @@ function toFilteredEvent(raw: RawFixture): FilteredEvent {
 
 /** Load the golden fixtures keyed by their `_label` for targeted assertions. */
 function loadFixtures(): Map<string, FilteredEvent> {
-  const path = fileURLToPath(
-    new URL("../__fixtures__/labelled-events.json", import.meta.url),
-  );
+  const path = fileURLToPath(new URL("../__fixtures__/labelled-events.json", import.meta.url));
   const raw = JSON.parse(readFileSync(path, "utf8")) as RawFixture[];
   const map = new Map<string, FilteredEvent>();
   for (const r of raw) map.set(r._label, toFilteredEvent(r));
