@@ -489,10 +489,10 @@ describe("renderTemplate — 📅 worth-a-look sub-line (D-14 / MEET-04 / MSG-06
   }
 
   const FIX = loadFixture("worth-a-look") as {
-    worthALook: Record<string, Array<{ title: string; start: string; link: string }>>;
+    worthALook: Record<string, Array<{ title: string; durationMinutes?: number }>>;
   };
 
-  it("renders a soft, deep-linked 📅 line under the relevant designer", () => {
+  it("renders a plain-text 📅 line (no hyperlink) with duration + 'not in Productive'", () => {
     const out = renderTemplate(worthALookReport(), ctx({ worthALook: FIX.worthALook }));
     // Rows are divider-separated: widget[0]=Anisha, [1]=divider, [2]=Ella,
     // [3]=divider, [4]=Liam. Liam gets the FDC line.
@@ -500,31 +500,47 @@ describe("renderTemplate — 📅 worth-a-look sub-line (D-14 / MEET-04 / MSG-06
     const liamRow = rowSection.widgets[4];
     assert.ok("decoratedText" in liamRow);
     const text = liamRow.decoratedText.text;
-    assert.match(
-      text,
-      /📅 <a href="https:\/\/www\.google\.com\/calendar\/event\?eid=abc">FDC IPO Launch Check-In<\/a>/,
-    );
-    assert.match(text, /9:00am/);
-    assert.match(text, /worth a look/);
+    assert.match(text, /📅 .*FDC IPO Launch Check-In/, "plain-text title in the 📅 line");
+    assert.match(text, /1 hour/, "humanized duration (60 min → '1 hour')");
+    assert.match(text, /not in Productive/, "ends with 'not in Productive'");
+    assert.doesNotMatch(text, /<a href/, "no hyperlink on the 📅 line anymore (overrides MSG-06)");
+    assert.doesNotMatch(text, /worth a look/, "'worth a look' wording removed");
   });
 
-  it("uses the soft 'worth a look' voice — never 'conflict'", () => {
+  it("the rendered card no longer says 'worth a look' or 'conflict', and does say 'not in Productive'", () => {
     const out = renderTemplate(worthALookReport(), ctx({ worthALook: FIX.worthALook }));
     const json = JSON.stringify(out);
-    assert.ok(json.includes("worth a look"), "soft voice present");
-    assert.ok(!/conflict/i.test(json), "never asserts a conflict");
+    assert.ok(!json.includes("worth a look"), "'worth a look' wording removed");
+    assert.ok(!/conflict/i.test(json), "never asserts a conflict (D-04)");
+    assert.ok(json.includes("not in Productive"), "new 'not in Productive' tail present");
   });
 
-  it("HTML-escapes the title and link (T-04-11) — a <script> title is never raw", () => {
+  it("HTML-escapes the title (T-04-11) — a <script> title is never raw; no hyperlink", () => {
     const out = renderTemplate(worthALookReport(), ctx({ worthALook: FIX.worthALook }));
     const rowSection = out.cardsV2[0].card.sections[1];
-    // Anisha (index 0) carries the XSS-shaped fixture entry.
+    // Anisha (index 0) carries the XSS-shaped fixture entry (90 min → "1.5 hours").
     const anishaRow = rowSection.widgets[0];
     assert.ok("decoratedText" in anishaRow);
     const text = anishaRow.decoratedText.text;
     assert.match(text, /&lt;script&gt;/, "title is escaped");
     assert.doesNotMatch(text, /<script>/, "no raw script tag injected");
-    assert.match(text, /eid=xss&amp;q=1/, "link & is escaped");
+    assert.doesNotMatch(text, /<a href/, "no hyperlink (no link to escape anymore)");
+    assert.match(text, /1\.5 hours/, "humanized duration (90 min → '1.5 hours')");
+  });
+
+  it("an entry with no durationMinutes renders '📅 {title}, not in Productive' (no duration segment, no NaN)", () => {
+    const out = renderTemplate(
+      worthALookReport(),
+      ctx({ worthALook: { [LIAM]: [{ title: "Mystery meeting" }] } }),
+    );
+    const rowSection = out.cardsV2[0].card.sections[1];
+    const liamRow = rowSection.widgets[4];
+    assert.ok("decoratedText" in liamRow);
+    const text = liamRow.decoratedText.text;
+    assert.match(text, /📅 .*Mystery meeting.*not in Productive/, "title + tail present");
+    assert.match(text, /Mystery meeting<\/font>, /, "tail joins title directly (no duration segment)");
+    assert.doesNotMatch(text, / · /, "no ' · ' duration separator when duration is missing");
+    assert.doesNotMatch(text, /undefined|NaN/, "never prints undefined/NaN");
   });
 
   it("a designer with no worthALook entry renders no 📅 line", () => {

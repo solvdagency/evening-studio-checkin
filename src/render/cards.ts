@@ -164,12 +164,16 @@ export interface RenderContext {
   /**
    * Per-designer "worth a look" meetings → the 📅 sub-line (D-14 / MEET-04). A
    * counting meeting whose client isn't booked that day, surfaced by
-   * reconcileMeetings as { title, start, link }. Presentation-only: the renderer
-   * formats and deep-links the title (MSG-06) but asserts nothing — the soft "worth
-   * a look" voice, never "conflict" (D-04). Every dynamic string is escaped before
-   * insertion (threat T-04-11). Absent/empty ⇒ no 📅 line (no regression).
+   * reconcileMeetings as { title, durationMinutes? }. Presentation-only: the
+   * renderer formats the line as PLAIN muted text —
+   * `📅 {title} · {duration}, not in Productive` — with NO deep link. This
+   * OVERRIDES the earlier MSG-06 deep-link decision and the D-14 "worth a look"
+   * wording per Liam's pilot feedback. It still asserts nothing (the soft nudge
+   * voice, never "conflict", D-04). The title is escaped before insertion (threat
+   * T-04-11); the duration is humanizeDuration output (digits + fixed words only).
+   * Absent/empty ⇒ no 📅 line (no regression).
    */
-  worthALook?: Record<string, Array<{ title: string; start: string; link: string }>>;
+  worthALook?: Record<string, Array<{ title: string; durationMinutes?: number }>>;
   /**
    * Set when the Calendar source failed but the figures are intact (REL-01).
    * Drives a single muted note in the NORMAL card; NEVER a top-level variant —

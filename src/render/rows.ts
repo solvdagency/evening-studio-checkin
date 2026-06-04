@@ -19,6 +19,7 @@ import type { DesignerResult } from "../domain/capacity.ts";
 import type { BriefFlag } from "../productive/brief.ts";
 import type { DecoratedText, TentativeNote } from "./cards.ts";
 import { BRAND_COLORS } from "../config.ts";
+import { humanizeDuration } from "../calendar/duration.ts";
 
 /** HTML-escape the Cards-v2 HTML-subset specials (`&` first). */
 export function escapeHtml(value: string): string {
@@ -92,7 +93,8 @@ function missingDesignerRow(escapedName: string): { decoratedText: DecoratedText
  *   2. greyed booked detail (omitted only for an on-leave "off" day — D-22 minimal)
  *   3. ⚠️ tentative line if a tentative note exists (D-14/D-15, additive, NO job code)
  *   4. 📄 brief line(s) for each brief flag on this designer (D-16, CODE + hours)
- *   5. 📅 "worth a look" line(s) for each unaccounted meeting (D-14, deep-linked)
+ *   5. 📅 unaccounted-meeting line(s): plain muted `📅 {title} · {duration}, not
+ *      in Productive` (D-14 / MEET-04 — overrides MSG-06 deep-link per pilot feedback)
  *
  * A designer in `missingDesigners` (D-19) short-circuits to the minimal 🤖 row —
  * its figures are untrusted this run and are never shown.
@@ -105,7 +107,7 @@ export function buildRow(
     tentativeNotes: Record<string, TentativeNote>;
     leaveNotes?: Record<string, string>;
     missingDesigners?: ReadonlyArray<DesignerResult["designerId"]>;
-    worthALook?: Record<string, Array<{ title: string; start: string; link: string }>>;
+    worthALook?: Record<string, Array<{ title: string; durationMinutes?: number }>>;
   },
 ): { decoratedText: DecoratedText } {
   const escapedName = escapeHtml(ctx.designerNames[d.designerId] ?? String(d.designerId));
@@ -151,13 +153,21 @@ export function buildRow(
     lines.push(`📄 ${label} · ${muted(`${code} · ${oneDecimal(d.bookedHours)}h`)}`);
   }
 
-  // 📅 "worth a look" line(s) (D-14 / MEET-04): a counting meeting whose client
-  // isn't booked that day. Soft nudge only — the title deep-links (MSG-06) and the
-  // voice stays "worth a look", never an asserted clash (D-04). Same nested-sub-line
-  // widget pattern as ⚠️/📄; every dynamic string is escaped (threat T-04-11).
+  // 📅 unaccounted-meeting line(s) (D-14 / MEET-04): a counting meeting whose
+  // client isn't booked that day. PLAIN muted text, no deep link —
+  // `📅 {title} · {duration}, not in Productive` (overrides MSG-06 / the "worth a
+  // look" wording per Liam's pilot feedback). Soft nudge, never an asserted clash
+  // (D-04). The title is escaped (threat T-04-11); the duration is humanizeDuration
+  // output. When durationMinutes is missing the duration segment is omitted — never
+  // "undefined"/"NaN".
   for (const m of ctx.worthALook?.[d.designerId] ?? []) {
-    const titleLink = `<a href="${escapeHtml(m.link)}">${escapeHtml(m.title)}</a>`;
-    lines.push(`📅 ${titleLink} · ${muted(escapeHtml(m.start))} · ${muted("worth a look")}`);
+    const title = muted(escapeHtml(m.title));
+    const tail = muted("not in Productive");
+    if (typeof m.durationMinutes === "number" && Number.isFinite(m.durationMinutes)) {
+      lines.push(`📅 ${title} · ${muted(humanizeDuration(m.durationMinutes))}, ${tail}`);
+    } else {
+      lines.push(`📅 ${title}, ${tail}`);
+    }
   }
 
   return { decoratedText: { text: lines.join("<br>"), wrapText: true } };

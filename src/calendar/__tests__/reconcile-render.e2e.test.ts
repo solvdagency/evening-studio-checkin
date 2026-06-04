@@ -23,6 +23,7 @@ import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
+import { DateTime } from "luxon";
 import type { FilteredEvent } from "../gather.ts";
 import type { DesignerId } from "../../domain/types.ts";
 import type { DesignerResult } from "../../domain/capacity.ts";
@@ -53,7 +54,16 @@ interface RawFixture {
   htmlLink?: string;
   eventType?: string;
   start?: { date?: string; dateTime?: string };
+  end?: { date?: string; dateTime?: string };
   attendees?: Array<{ self?: boolean; responseStatus?: string }>;
+}
+
+function rawDurationMinutes(raw: RawFixture): number | undefined {
+  if (!raw.start?.dateTime || !raw.end?.dateTime) return undefined;
+  const s = DateTime.fromISO(raw.start.dateTime);
+  const e = DateTime.fromISO(raw.end.dateTime);
+  if (!s.isValid || !e.isValid) return undefined;
+  return Math.round(e.diff(s, "minutes").minutes);
 }
 
 function toFilteredEvent(raw: RawFixture): FilteredEvent {
@@ -69,6 +79,7 @@ function toFilteredEvent(raw: RawFixture): FilteredEvent {
     eventType: raw.eventType,
     responseStatusSelf: self?.responseStatus,
     attendeeCount: attendees.length,
+    durationMinutes: rawDurationMinutes(raw),
   };
 }
 
@@ -150,8 +161,8 @@ function ctx(over: Partial<RenderContext>): RenderContext {
   };
 }
 
-describe("reconcile → render e2e — an unaccounted meeting becomes a 📅 worth-a-look line", () => {
-  it("WORTH: a real unbooked FDC meeting surfaces a deep-linked, soft-voiced 📅 line under Liam", () => {
+describe("reconcile → render e2e — an unaccounted meeting becomes a 📅 not-in-Productive line", () => {
+  it("WORTH: a real unbooked FDC meeting surfaces a plain-text 📅 line (duration + 'not in Productive') under Liam", () => {
     // (1) Reconcile the WORTH golden event with FDC NOT in Liam's booked set.
     const worthALook = reconcileMeetings(
       { [LIAM]: [WORTH] },
@@ -174,12 +185,11 @@ describe("reconcile → render e2e — an unaccounted meeting becomes a 📅 wor
     const text = liamRow.decoratedText.text;
 
     assert.match(text, /📅/, "📅 sub-line present");
-    assert.match(
-      text,
-      /<a href="[^"]*">FDC IPO Launch Check-In<\/a>/,
-      "title is deep-linked to the calendar event",
-    );
-    assert.match(text, /worth a look/, "soft 'worth a look' voice present");
+    assert.match(text, /📅 .*FDC IPO Launch Check-In/, "plain-text title in the 📅 line");
+    assert.match(text, /1 hour/, "humanized duration (60 min → '1 hour')");
+    assert.match(text, /not in Productive/, "ends with 'not in Productive'");
+    assert.doesNotMatch(text, /<a href/, "no hyperlink (overrides MSG-06)");
+    assert.doesNotMatch(text, /worth a look/, "'worth a look' wording removed");
 
     // The soft-nudge contract: never assert a conflict anywhere in the payload.
     const json = JSON.stringify(out);
