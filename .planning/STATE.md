@@ -119,6 +119,7 @@ None yet.
 | fast | Type DesignerId index keys in gather tests — tsc --noEmit now clean | 2026-06-04 | f5170cb | — |
 | 260604-l0j | Calendar-only failure keeps Productive figures + clean note (no leaked key) | 2026-06-04 | afb98a5 | [260604-l0j-calendar-only-failure-keeps-productive-f](./quick/260604-l0j-calendar-only-failure-keeps-productive-f/) |
 | 260604-lco | 📅 line: plain text + duration + "not in Productive" (overrides MSG-06 deep-link) | 2026-06-04 | a36601e | [260604-lco-worth-a-look-line-plain-text-show-durati](./quick/260604-lco-worth-a-look-line-plain-text-show-durati/) |
+| fast | Mute the ⚠️ tentative line text to match the other grey sub-lines | 2026-06-04 | 2a3c2f9 | — |
 
 ## Deferred Items
 
