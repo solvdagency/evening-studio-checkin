@@ -25,3 +25,6 @@ jobs:
           GCHAT_WEBHOOK_URL: ${{ secrets.GCHAT_WEBHOOK_URL }}
           PRODUCTIVE_AUTH_TOKEN: ${{ secrets.PRODUCTIVE_AUTH_TOKEN }}
           PRODUCTIVE_ORG_ID: ${{ secrets.PRODUCTIVE_ORG_ID }}
+          # Phase 4 — Google Calendar service-account key (raw single-line JSON;
+          # consumed via JSON.parse(process.env.GOOGLE_SA_KEY) in the calendar source).
+          GOOGLE_SA_KEY: ${{ secrets.GOOGLE_SA_KEY }}
