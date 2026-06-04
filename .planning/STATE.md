@@ -116,6 +116,7 @@ None yet.
 | # | Description | Date | Commit | Directory |
 |---|-------------|------|--------|-----------|
 | 260604-kig | Add end-to-end calendar render + runNightly integration tests for Phase 04 | 2026-06-04 | dd4fcb0 | [260604-kig-add-end-to-end-calendar-render-runnightl](./quick/260604-kig-add-end-to-end-calendar-render-runnightl/) |
+| fast | Type DesignerId index keys in gather tests — tsc --noEmit now clean | 2026-06-04 | f5170cb | — |
 
 ## Deferred Items
 
