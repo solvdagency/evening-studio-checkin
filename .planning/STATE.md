@@ -28,7 +28,7 @@ See: .planning/PROJECT.md (updated 2026-06-02)
 Phase: 04 (calendar-meeting-reconciliation) — COMPLETE
 Plan: 4 of 4
 Status: Phase complete — verified (12/12 must-haves; 2 live-run checks pending)
-Last activity: 2026-06-04
+Last activity: 2026-06-04 - Completed quick task 260604-kig: Phase 04 render + runNightly tests
 
 Progress: [██████████] 100%
 
@@ -110,6 +110,12 @@ None yet.
 - [Phase 4]: Google Calendar — **UNBLOCKED + LIVE-VALIDATED 2026-06-04.** Service account `studio-checkin-calendar@evening-studio-checkin.iam.gserviceaccount.com` (Client ID 114624945849863129481, project evening-studio-checkin) created; JSON key in gitignored `secrets/`; DWD authorised by admin for scope `https://www.googleapis.com/auth/calendar.readonly`. End-to-end probe PASSED for ALL THREE designers (read primary calendars, Australia/Sydney tz, all share a real "Creative team - review" meeting). Confirmed impersonation emails: liamm@solvdagency.com.au (686717), anishag@solvdagency.com.au (686712), ellaw@solvdagency.com.au (686716). Still TODO for Phase 4 execution: set the SA JSON as a GitHub secret (e.g. GOOGLE_SA_KEY); build the read via `googleapis` JWT+subject (probe used raw JWT, no dep); the WIP/creative-team meeting ignore-list (per CLAUDE.md) is relevant — "Creative team - review" is exactly such a meeting.
 - [Phase 5]: Production LLM needs an org-sanctioned Anthropic API key (`ANTHROPIC_API_KEY`). **UNBLOCKING 2026-06-04** — Liam confirmed he can obtain a sanctioned API key today, removing the post-15-Jun-2026 metered-Pro-credit concern. Phase 5 no longer "cuttable" once the key lands.
 - [Phase 3 → production]: The nightly GitHub Actions cron will not fire until `GCHAT_WEBHOOK_URL` (real studio space, not the test space), `PRODUCTIVE_AUTH_TOKEN`, and `PRODUCTIVE_ORG_ID` are added as GitHub Actions repository secrets. They currently exist only in the local gitignored `.env`. Phase 3 code is shippable; production delivery is gated on these secrets.
+
+### Quick Tasks Completed
+
+| # | Description | Date | Commit | Directory |
+|---|-------------|------|--------|-----------|
+| 260604-kig | Add end-to-end calendar render + runNightly integration tests for Phase 04 | 2026-06-04 | dd4fcb0 | [260604-kig-add-end-to-end-calendar-render-runnightl](./quick/260604-kig-add-end-to-end-calendar-render-runnightl/) |
 
 ## Deferred Items
 
