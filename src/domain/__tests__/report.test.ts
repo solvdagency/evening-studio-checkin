@@ -39,7 +39,12 @@ const NOW_FOR_TUE_TARGET = sydney("2026-06-08T18:00:00");
  */
 const NOW_FOR_MON_TARGET = sydney("2026-06-05T16:30:00");
 
-/** Minimal input builder; callers override only what each case cares about. */
+/**
+ * Minimal input builder; callers override only what each case cares about.
+ * `rosteredMinutes` defaults to a flat standard 450-minute day for every
+ * designer-date — this proves the standard week is UNCHANGED under CAP-06 (the
+ * pre-existing rollup/target-day assertions below all assume a flat 7.5h day).
+ */
 function input(overrides: Partial<StudioReportInput>): StudioReportInput {
   return {
     now: NOW_FOR_TUE_TARGET,
@@ -47,6 +52,7 @@ function input(overrides: Partial<StudioReportInput>): StudioReportInput {
     roster: ROSTER,
     bookings: [],
     absences: [],
+    rosteredMinutes: () => 450,
     ...overrides,
   };
 }
@@ -223,6 +229,95 @@ describe("computeStudioReport — missing-designer roster gap (D-18 / T-01-06)",
       }),
     );
     assert.deepEqual(r.missingDesigners, []);
+  });
+});
+
+describe("computeStudioReport — rostered-minutes basis (CAP-06 / D-02 / D-04 / D-07)", () => {
+  // Window for the Tue target is Tue 06-09, Wed 06-10, Thu 06-11, Fri 06-12.
+  // weekday(dateKey): a lookup that rosters a designer Mon/Tue/Thu and OFF Wed/Fri.
+  const offWedFri = (_designerId: DesignerId, dateKey: string): number => {
+    const wd = DateTime.fromISO(dateKey, { zone: STUDIO_ZONE }).weekday; // 1=Mon..7=Sun
+    return wd === 3 || wd === 5 ? 0 : 450; // off Wed(3) & Fri(5)
+  };
+
+  it("a designer rostered 0 on the target day is \"off\" (never underbooked), even with zero bookings", () => {
+    // Make the TARGET day (Tue 06-09) a non-rostered day for designer A only.
+    const r = computeStudioReport(
+      input({
+        rosteredMinutes: (designerId, dateKey) =>
+          designerId === A && dateKey === "2026-06-09" ? 0 : 450,
+      }),
+    );
+    const a = r.designers.find((d) => d.designerId === A)!;
+    assert.equal(a.status, "off");
+    assert.equal(a.availableMin, 0);
+    assert.equal(a.openMin, 0);
+  });
+
+  it("a designer rostered 450 on the target day with nothing booked is underbooked, openHours 7.5 (no regression)", () => {
+    const r = computeStudioReport(input({ rosteredMinutes: () => 450 }));
+    const a = r.designers.find((d) => d.designerId === A)!;
+    assert.equal(a.status, "underbooked");
+    assert.equal(a.openMin, 450);
+    assert.equal(a.openHours, 7.5);
+  });
+
+  it("the rollup EXCLUDES a designer's not-rostered window days (Wed/Fri contribute 0) — CAP-05 fix (D-07)", () => {
+    // Only designer A follows off-Wed/Fri; B and C stay flat 450.
+    // A rostered: Tue 450, Wed 0, Thu 450, Fri 0 = 900 over the 4-day window.
+    // B and C: 4 × 450 = 1800 each.  totalMin = 900 + 1800 + 1800 = 4500.
+    const r = computeStudioReport(
+      input({
+        rosteredMinutes: (designerId, dateKey) =>
+          designerId === A ? offWedFri(designerId, dateKey) : 450,
+      }),
+    );
+    assert.equal(r.rollup.totalMin, 4500);
+    // openMin equals totalMin here — nothing booked — proving the not-rostered days
+    // never inflate the studio's open figure (no fabricated 3×450).
+    assert.equal(r.rollup.openMin, 4500);
+  });
+
+  it("absence on a rostered day still subtracts in both the target result and the rollup", () => {
+    // A rostered 450 every day, 120min absence on the Tue target.
+    const r = computeStudioReport(
+      input({
+        rosteredMinutes: () => 450,
+        absences: [{ designerId: A, minutes: 120, date: "2026-06-09" }],
+      }),
+    );
+    const a = r.designers.find((d) => d.designerId === A)!;
+    assert.equal(a.availableMin, 330); // 450 - 120
+    // Rollup: A's Tue slot is 330 (not 450); the other 11 slots are 450 each.
+    // total = 11×450 + 330 = 4950 + 330 = 5280.
+    assert.equal(r.rollup.totalMin, 5280);
+  });
+
+  it("rosteredMinutes omitted falls back to a flat standard day and never throws (degrade-safe)", () => {
+    const r = computeStudioReport({
+      now: NOW_FOR_TUE_TARGET,
+      holidays: new Set<string>(),
+      roster: ROSTER,
+      bookings: [],
+      absences: [],
+      // rosteredMinutes intentionally omitted
+    });
+    assert.equal(r.rollup.totalMin, 5400); // 4 days × 3 designers × 450
+    for (const d of r.designers) {
+      assert.equal(d.status, "underbooked");
+      assert.equal(d.openMin, 450);
+    }
+  });
+
+  it("an unknown designer-date from a provided lookup resolves to 0 (never invents capacity — D-06)", () => {
+    // Lookup returns 0 for everything → every day is not-rostered → all "off", total 0.
+    const r = computeStudioReport(input({ rosteredMinutes: () => 0 }));
+    for (const d of r.designers) {
+      assert.equal(d.status, "off");
+      assert.equal(d.availableMin, 0);
+    }
+    assert.equal(r.rollup.totalMin, 0);
+    assert.equal(r.rollup.openMin, 0);
   });
 });
 

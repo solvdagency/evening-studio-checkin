@@ -27,10 +27,18 @@ import type { DateTime } from "luxon";
 export const STUDIO_ZONE = "Australia/Sydney" as const;
 
 /**
- * Per-day booking target for a monitored designer: 7.5h expressed in exact
- * minutes (Productive's native `time` unit). Computing in integer minutes and
- * converting to decimal hours only at the display edge keeps the arithmetic
- * exact (D-15 / Pitfall 3).
+ * The standard 7.5h working day in exact minutes (Productive's native `time` unit).
+ *
+ * As of CAP-06 (D-02 / D-03) this is a REFERENCE / fallback constant only — it is
+ * NO LONGER the per-designer available-minutes source of truth. Available minutes
+ * now derive from each designer's real rostered minutes for the day (read from
+ * Productive's `person.availabilities`), so a designer on a non-standard week is
+ * never assumed to be working a flat 7.5h on a day they aren't rostered. The value
+ * stays the documented standard-week default and remains the percentage basis used
+ * by the Productive mappers (method-2 allocation conversion).
+ *
+ * Computing in integer minutes and converting to decimal hours only at the display
+ * edge keeps the arithmetic exact (D-15 / Pitfall 3).
  */
 export const TARGET_MINUTES = 450 as const;
 

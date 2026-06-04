@@ -30,6 +30,7 @@
 
 import type { DateTime } from "luxon";
 import type { Absence, Booking, DesignerId, HolidaySet } from "./types.ts";
+import { TARGET_MINUTES } from "./types.ts";
 import { availableMinutes, bookedMinutes, computeDesignerDay } from "./capacity.ts";
 import type { DesignerResult } from "./capacity.ts";
 import { nextWorkingDay, restOfWeekWindow } from "./clock.ts";
@@ -73,6 +74,22 @@ export interface StudioReportInput {
   bookings: ReadonlyArray<DatedBooking>;
   /** Absences, optionally per window day (undated = target day). */
   absences: ReadonlyArray<DatedAbsence>;
+  /**
+   * Per-designer per-day ROSTERED minutes — the available-minutes basis (CAP-06 /
+   * D-02 / D-03). Given a designer and a studio-zone "yyyy-MM-dd" date key, returns
+   * that designer's rostered minutes for that window day: their real working hours
+   * for the matching weekday (e.g. Anisha is rostered 0 on Wed/Fri). A value of 0
+   * means NOT rostered → 0 available for that day → "off" (mentioned, never flagged).
+   *
+   * Injected the same way as `holidays` / `roster` / `assessedDesigners` so the
+   * module stays pure and deterministic — Phase 2 (Productive ingestion) parses and
+   * validates `person.availabilities` at the boundary and supplies this lookup.
+   *
+   * OMIT to fall back to a flat standard day for every designer-date (TARGET_MINUTES).
+   * A missing/unknown entry from a provided lookup resolves to 0 (degrade-safe — the
+   * report never INVENTS capacity for a designer it has no rostered data for, D-06).
+   */
+  rosteredMinutes?: (designerId: DesignerId, dateKey: string) => number;
   /**
    * Which rostered designers the data pull actually covered (D-18). OMIT to mean
    * "the whole roster was assessed" — so an empty/quiet pull for the full roster
@@ -164,6 +181,12 @@ function absenceMinutesFor(
 export function computeStudioReport(input: StudioReportInput): StudioReport {
   const { now, holidays, roster, bookings, absences, assessedDesigners } = input;
 
+  // Rostered-minutes lookup (CAP-06 / D-02). When omitted, every designer-date falls
+  // back to the standard 7.5h day (preserves the pre-CAP-06 flat-day behaviour for
+  // simple callers). A provided lookup is the per-designer source of truth.
+  const rosteredMinutesFor = (designerId: DesignerId, dateKey: string): number =>
+    input.rosteredMinutes === undefined ? TARGET_MINUTES : input.rosteredMinutes(designerId, dateKey);
+
   const targetDay = nextWorkingDay(now, holidays);
   const targetKey = dayKey(targetDay);
   const windowDays = restOfWeekWindow(targetDay, holidays);
@@ -183,7 +206,8 @@ export function computeStudioReport(input: StudioReportInput): StudioReport {
       (b) => b.designerId === designerId && b.date === targetKey,
     );
     const targetAbsence = absenceMinutesFor(datedAbsences, designerId, targetKey);
-    return computeDesignerDay(designerId, targetBookings, targetAbsence);
+    const rostered = rosteredMinutesFor(designerId, targetKey);
+    return computeDesignerDay(designerId, targetBookings, rostered, targetAbsence);
   });
 
   // Rest-of-week rollup, summed over (window day × rostered designer), net of
@@ -194,7 +218,11 @@ export function computeStudioReport(input: StudioReportInput): StudioReport {
   let openMin = 0;
   for (const dayString of window) {
     for (const designerId of roster) {
-      const available = availableMinutes(absenceMinutesFor(datedAbsences, designerId, dayString));
+      const rostered = rosteredMinutesFor(designerId, dayString);
+      const available = availableMinutes(
+        rostered,
+        absenceMinutesFor(datedAbsences, designerId, dayString),
+      );
       const confirmed = confirmedMinutesFor(datedBookings, designerId, dayString);
       totalMin += available;
       openMin += Math.max(0, available - confirmed);
