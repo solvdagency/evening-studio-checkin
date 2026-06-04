@@ -47,6 +47,12 @@ import type { CardsV2Payload, RenderContext } from "./render/cards.ts";
 import { renderLlmOrTemplate } from "./llm/renderLlm.ts";
 import { postToChat } from "./chat/postToChat.ts";
 import {
+  markerDateKey,
+  readMarker as realReadMarker,
+  writeMarker as realWriteMarker,
+  buildRunLog,
+} from "./run/marker.ts";
+import {
   DESIGNER_PERSON_IDS,
   DESIGNER_NAMES,
   STUDIO_CLOSURES,
@@ -202,6 +208,28 @@ export interface RunNightlyDeps {
     report: ReturnType<typeof computeStudioReport>,
     ctx: RenderContext,
   ) => CardsV2Payload | Promise<CardsV2Payload>;
+  /**
+   * Idempotency-marker read (REL-03 / D-04/D-05a). Defaults to the real
+   * existence-only `readMarker` over node:fs. EXISTENCE is the only signal —
+   * contents are never parsed. Injected the same default-to-real way as
+   * gather/postToChat so the scheduled guard is unit-testable with no disk.
+   */
+  readMarker: typeof realReadMarker;
+  /**
+   * Post-success run-log write (REL-03 / D-05c/D-07-fail). Defaults to the real
+   * Result-shaped, never-throws `writeMarker`. Called ONLY after `posted.ok`;
+   * a `{ ok:false }` result is logged loudly and the run STILL returns 0
+   * (a marker-persist hiccup must never masquerade as a failed run).
+   */
+  writeMarker: typeof realWriteMarker;
+  /**
+   * The GitHub Actions event name (D-04). The idempotency guard engages ONLY when
+   * this is `"schedule"`; a manual `workflow_dispatch` always posts. Defaults to
+   * `process.env.GITHUB_EVENT_NAME ?? ""` so the entrypoint reads it from the
+   * environment while tests inject it explicitly. Carries NO clock — `now` stays
+   * the single injected clock (trust boundary).
+   */
+  eventName: string;
 }
 
 /**
@@ -228,11 +256,28 @@ export async function runNightly(now: DateTime, deps?: Partial<RunNightlyDeps>):
     renderMessage:
       deps?.renderMessage ??
       (process.env.USE_LLM_RENDERER === "true" ? renderLlmOrTemplate : renderTemplate),
+    // Marker seam (REL-03). Default-to-real, mirroring gather/postToChat. The
+    // seam carries NO clock — the date key still derives from the injected `now`.
+    readMarker: deps?.readMarker ?? realReadMarker,
+    writeMarker: deps?.writeMarker ?? realWriteMarker,
+    eventName: deps?.eventName ?? process.env.GITHUB_EVENT_NAME ?? "",
   };
 
   // (1) Weekday guard (SCHED-01).
   if (shouldSkipForWeekend(now)) {
     console.log("weekend — skipping");
+    return 0;
+  }
+
+  // (1b) Idempotency: derive the marker date key ONCE from the injected `now`
+  //      (markerDateKey, D-03 single-clock — no live read here). The guard engages
+  //      ONLY for scheduled runs (D-04): if today's marker already exists we have
+  //      already posted this studio-local evening, so skip BEFORE gather/render/post
+  //      and return 0. A manual workflow_dispatch (eventName !== "schedule") skips
+  //      this guard entirely and always posts — Liam's deliberate test-run path.
+  const dateKey = markerDateKey(now);
+  if (resolvedDeps.eventName === "schedule" && resolvedDeps.readMarker(dateKey).exists) {
+    console.log(`already posted ${dateKey} — skipping (scheduled re-run)`);
     return 0;
   }
 
@@ -313,6 +358,49 @@ export async function runNightly(now: DateTime, deps?: Partial<RunNightlyDeps>):
   }
 
   console.log("nightly check-in posted");
+
+  // (7) POST-SUCCESS run log + idempotency marker (REL-03 / D-05c/D-06/D-07/D-08).
+  //     We are strictly on the `posted.ok === true` path — the `!posted.ok` exit-1
+  //     branch above never reaches here and NEVER writes a marker (D-05). All facts
+  //     are COUNTED from already-computed values; nothing new is computed (no math,
+  //     no clock, no secret). A degraded 🤖 post still marks (degraded counts as
+  //     posted, D-06). No webhook URL or secret is ever passed to buildRunLog /
+  //     console.* — only counts/booleans/date/enum + the literal "ok" outcome (D-08).
+  const notFullyBooked = report.designers.filter(
+    (d) => d.status === "underbooked" || d.status === "overbooked",
+  ).length;
+  const missingBrief = g.briefFlags.length;
+  const worthALookCount = Object.values(worthALook).reduce(
+    (sum, items) => sum + items.length,
+    0,
+  );
+  const runLog = buildRunLog({
+    date: dateKey,
+    posted: true,
+    degraded: g.sourceErrors.length > 0,
+    sourcesReached: {
+      productive: g.sourceErrors.length === 0,
+      calendar: cal.sourceErrors.length === 0,
+    },
+    flagsRaised: {
+      notFullyBooked,
+      missingBrief,
+      worthALook: worthALookCount,
+    },
+    rendererUsed: process.env.USE_LLM_RENDERER === "true" ? "llm" : "template",
+    postOutcome: "ok",
+  });
+  // Emit the structured log to stdout (D-07) so it shows in the Actions run log
+  // immediately, then persist it as the dated marker file (durable history + the
+  // next-run idempotency signal).
+  console.log(JSON.stringify(runLog));
+  const marked = resolvedDeps.writeMarker(runLog);
+  if (!marked.ok) {
+    // D-07-fail: the POST succeeded — that is the primary job. A failed marker
+    // persist must NOT fire a misleading "run failed" alert. Log loudly (no secret
+    // in the reason — writeMarker's error is an fs message) and STILL return 0.
+    console.warn(`marker write failed (post succeeded; returning 0): ${marked.error}`);
+  }
   return 0;
 }
 
