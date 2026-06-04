@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: executing
-stopped_at: Phase 7 context gathered
-last_updated: "2026-06-04T10:51:54.432Z"
+status: verifying
+stopped_at: Completed 07-02-PLAN.md (idempotency + run-log wired into runNightly)
+last_updated: "2026-06-04T11:30:00.000Z"
 last_activity: 2026-06-04
 progress:
   total_phases: 7
-  completed_phases: 6
+  completed_phases: 7
   total_plans: 22
-  completed_plans: 21
-  percent: 86
+  completed_plans: 22
+  percent: 100
 ---
 
 # Project State
@@ -25,22 +25,25 @@ See: .planning/PROJECT.md (updated 2026-06-02)
 
 ## Current Position
 
-Phase: 07 (hardening) — EXECUTING
+Phase: 07 (hardening) — COMPLETE (all 22 plans done; ready for phase verification)
 Plan: 2 of 2
-Status: Plan 07-01 complete; ready to execute 07-02
-Plan 07-01 (marker / run-log module) DONE: `src/run/marker.ts` + tests shipped via TDD
-(RED 19ede48 → GREEN 94cfb23). Delivers the idempotency-marker / structured-run-log
-primitives behind an injectable fs seam — markerDateKey (single-clock, no live read),
-markerPath (.runs/<date>.json), readMarker (existence-only), writeMarker (Result-shaped,
-never-throws, D-07-fail), buildRunLog (redacted, D-08). NOT yet wired into runNightly
-(src/index.ts untouched) — that is 07-02. Full suite 328 green, tsc clean; the
-`DateTime.now(` and secret-name grep gates both pass (0 hits).
-NOTE: REL-03 stays Pending — 07-01 is only the primitives; 07-02 wires the scheduled-only
-guard + post-success write + nightly.yml commit step, which is what closes REL-03 and fixes
-its Phase-6→Phase-7 traceability mapping.
-Last activity: 2026-06-04 -- Plan 07-01 complete
+Status: Plan 07-02 complete — REL-03 closed; idempotency + structured run log live in runNightly
+Plan 07-02 (wire marker into runNightly) DONE: scheduled-only idempotency guard +
+post-success run-log build/print/write wired into `runNightly` via the RunNightlyDeps
+marker seam (readMarker/writeMarker/eventName, default-to-real). The guard engages ONLY
+when GITHUB_EVENT_NAME==="schedule" and today's marker exists → returns 0 before gather
+(D-04); a manual workflow_dispatch always posts. Marker is written ONLY on posted.ok
+(D-05c); the !posted.ok exit-1 branch is untouched and never marks (D-05). A degraded 🤖
+post still marks (D-06); a writeMarker {ok:false} after a good post logs a loud warning and
+STILL returns 0 (D-07-fail). The run log is a redacted counts/booleans/date/enum object,
+emitted to stdout (D-07) and persisted as `.runs/<date>.json`. The marker date key derives
+from the injected `now` via markerDateKey (single-clock preserved, D-03). nightly.yml gained
+a JOB-scoped `contents: write` + a `[skip ci]`-tagged commit/push step with a
+nothing-to-commit guard. The 6 idempotency behaviors are tested; full suite 334 green, tsc clean.
+REL-03 traceability corrected Phase 6 → Phase 7 and the requirement ticked complete.
+Last activity: 2026-06-04 -- Plan 07-02 complete (Phase 7 done)
 
-Progress: [██████████] 95%
+Progress: [██████████] 100%
 
 ## Performance Metrics
 
@@ -77,6 +80,7 @@ Progress: [██████████] 95%
 | Phase 06 P01 | 3min | 2 tasks tasks | 5 files files |
 | Phase 06 P02 | 9min | 2 tasks | 7 files |
 | Phase 07 P01 | 2min | 2 tasks | 2 files |
+| Phase 07 P02 | 6min | 3 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -118,6 +122,7 @@ Recent decisions affecting current work:
 - [Phase 05-02]: `soften` carries the RAW model line into the worth-a-look title; escaping happens once at the renderer boundary (rows.ts escapeHtml, T-05-07) — `applyVerdicts` deliberately does NOT pre-escape (avoids double-escape; deviates from the literal plan must_have wording).
 - [Phase 05-02]: The never-drop-a-genuine-flag rule has two halves — STRUCTURAL (flagFairness.test.ts, network-free, in CI: a genuine flag survives no-verdict/keep/unknown-id) + BEHAVIOURAL (scripts/eval-llm-renderer.ts, dev key, OFF-CI: hard-fails if the model EMITS a drop for a genuine-labelled meeting). LLM-02 trusted only after the operator runs the harness and approves.
 - [Phase 07-01]: Idempotency marker + structured run log are ONE committed `.runs/<studio-local-date>.json` (D-01). `src/run/marker.ts` derives the date key from the injected `now` only (no live clock read, D-03 single-clock boundary), exposes an injectable `MarkerFs` seam mirroring `RunNightlyDeps` default-to-real DI, `writeMarker` is Result-shaped and never throws (D-07-fail), and `buildRunLog` carries only counts/booleans/date/enum + an already-redacted `postOutcome` (D-08). Primitives only — wiring into `runNightly` + nightly.yml is 07-02; REL-03 stays Pending until then.
+- [Phase 07-02]: REL-03 CLOSED. The marker module is wired into `runNightly` via three new `RunNightlyDeps` fields (readMarker/writeMarker/eventName, default-to-real). Scheduled-only guard (D-04): `eventName==="schedule"` AND today's marker exists → log + return 0 BEFORE gather; manual `workflow_dispatch` always posts. Run log built/printed/written ONLY on `posted.ok` (D-05c) — the `!posted.ok` exit-1 branch is byte-untouched and never marks (D-05/two-path rule); degraded 🤖 post still marks (D-06); `writeMarker {ok:false}` after a good post → loud `console.warn`, STILL return 0 (D-07-fail). flagsRaised counts are COUNTED from existing values (designers underbooked/overbooked, g.briefFlags.length, Σ worthALook lengths) — no new math, no secret to buildRunLog/console.*. Single clock preserved (markerDateKey(now); `DateTime.now(` actual-call count still 1 — the 2nd grep hit is a pre-existing doc comment). nightly.yml: JOB-scoped `contents: write` (T-07-04) + a `[skip ci]` commit/push step (T-07-05) guarded by `git diff --cached --quiet` (nothing-to-commit no-op); `.runs/` NOT gitignored. Full suite 334 green (6 new idempotency cases), tsc clean.
 
 ### Pending Todos
 
@@ -154,6 +159,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-06-04T10:51:00.000Z
-Stopped at: Completed 07-01-PLAN.md (marker / run-log module)
-Resume file: .planning/phases/07-hardening/07-02-PLAN.md
+Last session: 2026-06-04T11:30:00.000Z
+Stopped at: Completed 07-02-PLAN.md (idempotency + run log wired into runNightly — Phase 7 done)
+Resume file: None (all 22 plans complete; Phase 7 ready for phase verification)

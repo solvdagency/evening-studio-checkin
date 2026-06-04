@@ -19,7 +19,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 4: Calendar & Meeting Reconciliation** - Read designer calendars and reconcile ad-hoc meetings against bookings, behind a real-evening pilot gate (completed 2026-06-04)
 - [x] **Phase 5: LLM Renderer (optional)** - Swappable LLM renderer for prose and fuzzy meeting judgment, with templated fallback; cuttable (completed 2026-06-04)
 - [x] **Phase 6: Designer Working-Day Availability** - Per-designer working days read from Productive so non-standard weeks (e.g. a 4-day week) are never mis-flagged as open time (completed 2026-06-04)
-- [ ] **Phase 7: Hardening** - Idempotency and structured run logging so a stable, unattended automation stays trustworthy
+- [x] **Phase 7: Hardening** - Idempotency and structured run logging so a stable, unattended automation stays trustworthy
 
 ## Phase Details
 
@@ -210,7 +210,7 @@ Plans:
 
 **Wave 2** *(blocked on Wave 1)*
 
-- [ ] 07-02-PLAN.md — Wire scheduled-only idempotency guard + post-success run-log into runNightly + nightly.yml commit step + REL-03 traceability fix
+- [x] 07-02-PLAN.md — Wire scheduled-only idempotency guard + post-success run-log into runNightly + nightly.yml commit step + REL-03 traceability fix ✅ 2026-06-04
 
 ## Progress
 
@@ -225,4 +225,4 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7
 | 4. Calendar & Meeting Reconciliation | 4/4 | Complete   | 2026-06-04 |
 | 5. LLM Renderer (optional) | 2/2 | Complete   | 2026-06-04 |
 | 6. Designer Working-Day Availability | 3/3 | Complete   | 2026-06-04 |
-| 7. Hardening | 1/2 | In progress | - |
+| 7. Hardening | 2/2 | Complete   | 2026-06-04 |
