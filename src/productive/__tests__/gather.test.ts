@@ -380,6 +380,28 @@ describe("gather (composition root — pull → validate → map → assess → 
     assert.equal(tentative.reduce((s, b) => s + b.minutes, 0), 210);
   });
 
+  it("CR-01 regression: the /allocations query omits filter[canceled] (Productive returns HTTP 400 'unsupported_filter' on that endpoint; canceled exclusion is client-side per the test above)", async () => {
+    const queryByPath: Record<string, string> = {};
+    await gather({
+      now: NOW,
+      fetchPages: async (path: string, query: string): Promise<Result<Page>> => {
+        queryByPath[path] = query;
+        return { ok: true, value: { data: [], included: [] } };
+      },
+    });
+    assert.ok(
+      queryByPath["/allocations"] !== undefined,
+      "the /allocations endpoint was queried",
+    );
+    assert.ok(
+      !queryByPath["/allocations"].includes("filter[canceled]"),
+      `the /allocations query must omit filter[canceled] (live: HTTP 400 unsupported_filter); got: ${queryByPath["/allocations"]}`,
+    );
+    // The supported date-window filters must remain — proves we stripped only the bad param.
+    assert.ok(queryByPath["/allocations"].includes("filter[after]"));
+    assert.ok(queryByPath["/allocations"].includes("filter[before]"));
+  });
+
   it("GAP-CLOSURE: an allocation-only EVENT (absence) is IGNORED (no synthesized tentative absence)", async () => {
     const TARGET = "2026-06-04";
     const person = DESIGNER_PERSON_IDS[1]; // Anisha 686712

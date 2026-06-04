@@ -423,11 +423,16 @@ export async function gather(deps: GatherDeps): Promise<GatherResult> {
   //      allocations pull degrades (sourceError) and the run continues
   //      confirmed-only; it NEVER crashes the gather (Pitfall 6).
   const confirmedIds = new Set<string>(rawBookings.map((b) => b.id));
+  // NOTE: /allocations does NOT support filter[canceled] — Productive returns
+  // HTTP 400 unsupported_filter and the whole pull degrades (live-confirmed
+  // 2026-06-04). CR-01's intent (exclude canceled allocations) is enforced
+  // CLIENT-SIDE in the synthesis loop below on the row's `canceled` attribute,
+  // so omitting the query filter changes no behaviour. Keep after/before — those
+  // ARE supported on /allocations (live-confirmed: 200 with rows).
   const allocationsQuery =
     `filter[person_id]=${personFilter}` +
     `&filter[after]=${targetKey}` +
     `&filter[before]=${lastKey}` +
-    `&filter[canceled]=false` + // mirror the /bookings filter (CR-01)
     `&include=person,service,event`;
   const allocationsResult = await fetchPages("/allocations", allocationsQuery);
   if (!allocationsResult.ok) {
