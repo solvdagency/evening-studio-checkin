@@ -181,7 +181,7 @@ Plans:
 Plans:
 **Wave 1**
 
-- [ ] 06-01-PLAN.md — Rostered-minutes basis for availableMinutes + computeDesignerDay + CAP-05 rollup (domain core)
+- [x] 06-01-PLAN.md — Rostered-minutes basis for availableMinutes + computeDesignerDay + CAP-05 rollup (domain core)
 
 **Wave 2** *(blocked on Wave 1)*
 
@@ -216,5 +216,5 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7
 | 3. Template Renderer & Chat Delivery | 4/4 | Complete   | 2026-06-04 |
 | 4. Calendar & Meeting Reconciliation | 4/4 | Complete   | 2026-06-04 |
 | 5. LLM Renderer (optional) | 1/2 | In Progress|  |
-| 6. Designer Working-Day Availability | 0/3 | Not started | - |
+| 6. Designer Working-Day Availability | 1/3 | In Progress|  |
 | 7. Hardening | 0/TBD | Not started | - |

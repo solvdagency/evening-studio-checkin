@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Phase 06 context gathered
-last_updated: "2026-06-04T08:18:34.905Z"
-last_activity: 2026-06-04 -- Phase 06 execution started
+stopped_at: Completed 06-01-PLAN.md
+last_updated: "2026-06-04T08:24:19.224Z"
+last_activity: 2026-06-04
 progress:
   total_phases: 7
   completed_phases: 4
   total_plans: 20
-  completed_plans: 16
+  completed_plans: 17
   percent: 57
 ---
 
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-06-02)
 ## Current Position
 
 Phase: 06 (designer-working-day-availability) — EXECUTING
-Plan: 1 of 3
-Status: Executing Phase 06
-Last activity: 2026-06-04 -- Phase 06 execution started
+Plan: 2 of 3
+Status: Ready to execute
+Last activity: 2026-06-04
 
-Progress: [██████████] 100%
+Progress: [█████████░] 85%
 
 ## Performance Metrics
 
@@ -64,6 +64,7 @@ Progress: [██████████] 100%
 | Phase 04 P02 | 8min | 3 tasks | 2 files |
 | Phase 04 P03 | 6min | 2 tasks | 4 files |
 | Phase 04 P04 | 3min | 2 tasks | 6 files |
+| Phase 06 P01 | 3min | 2 tasks tasks | 5 files files |
 
 ## Accumulated Context
 
@@ -96,6 +97,8 @@ Recent decisions affecting current work:
 - [Phase 4]: matchTitleToClient is longest-alias-first with a double-match→null guard; reconcileMeetings stays SILENT on unmatched/ambiguous titles (D-04) and applies the ignore-list (via isCountingMeeting) before alias resolution. Both golden FDC cases resolve exactly (3 Jun covered, 26 May worth-a-look).
 - [Phase ?]: [Phase 4]: 📅 worth-a-look sub-line copies the ⚠️/📄 nested-sub-line pattern exactly (escapeHtml + muted, deep-linked title via htmlLink); RenderContext.worthALook is presentation-only, assembled in buildRenderContext alongside tentativeNotes.
 - [Phase ?]: [Phase 4]: calendar wired into runNightly as an ADDITIVE degradable source — cal.sourceErrors concatenated into the degrade list before render (REL-01), so a Calendar outage degrades to the 🤖 card and still posts; calendar is never the exit-1 POST-failure path (two-path rule).
+- [Phase 06]: availableMinutes basis is now per-designer rostered minutes (rostered - absence, floored), not flat TARGET_MINUTES; a 0-rostered day reuses the existing "off" status with no new DayStatus value (CAP-06 / D-02 / D-03 / D-04).
+- [Phase 06]: StudioReportInput.rosteredMinutes(designerId, dateKey) is the injected lookup the rollup + target-day path use; omitted = flat TARGET_MINUTES fallback, a missing/0 entry resolves to 0 and never fabricates capacity (CAP-05 fix / D-06 / D-07).
 
 ### Pending Todos
 
@@ -132,6 +135,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-06-04T07:24:15.647Z
-Stopped at: Phase 06 context gathered
-Resume file: .planning/phases/06-designer-working-day-availability/06-CONTEXT.md
+Last session: 2026-06-04T08:24:19.219Z
+Stopped at: Completed 06-01-PLAN.md
+Resume file: None
