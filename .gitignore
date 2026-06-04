@@ -24,6 +24,9 @@ service-account*.json
 *.log
 npm-debug.log*
 
+# Local screenshots / scratch captures — kept on disk, never committed
+screenshots/
+
 # OS / editor cruft
 .DS_Store
 Thumbs.db
