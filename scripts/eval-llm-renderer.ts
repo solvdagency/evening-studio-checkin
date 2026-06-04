@@ -47,18 +47,30 @@ interface Candidate {
   title: string;
   durationLabel?: string;
   /** The PM label class derived from the fixture _label. */
-  truth: "genuine" | "covered" | "other";
+  truth: "genuine" | "borderline" | "covered" | "other";
 }
 
-/** Load the PM-labelled golden set. */
+/** Load the PM-labelled golden set (real data). */
 function loadLabelled(): LabelledEvent[] {
   const url = new URL("../src/calendar/__fixtures__/labelled-events.json", import.meta.url);
+  return JSON.parse(readFileSync(url, "utf8")) as LabelledEvent[];
+}
+
+/**
+ * Load the SYNTHETIC borderline/overhead set (eval-only — kept out of the golden
+ * fixture so the real calendar tests stay clean). These are the soften/drop side
+ * of the rubric: meetings that would surface as flag candidates but a PM would not
+ * chase, so the LLM SHOULD soften or drop them (reducing over-flagging).
+ */
+function loadBorderline(): LabelledEvent[] {
+  const url = new URL("./eval-borderline.json", import.meta.url);
   return JSON.parse(readFileSync(url, "utf8")) as LabelledEvent[];
 }
 
 /** Map a fixture _label to its ground-truth class for scoring. */
 function truthOf(label: string): Candidate["truth"] {
   if (label.includes("worth-a-look")) return "genuine"; // genuine client work — must NEVER drop
+  if (label.includes("borderline")) return "borderline"; // overhead/low-signal — SHOULD soften/drop
   if (label.includes("covered")) return "covered"; // reconciler stays silent — not surfaced
   return "other";
 }
@@ -86,10 +98,10 @@ function buildCandidates(events: LabelledEvent[]): Candidate[] {
   for (const e of events) {
     const label = e._label ?? "";
     const truth = truthOf(label);
-    // Only the events the reconciler would actually surface reach the model. The
-    // genuine "worth-a-look" set is the protected core of the eval; covered/overhead/
-    // filtered events are not flag candidates, so they are not sent.
-    if (truth !== "genuine") continue;
+    // The flag candidates the reconciler would surface and the model must judge:
+    // genuine (must NEVER drop) + borderline (SHOULD soften/drop). covered and
+    // mechanically-filtered events never reach the model, so they are not sent.
+    if (truth !== "genuine" && truth !== "borderline") continue;
     const c: Candidate = { id, title: e.summary, truth };
     const dur = durationLabel(e);
     if (dur) c.durationLabel = dur;
@@ -122,9 +134,11 @@ async function main(): Promise<void> {
     process.exit(1);
   }
 
-  const events = loadLabelled();
+  const events = [...loadLabelled(), ...loadBorderline()];
   const candidates = buildCandidates(events);
-  if (candidates.length === 0) {
+  const genuineCount = candidates.filter((c) => c.truth === "genuine").length;
+  const borderlineCount = candidates.filter((c) => c.truth === "borderline").length;
+  if (genuineCount === 0) {
     console.error("No genuine worth-a-look candidates found in the labelled set — nothing to eval.");
     process.exit(1);
   }
@@ -165,35 +179,50 @@ async function main(): Promise<void> {
   const byId = new Map<number, "keep" | "soften" | "drop">();
   for (const v of validated.data.meetingVerdicts) byId.set(v.id, v.verdict);
 
-  // Score each candidate. PASS rubric (AI-SPEC §5): a genuine flag must NOT be
-  // dropped (keep/soften are both acceptable; a missing verdict defaults to keep).
-  let keepCount = 0;
-  let softenCount = 0;
-  let dropCount = 0;
+  // Score each candidate against its truth class:
+  //  - genuine: a `drop` is the never-drop violation → HARD FAIL (T-05-06).
+  //    keep/soften both pass (a missing verdict defaults to keep).
+  //  - borderline: the model SHOULD reduce over-flagging → soften/drop is the
+  //    desired outcome; a `keep` means it did not reduce noise (soft signal,
+  //    not a hard fail — the toggle ships OFF until this reads well).
   let droppedGenuine = 0;
+  let borderlineReduced = 0; // soften or drop on a borderline case (good)
+  let borderlineKept = 0; // keep on a borderline case (over-flagging not reduced)
 
-  console.log("\n──────── flag-fairness eval (genuine client-work flags) ────────");
-  console.log(`model: ${MODEL}   cases: ${candidates.length}`);
+  console.log("\n──────── flag-fairness eval (genuine never-drop + borderline soften/drop) ────────");
+  console.log(`model: ${MODEL}   genuine: ${genuineCount}   borderline (synthetic): ${borderlineCount}`);
   console.log("");
   const pad = (s: string, n: number) => (s.length > n ? s.slice(0, n - 1) + "…" : s.padEnd(n));
-  console.log(`${pad("verdict", 8)} ${pad("result", 6)} title`);
-  console.log("─".repeat(72));
+  console.log(`${pad("class", 11)} ${pad("verdict", 8)} ${pad("result", 7)} title`);
+  console.log("─".repeat(78));
 
   for (const c of candidates) {
     const verdict = byId.get(c.id) ?? "keep"; // no verdict → treated as keep
-    if (verdict === "keep") keepCount += 1;
-    else if (verdict === "soften") softenCount += 1;
-    else dropCount += 1;
-
-    const isHardFail = verdict === "drop"; // dropping a genuine flag is the never-drop violation
-    if (isHardFail) droppedGenuine += 1;
-    const result = isHardFail ? "FAIL" : "pass";
-    console.log(`${pad(verdict, 8)} ${pad(result, 6)} ${c.title}`);
+    let result: string;
+    if (c.truth === "genuine") {
+      if (verdict === "drop") {
+        droppedGenuine += 1;
+        result = "FAIL"; // never-drop violation
+      } else {
+        result = "pass"; // kept or softened — genuine flag preserved
+      }
+    } else {
+      // borderline
+      if (verdict === "keep") {
+        borderlineKept += 1;
+        result = "noisy"; // not reduced — a PM-borderline flag survived as-is
+      } else {
+        borderlineReduced += 1;
+        result = "good"; // softened or dropped — over-flagging reduced
+      }
+    }
+    console.log(`${pad(c.truth, 11)} ${pad(verdict, 8)} ${pad(result, 7)} ${c.title}`);
   }
 
-  console.log("─".repeat(72));
+  console.log("─".repeat(78));
   console.log(
-    `summary: ${candidates.length} cases · keep ${keepCount} · soften ${softenCount} · drop ${dropCount} · drops-of-genuine ${droppedGenuine}`,
+    `summary: genuine ${genuineCount} (drops-of-genuine ${droppedGenuine}) · ` +
+      `borderline ${borderlineCount} (reduced ${borderlineReduced}, kept ${borderlineKept})`,
   );
 
   if (droppedGenuine > 0) {
@@ -204,7 +233,17 @@ async function main(): Promise<void> {
     process.exit(1);
   }
 
-  console.log("\nPASS: no genuine client-work flag was dropped. Review the soften/keep calls for fairness above.");
+  console.log("\nPASS: no genuine client-work flag was dropped (the hard rule holds).");
+  if (borderlineCount > 0 && borderlineReduced === 0) {
+    console.log(
+      `NOTE: the model kept all ${borderlineCount} borderline case(s) — over-flagging was not reduced. ` +
+        "The judgment toggle adds little value as tuned; refine the prompt/few-shots before enabling it in prod.",
+    );
+  } else if (borderlineCount > 0) {
+    console.log(
+      `Over-flagging reduced on ${borderlineReduced}/${borderlineCount} borderline case(s) — the soften/drop side is working.`,
+    );
+  }
   process.exit(0);
 }
 

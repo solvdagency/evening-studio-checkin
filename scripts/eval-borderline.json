@@ -1,0 +1,23 @@
+[
+  {
+    "_label": "borderline · vague-internal-sync",
+    "_note": "SYNTHETIC (eval-only, not golden data). A short, vaguely-titled internal sync. It would surface as a flag candidate, but a PM would NOT treat it as an unaccounted client conflict worth chasing. The LLM should soften or drop it — reducing over-flagging.",
+    "summary": "Quick sync re: timelines",
+    "start": { "dateTime": "2026-06-05T11:00:00+10:00" },
+    "end": { "dateTime": "2026-06-05T11:15:00+10:00" }
+  },
+  {
+    "_label": "borderline · internal-review",
+    "_note": "SYNTHETIC (eval-only). Internal portfolio review — studio overhead, not client delivery. Soften/drop expected.",
+    "summary": "Internal portfolio review",
+    "start": { "dateTime": "2026-06-05T14:00:00+10:00" },
+    "end": { "dateTime": "2026-06-05T14:30:00+10:00" }
+  },
+  {
+    "_label": "borderline · new-biz-intro",
+    "_note": "SYNTHETIC (eval-only). Speculative new-business intro call — not booked design work. A PM wouldn't flag it as a resourcing conflict. Soften/drop expected.",
+    "summary": "New biz intro call",
+    "start": { "dateTime": "2026-06-05T15:30:00+10:00" },
+    "end": { "dateTime": "2026-06-05T16:00:00+10:00" }
+  }
+]
