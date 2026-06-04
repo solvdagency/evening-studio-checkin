@@ -177,7 +177,19 @@ Plans:
   4. If Productive availability can't be read, the run degrades safely (does not silently invent open time) and still posts
   5. All capacity arithmetic stays deterministic and unit-tested; no regression to Phases 1–5
 
-**Plans**: TBD
+**Plans**: 3 plans
+Plans:
+**Wave 1**
+
+- [ ] 06-01-PLAN.md — Rostered-minutes basis for availableMinutes + computeDesignerDay + CAP-05 rollup (domain core)
+
+**Wave 2** *(blocked on Wave 1)*
+
+- [ ] 06-02-PLAN.md — /people availabilities pull + per-weekday minutes mapper + per-designer degrade (rosteredMinutes on GatherResult)
+
+**Wave 3** *(blocked on Wave 1 + Wave 2)*
+
+- [ ] 06-03-PLAN.md — Wire rosteredMinutes into runNightly + routine "not in <day>" wording + live smoke check
 
 ### Phase 7: Hardening
 
@@ -204,5 +216,5 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7
 | 3. Template Renderer & Chat Delivery | 4/4 | Complete   | 2026-06-04 |
 | 4. Calendar & Meeting Reconciliation | 4/4 | Complete   | 2026-06-04 |
 | 5. LLM Renderer (optional) | 1/2 | In Progress|  |
-| 6. Designer Working-Day Availability | 0/TBD | Not started | - |
+| 6. Designer Working-Day Availability | 0/3 | Not started | - |
 | 7. Hardening | 0/TBD | Not started | - |
