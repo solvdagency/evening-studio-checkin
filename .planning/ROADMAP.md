@@ -17,7 +17,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 2: Productive Pull & Briefed Discovery** - Live Productive data into typed objects; discover and confirm the real "briefed" mapping (completed 2026-06-03)
 - [x] **Phase 3: Template Renderer & Chat Delivery** - Shippable v1: on-brand Cards v2 message, scheduled weekday posting, always-post and degraded mode (no LLM, no Calendar) (completed 2026-06-04)
 - [x] **Phase 4: Calendar & Meeting Reconciliation** - Read designer calendars and reconcile ad-hoc meetings against bookings, behind a real-evening pilot gate (completed 2026-06-04)
-- [ ] **Phase 5: LLM Renderer (optional)** - Swappable LLM renderer for prose and fuzzy meeting judgment, with templated fallback; cuttable
+- [x] **Phase 5: LLM Renderer (optional)** - Swappable LLM renderer for prose and fuzzy meeting judgment, with templated fallback; cuttable (completed 2026-06-04)
 - [x] **Phase 6: Designer Working-Day Availability** - Per-designer working days read from Productive so non-standard weeks (e.g. a 4-day week) are never mis-flagged as open time (completed 2026-06-04)
 - [ ] **Phase 7: Hardening** - Idempotency and structured run logging so a stable, unattended automation stays trustworthy
 
@@ -159,7 +159,7 @@ Plans:
 
 **Wave 2** *(blocked on Wave 1)*
 
-- [ ] 05-02-PLAN.md — Fuzzy keep/soften/drop meeting judgment behind a default-OFF toggle + offline flag-fairness eval over the Phase-4 labelled set (LLM-02) — Tasks 1-3 built & committed (suite 319 green, tsc clean); PAUSED at Task 4, a blocking human-verify checkpoint (operator runs scripts/eval-llm-renderer.ts with the dev key and approves flag fairness before LLM-02 is validated)
+- [x] 05-02-PLAN.md — Fuzzy keep/soften/drop meeting judgment behind a default-OFF toggle + offline flag-fairness eval over the Phase-4 labelled set (LLM-02) — all 4 tasks done; suite 319 green, tsc clean; Task 4 blocking human-verify APPROVED (operator ran scripts/eval-llm-renderer.ts live on haiku-4-5: PASS, genuine flag kept, drops-of-genuine=0). Follow-up: expand the labelled set with 2-3 borderline cases before ever enabling the toggle in production.
 
 **Dependencies (external)**: Anthropic API key — a personal $5-credit key for development/testing, and an org-sanctioned key for production. Production cutover is gated on org approval of the sanctioned key; the Pro/Max subscription OAuth route is prohibited and must not be used. This entire phase is cuttable without affecting the shipped product.
 
@@ -215,6 +215,6 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7
 | 2. Productive Pull & Briefed Discovery | 4/4 | Complete   | 2026-06-03 |
 | 3. Template Renderer & Chat Delivery | 4/4 | Complete   | 2026-06-04 |
 | 4. Calendar & Meeting Reconciliation | 4/4 | Complete   | 2026-06-04 |
-| 5. LLM Renderer (optional) | 1/2 | In Progress|  |
+| 5. LLM Renderer (optional) | 2/2 | Complete   | 2026-06-04 |
 | 6. Designer Working-Day Availability | 3/3 | Complete   | 2026-06-04 |
 | 7. Hardening | 0/TBD | Not started | - |

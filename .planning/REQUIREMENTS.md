@@ -56,7 +56,7 @@ Requirements for the initial release. Each maps to roadmap phases.
 ### Intelligence Layer
 
 - [ ] **LLM-01**: The message renderer is swappable behind one interface, with a deterministic templated renderer as the always-available default
-- [ ] **LLM-02**: An optional LLM renderer (via an Anthropic API key — a personal $5-credit key for development/testing, the org-sanctioned key for production) produces the message prose and adjudicates fuzzy meeting reconciliation, receiving only pre-computed facts (never doing arithmetic), and falls back to the templated renderer on any failure
+- [x] **LLM-02**: An optional LLM renderer (via an Anthropic API key — a personal $5-credit key for development/testing, the org-sanctioned key for production) produces the message prose and adjudicates fuzzy meeting reconciliation, receiving only pre-computed facts (never doing arithmetic), and falls back to the templated renderer on any failure
 
 ## v2 Requirements
 
@@ -125,7 +125,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | REL-02 | Phase 3 | Pending |
 | REL-03 | Phase 6 | Pending |
 | LLM-01 | Phase 5 | Pending |
-| LLM-02 | Phase 5 | Pending |
+| LLM-02 | Phase 5 | Complete |
 
 **Coverage:**
 - v1 requirements: 25 total

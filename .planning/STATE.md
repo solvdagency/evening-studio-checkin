@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Paused at 05-02 Task 4 human-verify checkpoint (blocking) — operator must run scripts/eval-llm-renderer.ts with the dev key and approve flag fairness
-last_updated: "2026-06-04T09:35:00.000Z"
-last_activity: 2026-06-04 -- 05-02 Tasks 1-3 complete (fuzzy meeting judgment, default OFF); paused at the blocking flag-fairness checkpoint
+stopped_at: Completed 05-02 — Task 4 blocking flag-fairness checkpoint APPROVED; Phase 5 complete (2/2), LLM-02 validated. Only Phase 7 (Hardening) remains.
+last_updated: "2026-06-04T10:05:00.000Z"
+last_activity: 2026-06-04 -- 05-02 finalized: operator approved the live flag-fairness eval (haiku-4-5, drops-of-genuine=0); LLM-02 complete, Phase 5 closed
 progress:
   total_phases: 7
-  completed_phases: 5
+  completed_phases: 6
   total_plans: 20
-  completed_plans: 19
-  percent: 71
+  completed_plans: 20
+  percent: 86
 ---
 
 # Project State
@@ -21,25 +21,25 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-02)
 
 **Core value:** Every evening the team gets one clear, trustworthy heads-up of exactly what needs fixing before tomorrow — so the three designers start the day with full, briefed workloads instead of chasing the work themselves.
-**Current focus:** Phase 05 — llm-renderer-optional
+**Current focus:** Phase 07 — Hardening (next; not started)
 
 ## Current Position
 
-Phase: 05 (llm-renderer-optional) — EXECUTING
-Plan: 2 of 2
-Status: 05-02 Tasks 1-3 done (fuzzy meeting keep/soften/drop behind a default-OFF
-toggle + offline flag-fairness eval harness); PAUSED at Task 4 — a blocking
-human-verify checkpoint. LLM-02 stays Pending until the operator runs
-`ANTHROPIC_API_KEY=$DEV_KEY npx tsx scripts/eval-llm-renderer.ts`, confirms ZERO drops
-of genuine client work, and approves. Suite 319 green, tsc clean, toggle OFF =
-byte-identical to Slice 1.
-clean. The 06-03 live smoke check caught a real fixtures-vs-live bug
-(`person.availabilities` is a JSON-string-of-tuples, not array-of-objects) — fixed at
-the zod boundary (commit a042430) and re-verified live; Liam approved. One degrade-path
-quality issue (D-06 vs D-18) was reviewed and deferred to a follow-up (see 06-03-SUMMARY).
-Last activity: 2026-06-04 -- Phase 05 execution started
+Phase: 05 (llm-renderer-optional) — COMPLETE (2/2)
+Plan: 2 of 2 done
+Status: 05-02 COMPLETE. Task 4 blocking flag-fairness checkpoint APPROVED — the operator
+ran `scripts/eval-llm-renderer.ts` live against haiku-4-5 with the dev key: PASS / exit 0,
+the one genuine client-work flag (`FDC IPO Launch Check-In`) kept, drops-of-genuine = 0,
+toggle ships OFF. LLM-02 validated. Suite 319 green, tsc clean, toggle OFF = byte-identical
+to Slice 1. Phase 5 closed; the only remaining phase is Phase 7 (Hardening), which is
+independent of Phases 4/5 and not yet planned.
+Follow-up logged (do NOT act now): `labelled-events.json` has only 1 genuine case, so the
+harness has not yet exercised soften/drop on borderline/overhead meetings — expand the
+labelled set with 2-3 borderline cases and re-run the eval BEFORE the
+`USE_LLM_MEETING_JUDGMENT` toggle is ever enabled in production.
+Last activity: 2026-06-04 -- Phase 05 closed (LLM-02 approved)
 
-Progress: [█████████▓] 95%
+Progress: [████████▌ ] 86%
 
 ## Performance Metrics
 
@@ -147,10 +147,10 @@ Items acknowledged and carried forward from previous milestone close:
 
 | Category | Item | Status | Deferred At |
 |----------|------|--------|-------------|
-| *(none)* | | | |
+| Phase 05 (LLM-02) | Expand `labelled-events.json` with 2-3 borderline/overhead cases and re-run `scripts/eval-llm-renderer.ts` to confirm over-flagging drops (the soften/drop side of the rubric) — REQUIRED before `USE_LLM_MEETING_JUDGMENT` is ever turned ON in production. Current eval proves only the never-drop (keep-genuine) path on a single genuine case. | Open | 2026-06-04 |
 
 ## Session Continuity
 
-Last session: 2026-06-04T09:10:00.000Z
-Stopped at: Paused at 06-03 human-verify checkpoint (Task 3) — awaiting operator smoke-check approval
-Resume file: .planning/phases/06-designer-working-day-availability/06-03-SUMMARY.md
+Last session: 2026-06-04T10:05:00.000Z
+Stopped at: Completed 05-02 — flag-fairness checkpoint approved, Phase 5 closed (LLM-02 validated). Next: Phase 7 (Hardening), not yet planned.
+Resume file: .planning/phases/05-llm-renderer-optional/05-02-SUMMARY.md

@@ -1,7 +1,7 @@
 ---
 phase: 05-llm-renderer-optional
 plan: 02
-status: paused-at-checkpoint
+status: complete
 requirements: [LLM-02]
 date: 2026-06-04
 ---
@@ -12,8 +12,9 @@ Slice-2 fuzzy meeting-judgment layer: the single Anthropic call's per-meeting
 keep/soften/drop verdicts now adjudicate the deterministic reconciler's worth-a-look
 flags, applied by pure TypeScript BEFORE rendering, behind a default-OFF toggle —
 plus the offline flag-fairness eval harness over the Phase-4 labelled real meetings.
-Autonomous Tasks 1-3 are complete; Task 4 (blocking human-verify) is pending the
-operator running the harness with their dev key.
+All four tasks complete: Tasks 1-3 built & committed; Task 4 (blocking human-verify)
+APPROVED — the operator ran the harness live and confirmed flag fairness. LLM-02 is
+validated.
 
 ## What was built (Tasks 1-3)
 
@@ -74,7 +75,11 @@ meeting labelled genuine client work (never-drop rule, T-05-06).
   worth-a-look render tests all still pass unchanged)
 - `eval-llm-renderer` is NOT matched by the `npm test` glob (0 matches); harness parses,
   loads the labelled set, and its no-key guard exits cleanly before any network call
-- Behavioural flag-fairness over the live model: PENDING — Task 4 human-verify checkpoint
+- Behavioural flag-fairness over the live model: PASSED — Task 4 human-verify checkpoint
+  APPROVED. Operator ran `scripts/eval-llm-renderer.ts` against the live model
+  (haiku-4-5) with the dev key: exit 0 / PASS. The one genuine client-work flag
+  (`FDC IPO Launch Check-In`) was kept; drops-of-genuine = 0 — the never-drop rule
+  holds. Toggle confirmed shipping OFF.
 
 ## Trust rule enforced in code
 
@@ -113,19 +118,26 @@ rather than reading env directly, so it stays pure/testable; the toggle is read 
 `renderLlm.ts` wiring point (`USE_LLM_MEETING_JUDGMENT`) and threaded in. This matches
 the project's injection style and keeps `assemble.ts` free of `process.env`.
 
-## Pending — blocking human-verify checkpoint (Task 4)
+## Task 4 — blocking human-verify checkpoint: APPROVED
 
-LLM-02 is NOT yet marked complete. The operator must run the offline harness with the
-dev key and confirm flag fairness before the judgment toggle is trusted:
+LLM-02 is validated. The operator ran the offline harness with the dev key against the
+live model (haiku-4-5) and confirmed flag fairness:
 
-1. `ANTHROPIC_API_KEY=$DEV_KEY npx tsx scripts/eval-llm-renderer.ts` and read the
-   keep/soften/drop table.
-2. Confirm ZERO drops of genuine client work (the never-drop rule — the harness
-   hard-fails on any such drop).
-3. Confirm the softened/dropped flags are ones a PM would agree are borderline.
-4. Confirm the toggle ships OFF and that with it OFF the card is byte-identical to Slice 1.
+- `scripts/eval-llm-renderer.ts` → PASS, exit 0.
+- The one genuine client-work flag (`FDC IPO Launch Check-In`) was KEPT.
+- drops-of-genuine = 0 — the never-drop rule holds.
+- The toggle ships OFF; with it OFF the card is byte-identical to Slice 1.
 
-Resume signal: "approved" if fair, else describe the misjudged flags to tune the
-prompt/few-shots and re-run.
+Resume signal received: "approved".
+
+## Follow-up (do NOT act on now — gate before enabling the toggle in production)
+
+The labelled reference set in `labelled-events.json` currently has only **1 genuine
+case**, so the harness has not yet exercised `soften`/`drop` on borderline/overhead
+meetings — only the never-drop (keep-genuine) path has been behaviourally proven.
+**Before `USE_LLM_MEETING_JUDGMENT` is ever turned ON in production**, expand the
+labelled set with 2–3 borderline/overhead cases and re-run `eval-llm-renderer.ts` to
+confirm over-flagging actually drops (the soften/drop side of the rubric). Until then
+the toggle stays OFF and Slice 2 is dormant.
 
 ## Self-Check: PASSED
