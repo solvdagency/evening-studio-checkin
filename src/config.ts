@@ -97,3 +97,79 @@ export const BRAND_COLORS = {
   muted: "#5f6368",
   openDots: "#c9ccd1",
 } as const;
+
+/**
+ * Calendar SECRET posture (Phase 4): mirrors the Productive token rule at the top
+ * of this file. The Google service-account private-key JSON is a SECRET and is
+ * NEVER committed here — `src/calendar/auth.ts` reads it from
+ * `process.env.GOOGLE_SA_KEY` (a GitHub Actions secret in CI; a gitignored
+ * `.env` / `secrets/` file locally) and `JSON.parse`s it. The key value (and the
+ * minted JWT client) is never logged. Only the NON-secret calendar config below
+ * — the overhead ignore-list, the client-alias map, the designer calendar emails,
+ * and the studio-hours window — lives in this committed file.
+ */
+
+/**
+ * Overhead-ceremony ignore-list (D-07): SPECIFIC title phrases (NOT loose
+ * keywords), matched case-insensitively as substrings against a meeting title.
+ * These are the recurring internal team meetings the studio explicitly does NOT
+ * count against the 7.5h day and never reconciles. Specific phrases — so a future
+ * client meeting like "FDC WIP" is NOT accidentally swallowed by "WIP". Seeded
+ * from the real meetings observed across all three calendars (04-CONTEXT
+ * §Specifics); plan 02's labelling spike refines/extends this list.
+ */
+export const MEETING_IGNORE_LIST: readonly string[] = [
+  "Daily Stand-up", // "Team Daily Stand-up"
+  "Weekly WIP", // "Team Weekly WIP"
+  "Creative WIP", // "Creative WIP - plan the week"
+  "Creative team", // "Creative team - review (bring a piece of work!)"
+];
+
+/**
+ * One client/company the meeting-title → client matcher (D-03) can resolve a
+ * calendar event to. `companyId` is the Productive company id the same-day
+ * reconciliation (D-01/D-02) compares against; `aliases` are the title tokens a
+ * meeting may carry (short code, legal/trading name, project shorthand).
+ */
+export interface ClientAlias {
+  companyId: string;
+  companyName: string;
+  code?: string;
+  aliases: string[];
+}
+
+/**
+ * Committed client-alias map (D-03/D-09): calendar-title tokens → Productive
+ * company. Seeded with the live-validated FDC entry (04-CONTEXT §Specifics: FDC
+ * Construction, id 1333899, code FDCC, IPO Launch Video project). Plan 02's
+ * labelling spike confirms/extends this map against ~3-4 weeks of real meetings.
+ */
+export const CLIENT_ALIAS_MAP: readonly ClientAlias[] = [
+  {
+    companyId: "1333899",
+    companyName: "FDC Construction",
+    code: "FDCC",
+    aliases: ["FDC", "FDC Construction", "FDCC", "IPO Launch"], // spike confirms/extends
+  },
+];
+
+/**
+ * The three monitored designers' primary calendar emails, keyed by Productive
+ * person id to align with DESIGNER_PERSON_IDS / DESIGNER_NAMES (live-confirmed
+ * 2026-06-04, STATE.md). The calendar read impersonates each of these via the
+ * service account's domain-wide delegation (one `subject:` per designer). These
+ * are non-secret identifiers, so they live in committed config.
+ */
+export const DESIGNER_CALENDAR_EMAILS = {
+  "686717": "liamm@solvdagency.com.au",
+  "686712": "anishag@solvdagency.com.au",
+  "686716": "ellaw@solvdagency.com.au",
+} as const;
+
+/**
+ * Studio working-hours window (D-08), studio-zone local time "HH:mm". Meetings
+ * starting outside 08:30–17:30 (e.g. the 17:30 Falcon Dinner) are excluded as
+ * after-hours by the mechanical filter in plan 03. Committed, non-secret.
+ */
+export const WORK_DAY_START = "08:30" as const;
+export const WORK_DAY_END = "17:30" as const;
