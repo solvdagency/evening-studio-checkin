@@ -15,6 +15,11 @@ coverage/
 .env.*
 !.env.example
 
+# Credentials dropped locally (Google service-account JSON, etc.) — NEVER commit
+secrets/
+*.sa.json
+service-account*.json
+
 # Logs
 *.log
 npm-debug.log*
