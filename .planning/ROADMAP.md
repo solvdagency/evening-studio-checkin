@@ -126,7 +126,7 @@ Plans:
 
 **Wave 2** *(blocked on Wave 1)*
 
-- [ ] 04-02-PLAN.md — Live-data labelling spike (D-09): committed ignore-list + client-alias map + golden fixtures, with a human-labelling checkpoint
+- [x] 04-02-PLAN.md — Live-data labelling spike (D-09): committed ignore-list + client-alias map + golden fixtures, with a human-labelling checkpoint
 
 **Wave 3** *(blocked on Wave 2)*
 
@@ -176,6 +176,6 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | 1. Core Math & Clock | 3/3 | Complete   | 2026-06-02 |
 | 2. Productive Pull & Briefed Discovery | 4/4 | Complete   | 2026-06-03 |
 | 3. Template Renderer & Chat Delivery | 4/4 | Complete   | 2026-06-04 |
-| 4. Calendar & Meeting Reconciliation | 1/4 | In Progress|  |
+| 4. Calendar & Meeting Reconciliation | 2/4 | In Progress|  |
 | 5. LLM Renderer (optional) | 0/TBD | Not started | - |
 | 6. Hardening | 0/TBD | Not started | - |
