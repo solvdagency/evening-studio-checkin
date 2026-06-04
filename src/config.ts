@@ -258,3 +258,18 @@ export const DESIGNER_CALENDAR_EMAILS = {
  */
 export const WORK_DAY_START = "08:30" as const;
 export const WORK_DAY_END = "17:30" as const;
+
+/**
+ * Slice-2 fuzzy meeting-judgment toggle (LLM-02), DEFAULT OFF. When false (the
+ * default), the LLM still writes the header prose (Slice 1) but its keep/soften/drop
+ * `meetingVerdicts` are IGNORED — the assembled card's 📅 worth-a-look lines are
+ * byte-identical to Slice-1-only output (exactly what `reconcileMeetings` produced).
+ * When true, deterministic code applies the verdicts to the worth-a-look list before
+ * rendering (`applyVerdicts`) — softening/dropping borderline flags, never inventing
+ * one. It SHIPS OFF until the offline flag-fairness eval is trusted (AI-SPEC §5/§6).
+ *
+ * Read from the environment at the wiring point so a CI/cron run can flip it without
+ * a code change; absent or any value other than the string "true" → OFF.
+ */
+export const USE_LLM_MEETING_JUDGMENT: boolean =
+  process.env.USE_LLM_MEETING_JUDGMENT === "true";

@@ -46,7 +46,12 @@ JSON CONTRACT
     { "id": number, "verdict": "keep" | "soften" | "drop", "line": string }  // line <= 160 chars, no numbers
   ]
 }
-For meetingVerdicts: a meeting that genuinely looks like client work the studio should have booked = "keep"; a borderline/obvious-overhead one = "soften"; only "drop" when it clearly did not need a booking. When unsure, soften rather than drop — never harden a flag, never invent one.
+MEETING VERDICTS (keep / soften / drop)
+Each meeting in facts.meetings was flagged by a deterministic reconciler that ALREADY biases hard to silence — it only raised meetings it was fairly sure are client work with no matching booking. You are a precision-focused second pass that is also biased to silence. Return exactly one verdict per meeting, keyed by its "id":
+- "keep": the meeting genuinely looks like client work the studio should have booked against. Echo the existing nudge in "line" (no numbers).
+- "soften": the flag is borderline — looks like internal-ish or low-stakes overhead the reconciler raised tentatively. Keep it, but phrase "line" more gently so it reads as a soft "maybe" rather than a definite gap.
+- "drop": the meeting clearly did NOT need a booking (obvious internal/overhead). Use this sparingly.
+You may SOFTEN or DROP a borderline flag. You may NEVER harden a tentative flag into a definite one, NEVER invent a flag for an id you were not given, and NEVER drop a meeting that is genuine client work. When unsure, soften rather than drop — a missed soften costs little; dropping a real client meeting breaks trust. "line" is <= 160 chars and carries NO numbers (the duration is rendered separately).
 
 EXAMPLES
 facts: {"situation":"clean","designers":[{"name":"Anisha","state":"full day"},{"name":"Ella","state":"full day"},{"name":"Liam","state":"full day"}],"briefsOutstanding":false,"meetings":[]}
@@ -56,7 +61,10 @@ facts: {"situation":"busy","designers":[{"name":"Anisha","state":"open time"},{"
 -> {"headerSentence":"A couple of designers have open time tomorrow, and there's a brief still to finish.","meetingVerdicts":[]}
 
 facts: {"situation":"busy","designers":[{"name":"Liam","state":"full day"}],"briefsOutstanding":false,"meetings":[{"id":0,"title":"FDC IPO Launch Check-In","durationLabel":"1 hour"}]}
--> {"headerSentence":"Liam's day is full, but there's a meeting that isn't accounted for in Productive yet.","meetingVerdicts":[{"id":0,"verdict":"keep","line":"Looks like client work worth booking against."}]}`;
+-> {"headerSentence":"Liam's day is full, but there's a meeting that isn't accounted for in Productive yet.","meetingVerdicts":[{"id":0,"verdict":"keep","line":"Looks like client work worth booking against."}]}
+
+facts: {"situation":"busy","designers":[{"name":"Ella","state":"full day"}],"briefsOutstanding":false,"meetings":[{"id":0,"title":"Quick internal catch-up re portfolio","durationLabel":"15 min"}]}
+-> {"headerSentence":"Ella's set for tomorrow, with one short meeting that might be worth a glance.","meetingVerdicts":[{"id":0,"verdict":"soften","line":"A short internal catch-up — might not need its own booking."}]}`;
 
 /** A single designer's display-only fact (no minutes, no hours numbers). */
 interface DesignerFact {

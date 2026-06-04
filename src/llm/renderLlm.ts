@@ -24,7 +24,7 @@
 import type { CardsV2Payload, RenderContext, Widget } from "../render/cards.ts";
 import type { StudioReport } from "../domain/report.ts";
 import { renderTemplate } from "../render/renderMessage.ts";
-import { BRAND_COLORS } from "../config.ts";
+import { BRAND_COLORS, USE_LLM_MEETING_JUDGMENT } from "../config.ts";
 import { LlmOutput } from "./schema.ts";
 import { buildFacts, SYSTEM_PROMPT } from "./prompt.ts";
 import { assembleCardsV2 } from "./assemble.ts";
@@ -143,7 +143,10 @@ export async function renderLlmOrTemplate(
       throw new LlmFailure("zod", "response failed schema validation");
     }
 
-    const payload = assembleCardsV2(report, ctx, validated.data);
+    // Slice-2 (LLM-02): apply the model's keep/soften/drop meeting verdicts to the
+    // worth-a-look lines ONLY when the judgment toggle is on (default OFF → byte-
+    // identical to Slice 1). The header prose is substituted regardless.
+    const payload = assembleCardsV2(report, ctx, validated.data, USE_LLM_MEETING_JUDGMENT);
     logRun({
       renderPath: "llm",
       model: MODEL,

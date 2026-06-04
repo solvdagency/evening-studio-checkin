@@ -219,6 +219,12 @@ export async function runNightly(now: DateTime, deps?: Partial<RunNightlyDeps>):
     webhookUrl: deps?.webhookUrl ?? process.env.GCHAT_WEBHOOK_URL ?? "",
     // LLM-01 swap: opt-in via USE_LLM_RENDERER. The LLM renderer self-falls-back to
     // renderTemplate + degraded note on any failure, so this never throws (REL-01).
+    // LLM-02 (Slice 2): the fuzzy meeting-judgment layer is gated on BOTH this flag
+    // AND USE_LLM_MEETING_JUDGMENT (read inside renderLlmOrTemplate → assembleCardsV2).
+    // The judgment toggle only has any effect when the LLM renderer is the active one;
+    // with USE_LLM_RENDERER off, renderTemplate runs and verdicts never apply. With
+    // USE_LLM_MEETING_JUDGMENT off (default), the LLM still writes prose but its
+    // verdicts are ignored — the 📅 lines stay byte-identical to Slice 1.
     renderMessage:
       deps?.renderMessage ??
       (process.env.USE_LLM_RENDERER === "true" ? renderLlmOrTemplate : renderTemplate),
