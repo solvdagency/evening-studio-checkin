@@ -176,6 +176,20 @@ function makeMarkerStub(opts: {
   return { readMarker, writeMarker, readCalls, writeCalls };
 }
 
+/**
+ * A no-op marker seam for the orchestration tests that don't exercise idempotency.
+ * readMarker always reports "no marker" (so the scheduled-only guard never skips) and
+ * writeMarker is a pure no-op — these tests touch NO real filesystem. Without it, the
+ * deps fall back to runNightly's REAL writeMarker default and litter .runs/<date>.json
+ * into the working tree on every `npm test` (a test-isolation leak). Tests that DO
+ * exercise the marker override these via makeMarkerStub — later keys in the deps
+ * literal win, so the explicit stub takes precedence over this spread.
+ */
+const NOOP_MARKER = {
+  readMarker: () => ({ exists: false }),
+  writeMarker: () => ({ ok: true as const }),
+};
+
 describe("runNightly — orchestration paths (REL-01 / REL-02 / MEET-04)", () => {
   it("is a weekday now (guard sanity — fails loudly if the fixed date drifts to a weekend)", () => {
     assert.ok(NOW.isValid, "fixed now parses");
@@ -186,6 +200,7 @@ describe("runNightly — orchestration paths (REL-01 / REL-02 / MEET-04)", () =>
     const post = makePostStub({ ok: true, value: undefined });
 
     const code = await runNightly(NOW, {
+      ...NOOP_MARKER,
       gather: async () => stubGatherResult(),
       gatherCalendar: async () => stubCalendarResult(),
       postToChat: post.postToChat,
@@ -213,6 +228,7 @@ describe("runNightly — orchestration paths (REL-01 / REL-02 / MEET-04)", () =>
     };
 
     const code = await runNightly(NOW, {
+      ...NOOP_MARKER,
       gather: async () => stubGatherResult(),
       gatherCalendar: async () => calFail,
       postToChat: post.postToChat,
@@ -242,6 +258,7 @@ describe("runNightly — orchestration paths (REL-01 / REL-02 / MEET-04)", () =>
     const post = makePostStub({ ok: false, error: "stub fail" });
 
     const code = await runNightly(NOW, {
+      ...NOOP_MARKER,
       gather: async () => stubGatherResult(),
       gatherCalendar: async () => stubCalendarResult(),
       postToChat: post.postToChat,
@@ -262,6 +279,7 @@ describe("runNightly — orchestration paths (REL-01 / REL-02 / MEET-04)", () =>
     delete process.env.USE_LLM_RENDERER;
     try {
       const sharedStubs = {
+        ...NOOP_MARKER,
         gather: async () => stubGatherResult(),
         gatherCalendar: async () => stubCalendarResult(),
         webhookUrl: STUB_WEBHOOK,
@@ -306,6 +324,7 @@ describe("runNightly — orchestration paths (REL-01 / REL-02 / MEET-04)", () =>
     });
 
     const code = await runNightly(NOW, {
+      ...NOOP_MARKER,
       gather: async () => gatherOffAnisha(),
       gatherCalendar: async () => ({
         eventsByDesigner: { [LIAM]: [], [ANISHA]: [], [ELLA]: [] },
@@ -341,6 +360,7 @@ describe("runNightly — orchestration paths (REL-01 / REL-02 / MEET-04)", () =>
     });
 
     const code = await runNightly(NOW, {
+      ...NOOP_MARKER,
       gather: async () => gatherMissingAnisha(),
       gatherCalendar: async () => ({
         eventsByDesigner: { [LIAM]: [], [ANISHA]: [], [ELLA]: [] },
@@ -374,6 +394,7 @@ describe("runNightly — orchestration paths (REL-01 / REL-02 / MEET-04)", () =>
     });
 
     const code = await runNightly(NOW, {
+      ...NOOP_MARKER,
       gather: async () => gatherAllMissing(),
       gatherCalendar: async () => ({
         eventsByDesigner: { [LIAM]: [], [ANISHA]: [], [ELLA]: [] },
@@ -398,6 +419,7 @@ describe("runNightly — orchestration paths (REL-01 / REL-02 / MEET-04)", () =>
     const post = makePostStub({ ok: true, value: undefined });
 
     const code = await runNightly(NOW, {
+      ...NOOP_MARKER,
       gather: async () => stubGatherResult(["Couldn't reach Productive: 403"]),
       gatherCalendar: async () => stubCalendarResult(),
       postToChat: post.postToChat,
@@ -425,6 +447,7 @@ describe("runNightly — idempotency + run log (REL-03 / D-04/D-05/D-06/D-07-fai
     const marker = makeMarkerStub({ exists: true });
 
     const code = await runNightly(NOW, {
+      ...NOOP_MARKER,
       gather: async () => stubGatherResult(),
       gatherCalendar: async () => stubCalendarResult(),
       postToChat: post.postToChat,
@@ -445,6 +468,7 @@ describe("runNightly — idempotency + run log (REL-03 / D-04/D-05/D-06/D-07-fai
     const marker = makeMarkerStub({ exists: false });
 
     const code = await runNightly(NOW, {
+      ...NOOP_MARKER,
       gather: async () => stubGatherResult(),
       gatherCalendar: async () => stubCalendarResult(),
       postToChat: post.postToChat,
@@ -467,6 +491,7 @@ describe("runNightly — idempotency + run log (REL-03 / D-04/D-05/D-06/D-07-fai
     const marker = makeMarkerStub({ exists: true });
 
     const code = await runNightly(NOW, {
+      ...NOOP_MARKER,
       gather: async () => stubGatherResult(),
       gatherCalendar: async () => stubCalendarResult(),
       postToChat: post.postToChat,
@@ -486,6 +511,7 @@ describe("runNightly — idempotency + run log (REL-03 / D-04/D-05/D-06/D-07-fai
     const marker = makeMarkerStub({ exists: false });
 
     const code = await runNightly(NOW, {
+      ...NOOP_MARKER,
       gather: async () => stubGatherResult(),
       gatherCalendar: async () => stubCalendarResult(),
       postToChat: post.postToChat,
@@ -505,6 +531,7 @@ describe("runNightly — idempotency + run log (REL-03 / D-04/D-05/D-06/D-07-fai
     const marker = makeMarkerStub({ exists: false });
 
     const code = await runNightly(NOW, {
+      ...NOOP_MARKER,
       gather: async () => stubGatherResult(["Couldn't reach Productive: 403"]),
       gatherCalendar: async () => stubCalendarResult(),
       postToChat: post.postToChat,
@@ -529,6 +556,7 @@ describe("runNightly — idempotency + run log (REL-03 / D-04/D-05/D-06/D-07-fai
     });
 
     const code = await runNightly(NOW, {
+      ...NOOP_MARKER,
       gather: async () => stubGatherResult(),
       gatherCalendar: async () => stubCalendarResult(),
       postToChat: post.postToChat,
