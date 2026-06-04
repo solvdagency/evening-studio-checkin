@@ -281,6 +281,26 @@ describe("availabilityToWeekdayMinutes (CAP-06 / D-01 / D-02)", () => {
     assert.deepEqual(mins, [450, 450, 0, 450, 0, 0, 0]); // current Anisha-shape period
   });
 
+  it("overlapping covering periods: the current (latest-started) period wins, regardless of array order", () => {
+    // Realistic data slip: a new schedule is added (2026-03-09) but the old
+    // full-time period was never end-dated, so BOTH are open-ended and cover THU.
+    // First-match .find would pick whichever Productive returns first — flipping
+    // the roster with API ordering (the intermittent "7.5h on a day-off" symptom).
+    const stale = avail([7.5, 7.5, 7.5, 7.5, 7.5, 0, 0], "2026-01-01", null); // old full-time, never closed
+    const current = avail([7.5, 7.5, 0, 7.5, 0, 0, 0], "2026-03-09", null); // current Wed/Fri-off
+    const expected = [450, 450, 0, 450, 0, 0, 0]; // the current schedule (Wed & Fri off)
+    assert.deepEqual(
+      availabilityToWeekdayMinutes([stale, current], THU),
+      expected,
+      "stale-first order must still resolve to the current period",
+    );
+    assert.deepEqual(
+      availabilityToWeekdayMinutes([current, stale], THU),
+      expected,
+      "current-first order resolves to the current period",
+    );
+  });
+
   it("a non-finite working_hours entry coerces to 0 (never NaN, T-06-03)", () => {
     const mins = availabilityToWeekdayMinutes(
       [avail([Number.NaN, 7.5, 7.5, 7.5, 7.5, 0, 0])],

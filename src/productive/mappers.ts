@@ -190,12 +190,23 @@ export function availabilityToWeekdayMinutes(
 ): number[] {
   const allZero = (): number[] => [0, 0, 0, 0, 0, 0, 0];
 
-  // (1) Pick the covering period. First match wins; a current open-ended period is
-  //     authored as the last/active one, but any covering period is valid (D-01).
-  const period = availabilities.find((a) =>
+  // (1) Pick the covering period. Among ALL periods covering `dayKey`, the CURRENT
+  //     one wins: the latest `started_on` (a newer schedule supersedes an older one
+  //     even if the old period was never end-dated). This is order-independent — a
+  //     plain `.find` first-match would flip with the API's array ordering when two
+  //     periods overlap (e.g. a PM adds a new schedule without closing the old),
+  //     intermittently resurfacing a stale full-time day on a designer's day off.
+  //     Tie-break (same start) on `ended_on === null` = the open-ended active one.
+  const covering = availabilities.filter((a) =>
     availabilityCovers(dayKey, a.started_on, a.ended_on),
   );
-  if (period === undefined) return allZero();
+  if (covering.length === 0) return allZero();
+  const period = covering.reduce((best, a) => {
+    if (a.started_on !== best.started_on) return a.started_on > best.started_on ? a : best;
+    if (best.ended_on === null) return best;
+    if (a.ended_on === null) return a;
+    return a.ended_on > best.ended_on ? a : best;
+  });
 
   // (2) Resolve the week to use from working_hours length (D-08).
   const wh = period.working_hours;
