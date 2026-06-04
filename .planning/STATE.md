@@ -155,12 +155,16 @@ Items acknowledged and carried forward from previous milestone close:
 
 | Category | Item | Status | Deferred At |
 |----------|------|--------|-------------|
-| Phase 05 (LLM-02) | Expand `labelled-events.json` with 2-3 borderline/overhead cases and re-run `scripts/eval-llm-renderer.ts` to confirm over-flagging drops (the soften/drop side of the rubric) — REQUIRED before `USE_LLM_MEETING_JUDGMENT` is ever turned ON in production. Current eval proves only the never-drop (keep-genuine) path on a single genuine case. | Open | 2026-06-04 |
-| Tracking hygiene (REQUIREMENTS.md) | The Traceability table + checkboxes still show several already-shipped Phase 3 requirements (SCHED-01/02, MSG-01..07, REL-01, REL-02) as "Pending" even though Phase 3 is Complete — stale bookkeeping drift, not a code gap. Reconcile (tick delivered reqs) during `/gsd:complete-milestone` or a docs pass. | Open | 2026-06-04 |
-| Phase 06 (D-06) | Availability-read failure trips the whole-card D-18 degrade instead of a per-designer 🤖 row (D-06). Pre-existing, logged, not urgent. | Open | 2026-06-04 |
+| Phase 05 (LLM-02) | Expand the eval with borderline/overhead cases to exercise the soften/drop side. | RESOLVED 2026-06-04 (bf8895c) | 2026-06-04 |
+| Tracking hygiene (REQUIREMENTS.md) | Stale "Pending" Phase 3 rows despite Phase 3 Complete. | RESOLVED 2026-06-04 (e32db5f) | 2026-06-04 |
+| Phase 06 (D-06) | Availability-read failure tripped the whole-card degrade instead of a per-designer 🤖 row. | RESOLVED 2026-06-04 (5b86343) | 2026-06-04 |
+| Availability period selection | First-match `.find` was order-dependent under overlapping periods (could resurface a stale full-time day on a day off). | RESOLVED 2026-06-04 (52bec02) | 2026-06-04 |
+| Phase 04 live-run | Two live-run integration checks. | RESOLVED 2026-06-04 (real run, both checks) | 2026-06-04 |
+
+**All carried-forward tech debt resolved as of 2026-06-04.** Suite 335 green, tsc clean.
 
 ## Session Continuity
 
-Last session: 2026-06-04T11:55:00.000Z
-Stopped at: Phase 07 complete & verified; v1.0 feature-complete (7/7 phases). Post-verify test-isolation leak found & fixed (44732de).
-Resume file: None — next is `/gsd:complete-milestone` (optionally after the REQUIREMENTS.md traceability cleanup above)
+Last session: 2026-06-04T12:40:00.000Z
+Stopped at: v1.0 shipped + archived (tag v1.0 local); all carried-forward tech debt cleared — Phase 4 live-run done, availability period-selection hardened, D-06 fixed, Phase 5 eval extended. Suite 335 green.
+Resume file: None — milestone complete & clean. Next is `/gsd:new-milestone` for v2 (phase numbering continues from 8); `git push origin v1.0` to publish the tag when ready.
