@@ -14,7 +14,6 @@
  */
 
 import type { Booking, DesignerId } from "./types.ts";
-import { TARGET_MINUTES } from "./types.ts";
 import { minutesToHours, roundToQuarterHour } from "./round.ts";
 
 /**
@@ -40,7 +39,7 @@ export type DayStatus = "off" | "underbooked" | "overbooked" | "ok";
  */
 export interface DesignerResult {
   designerId: DesignerId;
-  /** Exact available minutes for the day = TARGET_MINUTES - absence, floored at 0. */
+  /** Exact available minutes for the day = rostered minutes - absence, floored at 0 (CAP-06 / D-02). */
   availableMin: number;
   /** Exact confirmed (non-tentative) booked minutes. */
   confirmedMin: number;
@@ -69,12 +68,26 @@ function safeMinutes(minutes: number): number {
 }
 
 /**
- * Available minutes for the target day = TARGET_MINUTES - absence, floored at 0
- * (CAP-01 / D-02). A non-finite absence is treated defensively as 0 absence
- * (full day available) rather than throwing (D-19).
+ * Available minutes for the target day = the designer's ROSTERED minutes for that
+ * day minus absence, floored at 0 (CAP-06 / D-02 / D-03).
+ *
+ * The basis is the designer's real per-weekday working hours (from Productive's
+ * `person.availabilities`), NOT the flat `TARGET_MINUTES` constant — a designer on
+ * a non-standard week (e.g. off Wed & Fri) has 0 rostered minutes on a day they do
+ * not work, so `availableMinutes(0, …) === 0` and the day classifies as "off"
+ * (mentioned, never flagged — D-04). Absence still subtracts from the rostered
+ * hours: a designer can be on leave on a day they would otherwise work.
+ *
+ * Both inputs are coerced via `safeMinutes` — a non-finite rostered OR absence
+ * value becomes 0 (never NaN/Infinity reaches a surfaced figure — D-19 / T-01-03 /
+ * T-06-01). A non-finite absence therefore resolves to 0 absence (preserves the
+ * full rostered day), and a non-finite rostered value resolves to 0 available.
  */
-export function availableMinutes(absenceMinutesForDay: number): number {
-  return Math.max(0, TARGET_MINUTES - safeMinutes(absenceMinutesForDay));
+export function availableMinutes(
+  rosteredMinutesForDay: number,
+  absenceMinutesForDay: number,
+): number {
+  return Math.max(0, safeMinutes(rosteredMinutesForDay) - safeMinutes(absenceMinutesForDay));
 }
 
 /**
@@ -132,9 +145,10 @@ export function classifyDay(
 export function computeDesignerDay(
   designerId: DesignerId,
   bookings: ReadonlyArray<Booking>,
+  rosteredMinutesForDay: number,
   absenceMinutesForDay: number,
 ): DesignerResult {
-  const availableMin = availableMinutes(absenceMinutesForDay);
+  const availableMin = availableMinutes(rosteredMinutesForDay, absenceMinutesForDay);
   const { confirmed: confirmedMin, tentative: tentativeMin } = bookedMinutes(bookings);
   const { status, openMin } = classifyDay(availableMin, confirmedMin);
 
