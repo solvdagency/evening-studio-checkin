@@ -1,7 +1,9 @@
 ---
 phase: 04-calendar-meeting-reconciliation
 verified: 2026-06-04T04:34:41Z
-status: human_needed
+status: passed
+live_run_completed: 2026-06-04 — real Google Calendar + Productive + Chat post exercised twice (happy path + broken-credential degrade); both posted correctly to the test space. Closes the two human_needed checks below. A latent availability period-selection fragility surfaced during this run was fixed separately (commit 52bec02).
+prior_status: human_needed
 score: 12/12
 overrides_applied: 0
 human_verification:
