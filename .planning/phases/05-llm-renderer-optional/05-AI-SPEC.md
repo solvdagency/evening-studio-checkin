@@ -504,9 +504,9 @@ plain deny-list regex (reuse the project's humanizer-style slop list if present)
 # Deterministic invariant + structural tests (no network, no key needed):
 node --import tsx --test "src/llm/**/*.test.ts"
 
-# Offline subjective harness (calls the real model over the labelled set — needs a dev key).
-# Uses the personal $5-credit ANTHROPIC_API_KEY (LLM-02), never the prod org key:
-ANTHROPIC_API_KEY=$DEV_KEY tsx scripts/eval-llm-renderer.ts
+# Offline subjective harness (calls the real model over the labelled set).
+# Uses the org-sanctioned ANTHROPIC_API_KEY from .env (single approved key; no separate dev/prod key):
+tsx scripts/eval-llm-renderer.ts   # reads ANTHROPIC_API_KEY from .env
 ```
 
 **CI/CD Integration:**
