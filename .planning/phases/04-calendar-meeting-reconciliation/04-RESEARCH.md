@@ -417,7 +417,9 @@ function matchTitleToClient(title: string, map: readonly ClientAlias[]): ClientA
 
 **Note:** A1–A3 are exactly what the labelling spike (D-09) exists to resolve — they are expected gaps, not research failures. A4 is a codebase question the planner can answer by inspecting the live `/bookings` response shape (or the spike can confirm).
 
-## Open Questions
+## Open Questions (RESOLVED)
+
+> All three questions below were resolved during planning and acted on in the Phase 4 plans (see 04-01 Task 3 for Q1's `bookedClientsByDesignerDay` resolution). Kept here for the decision trail.
 
 1. **Does the existing Productive pull already carry each booking's `company_id`, or must the calendar phase capture it?** (The biggest planning decision.)
    - What we know: `gather.ts` requests `include=...,task.project,task.project.company`, so the **company IS sideloaded** in `bookingsResult.value.included`. BUT `mappers.ts` reduces a booking to `{ designerId, minutes, isTentative }` and the domain `Booking` type carries no company. `indexProjects` reads `project.company` only as a boolean (client-vs-internal), discarding the company id. So the company data arrives in the pull but is **thrown away** before the report.

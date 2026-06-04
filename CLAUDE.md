@@ -38,7 +38,7 @@ A nightly automation for a design/marketing agency's creative studio. Every week
 ### Supporting Libraries
 | Library | Version | Purpose | When to Use |
 |---------|---------|---------|-------------|
-| `googleapis` | `^144` (latest) | Official Google Node client (Calendar) | Always, for Calendar. Built-in `google.auth.JWT` / `GoogleAuth` handles service-account + domain-wide-delegation token minting and refresh internally. |
+| `googleapis` | `^173` (latest) | Official Google Node client (Calendar) | Always, for Calendar. Built-in `google.auth.JWT` / `GoogleAuth` handles service-account + domain-wide-delegation token minting and refresh internally. |
 | `luxon` | `^3` | Dates/timezones | Essential. "Next working day," Friday→Monday rollover, time-off date ranges, and Productive's `started_on`/`ended_on` all need correct timezone math. JS native `Date` is a trap for a learner. |
 | `zod` | `^3` (or v4 if stable) | Validate API responses at the boundary | Parse Productive/Google responses into typed, trusted objects once, fail loudly on shape drift. Makes the "degraded message when a source fails" requirement clean. |
 | (native `fetch`) | built into Node 22 | HTTP client | No axios/got needed. Productive is plain GET with three headers; one tiny wrapper handles pagination. |
@@ -122,8 +122,8 @@ A nightly automation for a design/marketing agency's creative studio. Every week
 ## Version Compatibility
 | Package | Compatible With | Notes |
 |---------|-----------------|-------|
-| Node 22 LTS | `googleapis ^144`, `tsx ^4`, `typescript 5.x` | All current and mutually compatible as of 2026-06. |
-| `googleapis ^144` | Google Calendar API v3 | Service-account JWT + DWD `subject` impersonation supported natively. |
+| Node 22 LTS | `googleapis ^173`, `tsx ^4`, `typescript 5.x` | All current and mutually compatible as of 2026-06. |
+| `googleapis ^173` | Google Calendar API v3 | Service-account JWT + DWD `subject` impersonation supported natively. |
 | `luxon ^3` | `@types/luxon` | Pair the types; Luxon ships none bundled. |
 | `anthropics/claude-code-action@v1` | `CLAUDE_CODE_OAUTH_TOKEN` (Pro/Max) OR `ANTHROPIC_API_KEY` | OAuth token short-lived; v1 auto-detects schedule/prompt vs @claude trigger. |
 ## Sources
