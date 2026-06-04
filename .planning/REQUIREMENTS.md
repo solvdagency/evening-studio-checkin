@@ -9,8 +9,8 @@ Requirements for the initial release. Each maps to roadmap phases.
 
 ### Schedule & Runtime
 
-- [ ] **SCHED-01**: The check runs automatically every weekday at ~4:30pm studio time, and not on weekends
-- [ ] **SCHED-02**: The check can be triggered manually on demand for testing (without waiting for the schedule)
+- [x] **SCHED-01**: The check runs automatically every weekday at ~4:30pm studio time, and not on weekends
+- [x] **SCHED-02**: The check can be triggered manually on demand for testing (without waiting for the schedule)
 - [x] **SCHED-03**: The "next working day" window targets the following weekday; on a Friday it targets Monday
 - [x] **SCHED-04**: All working-day and window logic is computed from the studio timezone in code (not from the scheduler's clock), and is DST-safe
 
@@ -39,18 +39,18 @@ Requirements for the initial release. Each maps to roadmap phases.
 
 ### Message & Delivery
 
-- [ ] **MSG-01**: The check posts an on-brand Google Chat message using Cards v2 (studio logo, accent colour, sections)
-- [ ] **MSG-02**: The message leads with a verdict line, then the studio week rollup, then per-designer rows, then grouped flags
-- [ ] **MSG-03**: The message names the designer with open time and refers to thin jobs/briefs — never the responsible PM
-- [ ] **MSG-04**: The check always posts, including a short positive note on nights when everything is sorted
-- [ ] **MSG-05**: Message length scales with severity — short on good nights, fuller on busy nights
-- [ ] **MSG-06**: The message includes deep-links back to the relevant Productive bookings and Calendar events
-- [ ] **MSG-07**: Tentative bookings and "worth a look" meetings are visually distinguished in the message
+- [x] **MSG-01**: The check posts an on-brand Google Chat message using Cards v2 (studio logo, accent colour, sections)
+- [x] **MSG-02**: The message leads with a verdict line, then the studio week rollup, then per-designer rows, then grouped flags
+- [x] **MSG-03**: The message names the designer with open time and refers to thin jobs/briefs — never the responsible PM
+- [x] **MSG-04**: The check always posts, including a short positive note on nights when everything is sorted
+- [x] **MSG-05**: Message length scales with severity — short on good nights, fuller on busy nights
+- [x] **MSG-06**: The message includes deep-links back to the relevant Productive bookings and Calendar events
+- [x] **MSG-07**: Tentative bookings and "worth a look" meetings are visually distinguished in the message
 
 ### Reliability
 
-- [ ] **REL-01**: If a data source is unreachable, the check posts a degraded message naming what it couldn't reach, rather than skipping the night
-- [ ] **REL-02**: A failed run surfaces a human-visible alert (never fails silently)
+- [x] **REL-01**: If a data source is unreachable, the check posts a degraded message naming what it couldn't reach, rather than skipping the night
+- [x] **REL-02**: A failed run surfaces a human-visible alert (never fails silently)
 - [x] **REL-03**: The check avoids duplicate posts for the same evening (idempotency)
 
 ### Intelligence Layer
@@ -96,8 +96,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| SCHED-01 | Phase 3 | Pending |
-| SCHED-02 | Phase 3 | Pending |
+| SCHED-01 | Phase 3 | Complete |
+| SCHED-02 | Phase 3 | Complete |
 | SCHED-03 | Phase 1 | Complete |
 | SCHED-04 | Phase 1 | Complete |
 | CAP-01 | Phase 1 | Complete |
@@ -114,15 +114,15 @@ Which phases cover which requirements. Updated during roadmap creation.
 | MEET-03 | Phase 4 | Complete |
 | MEET-04 | Phase 4 | Complete |
 | MEET-05 | Phase 4 | Complete |
-| MSG-01 | Phase 3 | Pending |
-| MSG-02 | Phase 3 | Pending |
-| MSG-03 | Phase 3 | Pending |
-| MSG-04 | Phase 3 | Pending |
-| MSG-05 | Phase 3 | Pending |
-| MSG-06 | Phase 3 | Pending |
-| MSG-07 | Phase 3 | Pending |
-| REL-01 | Phase 3 | Pending |
-| REL-02 | Phase 3 | Pending |
+| MSG-01 | Phase 3 | Complete |
+| MSG-02 | Phase 3 | Complete |
+| MSG-03 | Phase 3 | Complete |
+| MSG-04 | Phase 3 | Complete |
+| MSG-05 | Phase 3 | Complete |
+| MSG-06 | Phase 3 | Complete |
+| MSG-07 | Phase 3 | Complete |
+| REL-01 | Phase 3 | Complete |
+| REL-02 | Phase 3 | Complete |
 | REL-03 | Phase 7 | Complete |
 | LLM-01 | Phase 5 | Complete |
 | LLM-02 | Phase 5 | Complete |
@@ -134,4 +134,4 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 ---
 *Requirements defined: 2026-06-02*
-*Last updated: 2026-06-02 after roadmap creation (traceability populated, 25/25 mapped)*
+*Last updated: 2026-06-04 — v1.0 feature-complete; all 25 v1 requirements delivered & traceability reconciled (Phase 3 rows were stale-Pending despite shipping)*
