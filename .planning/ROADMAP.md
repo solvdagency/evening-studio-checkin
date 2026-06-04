@@ -18,7 +18,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 3: Template Renderer & Chat Delivery** - Shippable v1: on-brand Cards v2 message, scheduled weekday posting, always-post and degraded mode (no LLM, no Calendar) (completed 2026-06-04)
 - [x] **Phase 4: Calendar & Meeting Reconciliation** - Read designer calendars and reconcile ad-hoc meetings against bookings, behind a real-evening pilot gate (completed 2026-06-04)
 - [ ] **Phase 5: LLM Renderer (optional)** - Swappable LLM renderer for prose and fuzzy meeting judgment, with templated fallback; cuttable
-- [ ] **Phase 6: Designer Working-Day Availability** - Per-designer working days read from Productive so non-standard weeks (e.g. a 4-day week) are never mis-flagged as open time
+- [x] **Phase 6: Designer Working-Day Availability** - Per-designer working days read from Productive so non-standard weeks (e.g. a 4-day week) are never mis-flagged as open time (completed 2026-06-04)
 - [ ] **Phase 7: Hardening** - Idempotency and structured run logging so a stable, unattended automation stays trustworthy
 
 ## Phase Details
@@ -189,7 +189,7 @@ Plans:
 
 **Wave 3** *(blocked on Wave 1 + Wave 2)*
 
-- [ ] 06-03-PLAN.md — Wire rosteredMinutes into runNightly + routine "not in <day>" wording + live smoke check
+- [x] 06-03-PLAN.md — Wire rosteredMinutes into runNightly + routine "not in <day>" wording + live smoke check
 
 ### Phase 7: Hardening
 
@@ -216,5 +216,5 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7
 | 3. Template Renderer & Chat Delivery | 4/4 | Complete   | 2026-06-04 |
 | 4. Calendar & Meeting Reconciliation | 4/4 | Complete   | 2026-06-04 |
 | 5. LLM Renderer (optional) | 1/2 | In Progress|  |
-| 6. Designer Working-Day Availability | 2/3 | In Progress|  |
+| 6. Designer Working-Day Availability | 3/3 | Complete   | 2026-06-04 |
 | 7. Hardening | 0/TBD | Not started | - |

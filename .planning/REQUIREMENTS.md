@@ -21,7 +21,7 @@ Requirements for the initial release. Each maps to roadmap phases.
 - [x] **CAP-03**: A designer booked below their available hours for the target day is flagged as underbooked, naming the designer and the open hours
 - [x] **CAP-04**: Tentative (draft) bookings are counted toward hours but shown distinctly as shaky/unconfirmed
 - [x] **CAP-05**: The check computes a studio "rest of this week" rollup — open hours vs total studio hours across the remaining working days
-- [ ] **CAP-06**: Available hours for the target day reflect each designer's actual working-day pattern read from Productive (e.g. a 4-day or otherwise non-standard week), not a flat 7.5h every weekday — so a designer is never flagged as underbooked on a day they are not rostered; a non-working day is mentioned without a flag
+- [x] **CAP-06**: Available hours for the target day reflect each designer's actual working-day pattern read from Productive (e.g. a 4-day or otherwise non-standard week), not a flat 7.5h every weekday — so a designer is never flagged as underbooked on a day they are not rostered; a non-working day is mentioned without a flag
 
 ### Briefs
 
@@ -105,7 +105,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | CAP-03 | Phase 1 | Complete |
 | CAP-04 | Phase 1 | Complete |
 | CAP-05 | Phase 1 | Complete |
-| CAP-06 | Phase 6 | Planned |
+| CAP-06 | Phase 6 | Complete |
 | BRIEF-01 | Phase 2 | Complete |
 | BRIEF-02 | Phase 2 | Complete |
 | BRIEF-03 | Phase 2 | Complete |

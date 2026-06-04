@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: paused-at-checkpoint
-stopped_at: Paused at 06-03 human-verify checkpoint (Task 3)
-last_updated: "2026-06-04T09:10:00.000Z"
-last_activity: 2026-06-04
+status: executing
+stopped_at: Phase 06 complete (CAP-06 done); Phase 5 plan 2 + Phase 7 remain
+last_updated: "2026-06-04T09:30:00.000Z"
+last_activity: 2026-06-04 -- Phase 6 complete (CAP-06), smoke check approved
 progress:
   total_phases: 7
-  completed_phases: 4
+  completed_phases: 5
   total_plans: 20
-  completed_plans: 18
-  percent: 57
+  completed_plans: 19
+  percent: 95
 ---
 
 # Project State
@@ -21,21 +21,20 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-02)
 
 **Core value:** Every evening the team gets one clear, trustworthy heads-up of exactly what needs fixing before tomorrow — so the three designers start the day with full, briefed workloads instead of chasing the work themselves.
-**Current focus:** Phase 06 — designer-working-day-availability
+**Current focus:** Phase 06 complete — next: Phase 5 plan 2 (LLM renderer) and Phase 7 (hardening)
 
 ## Current Position
 
-Phase: 06 (designer-working-day-availability) — EXECUTING
-Plan: 3 of 3
-Status: PAUSED at 06-03 human-verify checkpoint (Task 3). Tasks 1 & 2 executed,
-committed, and green (full suite 303/303, tsc clean). Task 3 is a blocking
-checkpoint:human-verify — the operator (Liam) runs the live smoke check
-(`npx tsx --import dotenv/config src/index.ts` to the TEST Chat space) and approves
-via the orchestrator. Plan 06-03 is NOT complete and ROADMAP plan-progress is NOT
-marked complete pending that approval.
+Phase: 06 (designer-working-day-availability) — COMPLETE (CAP-06)
+Plan: 3 of 3 (all complete)
+Status: COMPLETE. All three plans executed and committed; full suite 305/305, tsc
+clean. The 06-03 live smoke check caught a real fixtures-vs-live bug
+(`person.availabilities` is a JSON-string-of-tuples, not array-of-objects) — fixed at
+the zod boundary (commit a042430) and re-verified live; Liam approved. One degrade-path
+quality issue (D-06 vs D-18) was reviewed and deferred to a follow-up (see 06-03-SUMMARY).
 Last activity: 2026-06-04
 
-Progress: [█████████░] 90%
+Progress: [█████████▓] 95%
 
 ## Performance Metrics
 

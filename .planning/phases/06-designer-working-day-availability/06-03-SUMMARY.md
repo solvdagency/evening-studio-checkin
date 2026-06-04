@@ -3,7 +3,7 @@ phase: 06-designer-working-day-availability
 plan: 03
 subsystem: composition-root + render
 tags: [capacity, availability, render, wiring, tdd, trust-critical]
-status: PAUSED-AT-HUMAN-CHECKPOINT
+status: COMPLETE
 requires:
   - "src/index.ts runNightly (composition root)"
   - "src/render/rows.ts statusLine/buildRow (off-day wording)"
@@ -33,13 +33,22 @@ decisions:
   - "D-06: availability-unreadable designer reuses the existing missingDesignerRow 🤖 'couldn't read' row — no new top-level render variant; renderMessage.ts untouched this plan"
 metrics:
   duration_min: 6
-  tasks: "2 of 3 (Task 3 is a pending human-verify checkpoint)"
+  tasks: "3 of 3 (Task 3 human-verify checkpoint APPROVED 2026-06-04)"
   files: 3
-  completed: "PARTIAL — Tasks 1 & 2 done; Task 3 PENDING-HUMAN-CHECKPOINT"
+  completed: "COMPLETE — Tasks 1, 2 & 3 done; smoke check surfaced + fixed a live-shape bug (commit a042430)"
 requirements: [CAP-06]
 ---
 
-# Phase 6 Plan 03: End-to-End CAP-06 Wiring Summary (PAUSED at human-verify checkpoint)
+# Phase 6 Plan 03: End-to-End CAP-06 Wiring Summary (COMPLETE — smoke check approved)
+
+> **Checkpoint outcome (2026-06-04):** The Task 3 live smoke check did its job — it caught a
+> production bug the 305 unit tests missed: live `person.availabilities` is a JSON-encoded
+> STRING of positional tuples, not the array-of-objects plan 06-02 assumed, so every designer
+> failed validation and the first posted card fully degraded. Fixed at the zod boundary in
+> commit `a042430` (see "Smoke Check Outcome" below). Re-run verified: the live card shows
+> `⚪ Anisha Gittins — not in Friday` (mentioned, no flag), Liam/Ella against real rostered
+> hours, and the week rollup excludes Anisha's non-working days. Liam approved. A secondary
+> degrade-quality issue (D-06 vs D-18 tension) was reviewed and **deferred** to a follow-up.
 
 Closed the automated half of the CAP-06 loop: `runNightly` now threads gather's live
 `rosteredMinutes` lookup into `computeStudioReport`, so each designer's real working-day
@@ -53,9 +62,9 @@ that posts a live card to Google Chat and is run by the human operator, not the 
 
 - **Task 1 — DONE** (committed `73fd05d`, RED `401e44a`).
 - **Task 2 — DONE** (verification gate; full suite + tsc green; the gate's new test cases were committed with the RED commit `401e44a`).
-- **Task 3 — PENDING-HUMAN-CHECKPOINT** (blocking `checkpoint:human-verify`; NOT run — no Google Chat post, no live Productive call, no external API call made by the executor).
+- **Task 3 — DONE / APPROVED** (blocking `checkpoint:human-verify`; live smoke check run 2026-06-04 against live Productive, posted to the TEST Chat space). The check FAILED on the first run (real-shape bug, see below), the bug was fixed, and the re-run was approved by Liam.
 
-The plan is **NOT complete**. ROADMAP plan-progress for 06-03 remains in-progress pending the human smoke check.
+The plan is **COMPLETE**.
 
 ## What Was Built
 
@@ -126,50 +135,48 @@ authentication gates. Task 3 deliberately NOT executed per the orchestrator's in
 - [x] (SC-1, end-to-end) Target-day available hours come from the real working-day pattern — `g.rosteredMinutes` wired into the report.
 - [x] (SC-2) A not-rostered designer is mentioned with no open-time flag — a quiet "not in &lt;day&gt;" line; status stays "off".
 - [x] (SC-3) Rest-of-week rollup reflects real per-designer working days (Plan 01 rollup fix now fed live data).
-- [x] (SC-4) Availability read failure degrades safely and still posts (🤖 row, normal card).
+- [x] (SC-4) Availability read failure degrades safely and still posts — **correction:** an availability failure trips the whole-card D-18 degrade (still posts, invents no open time), NOT the per-designer 🤖 row in a figures-bearing card that this plan originally claimed. The per-designer-row intent (D-06) is defeated by D-18 because gather pushes availability errors into the same `sourceErrors` that selectVariant reads. Trust-safe but lower-quality; **deferred to a follow-up** (see below).
 - [x] (SC-5) No regression to Phases 1–5; all arithmetic deterministic + unit-tested.
-- [ ] **Human smoke check (Task 3) — PENDING.** Anisha's non-working day mentioned-not-flagged on the live posted card; numbers match Productive; degraded path posts. Awaiting operator approval.
+- [x] **Human smoke check (Task 3) — APPROVED 2026-06-04.** Live card shows Anisha mentioned-not-flagged ("not in Friday"); numbers match the real working-day pattern. The check first failed (live-shape bug), which was fixed, then re-verified and approved.
 
-## PENDING HUMAN CHECKPOINT — Task 3 (blocking)
+## Smoke Check Outcome — Task 3 (APPROVED, after a fix)
 
-**Type:** checkpoint:human-verify (gate="blocking")
-**Run by:** the human operator (Liam), NOT the executor. No Google Chat post or live
-Productive call was made by the executor.
+**Type:** checkpoint:human-verify (gate="blocking"). Run 2026-06-04 against live Productive,
+posted to the TEST Chat space (`.env` `GCHAT_WEBHOOK_URL`).
 
-**What was built (for the operator):** The CAP-06 working-day availability change is wired
-end-to-end — live Productive `person.availabilities` drive per-designer available hours and
-the rest-of-week rollup, a routine non-working day reads "not in &lt;day&gt;" instead of "on
-leave", and an availability-unreadable designer degrades to the 🤖 "couldn't read" row. All
-arithmetic stays deterministic and unit-tested; the full suite is green.
+**First run — FAILED (real bug caught):** Every designer rendered as availability-unreadable
+and the card fully degraded ("Couldn't reach … No booking figures this run"). Root cause: the
+live `/people` `attributes.availabilities` field is a **JSON-encoded string** whose periods are
+**positional tuples** `[started_on, ended_on, working_hours, holiday_calendar_id]` — NOT the
+array of `{started_on, …}` objects plan 06-02 assumed. So `PersonResource.safeParse` rejected
+all three designers. Classic fixtures-vs-live gap: the 305 unit tests passed because their
+fixtures were authored to the assumed shape; nobody had checked a live payload.
 
-**How to verify (exact steps from the plan's `<how-to-verify>`):**
+**Fix (commit `a042430`, plan 06-02 boundary):**
+- `AvailabilityPeriod` → a `z.tuple([...]).rest(...).transform(...)` that validates the tuple
+  and emits the named-field object the mapper already consumes (mapper logic unchanged).
+- `PersonResource.availabilities` → `z.preprocess(JSON.parse-if-string, z.array(...))`; malformed
+  JSON fails the safeParse so the designer degrades to "couldn't read" (D-06), never fabricated.
+- Fixed the `gather.test` `personResource` fixture to the real JSON-string-of-tuples shape.
+- Added regression tests pinning a verbatim copy of the live wire string.
 
-Run a real check-in against live Productive on a day whose target lands on Anisha's
-non-working day (Wed or Fri), posting to the TEST Chat space:
+**Re-run — APPROVED:** Rendered live card (verified via a `postToChat` capture stub + a real
+TEST-space post): `⚪ Anisha Gittins — not in Friday` (mentioned, no flag, not "on leave");
+`🔴 Liam 5.5h open / 2.0h booked`; `🔴 Ella 3.5h open / 4.0h booked`; week rollup `6h booked ·
+9h open` with Anisha's non-working days excluded. Liam approved.
 
-1. Confirm the TEST webhook is in use (per memory: `.env` `GCHAT_WEBHOOK_URL` is the TEST
-   space — do NOT post to the main team channel).
-2. From the repo root run a manual test send:
-   `npx tsx --import dotenv/config src/index.ts`
-   (If today's target day is not a Wed/Fri, trigger on a Tuesday-or-Thursday evening so the
-   target day is Anisha's off-day; or temporarily set the injected `now` in a local scratch
-   run to a Tuesday/Thursday evening — do NOT commit that.)
-3. In the posted Test-space card, confirm:
-   - Anisha appears MENTIONED with NO open-time flag (⚪, "not in Wednesday"/"not in
-     Friday" — NOT "on leave / Full day off.", NOT a red "Xh open" flag).
-   - Liam and Ella still show their normal availability against their real rostered hours
-     (7.5h-based), not a flat assumption that contradicts Productive.
-   - The "Remaining studio time this week" rollup does NOT count Anisha's Wed/Fri as open
-     studio capacity.
-   - If you force an availability read failure (e.g. temporarily break the `/people`
-     query), the card still POSTS with a 🤖 "couldn't read" row for the affected designer —
-     it never silently skips the night and never invents open time.
-4. Cross-check the numbers against the Productive scheduling UI for the target day — they
-   must match exactly (cardinal trust rule).
+## Deferred Follow-up — D-06 vs D-18 degrade-path tension
 
-**Resume signal:** Type "approved" if the card flags Anisha's non-working day correctly
-(mentioned, never flagged) and the numbers match Productive; otherwise describe the
-discrepancy (designer, expected vs shown wording/hours).
+`gather` pushes availability errors (whole-pull fail, per-entry parse fail, all-zero week) into
+`sourceErrors`; `selectVariant` (variants.ts:28, decision **D-18**) treats any non-empty
+`sourceErrors` as a whole-card "degraded" variant. This **defeats the D-06 per-designer
+intent** (an availability-unreadable designer should appear as a 🤖 "couldn't read" row inside
+the normal figures-bearing card). The degrade is trust-safe (still posts, invents nothing) but
+low-quality (internal-sounding text auto-joined with " and "). Reviewed with Liam 2026-06-04 and
+**deferred** — fixing it reopens a locked decision (D-18) and needs its own scoped task.
+Candidate fix: stop routing availability omissions through the figures-degrading `sourceErrors`;
+let the missingDesigners-driven 🤖 row carry them, reserving D-18 degrade for true figures
+(bookings) failures; and clean up the degraded-copy grammar.
 
 ## Self-Check: PASSED
 
