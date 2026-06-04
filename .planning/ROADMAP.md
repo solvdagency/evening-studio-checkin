@@ -16,7 +16,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 1: Core Math & Clock** - Pure, unit-tested capacity arithmetic and working-day logic with no external dependencies (completed 2026-06-02)
 - [x] **Phase 2: Productive Pull & Briefed Discovery** - Live Productive data into typed objects; discover and confirm the real "briefed" mapping (completed 2026-06-03)
 - [x] **Phase 3: Template Renderer & Chat Delivery** - Shippable v1: on-brand Cards v2 message, scheduled weekday posting, always-post and degraded mode (no LLM, no Calendar) (completed 2026-06-04)
-- [ ] **Phase 4: Calendar & Meeting Reconciliation** - Read designer calendars and reconcile ad-hoc meetings against bookings, behind a real-evening pilot gate
+- [x] **Phase 4: Calendar & Meeting Reconciliation** - Read designer calendars and reconcile ad-hoc meetings against bookings, behind a real-evening pilot gate (completed 2026-06-04)
 - [ ] **Phase 5: LLM Renderer (optional)** - Swappable LLM renderer for prose and fuzzy meeting judgment, with templated fallback; cuttable
 - [ ] **Phase 6: Hardening** - Idempotency and structured run logging so a stable, unattended automation stays trustworthy
 
@@ -134,7 +134,7 @@ Plans:
 
 **Wave 4** *(blocked on Wave 3)*
 
-- [ ] 04-04-PLAN.md — 📅 "worth a look" sub-line + wire calendar gather/reconcile into runNightly (degrade path)
+- [x] 04-04-PLAN.md — 📅 "worth a look" sub-line + wire calendar gather/reconcile into runNightly (degrade path)
 
 **Dependencies (external)**: Google Calendar via service account + domain-wide delegation with `calendar.readonly` — live-validated 2026-06-04 (STATE.md); execution adds the `GOOGLE_SA_KEY` GitHub secret and the `googleapis ^173` dependency.
 
@@ -176,6 +176,6 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | 1. Core Math & Clock | 3/3 | Complete   | 2026-06-02 |
 | 2. Productive Pull & Briefed Discovery | 4/4 | Complete   | 2026-06-03 |
 | 3. Template Renderer & Chat Delivery | 4/4 | Complete   | 2026-06-04 |
-| 4. Calendar & Meeting Reconciliation | 3/4 | In Progress|  |
+| 4. Calendar & Meeting Reconciliation | 4/4 | Complete   | 2026-06-04 |
 | 5. LLM Renderer (optional) | 0/TBD | Not started | - |
 | 6. Hardening | 0/TBD | Not started | - |

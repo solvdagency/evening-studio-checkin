@@ -33,7 +33,7 @@ Requirements for the initial release. Each maps to roadmap phases.
 - [x] **MEET-01**: The check reads the target day's events from the three designers' Google calendars
 - [x] **MEET-02**: Known recurring overhead meetings (the daily WIP and the creative-team meeting) are excluded from reconciliation
 - [x] **MEET-03**: Ad-hoc/client meetings are reconciled against that designer's bookings; clearly-covered meetings are not flagged
-- [ ] **MEET-04**: Meetings that appear unaccounted for are surfaced as "worth a look" rather than asserted as definite conflicts (bias against false positives)
+- [x] **MEET-04**: Meetings that appear unaccounted for are surfaced as "worth a look" rather than asserted as definite conflicts (bias against false positives)
 - [x] **MEET-05**: Declined, all-day, and out-of-office events are excluded from reconciliation
 
 ### Message & Delivery
@@ -110,7 +110,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | MEET-01 | Phase 4 | Complete |
 | MEET-02 | Phase 4 | Complete |
 | MEET-03 | Phase 4 | Complete |
-| MEET-04 | Phase 4 | Pending |
+| MEET-04 | Phase 4 | Complete |
 | MEET-05 | Phase 4 | Complete |
 | MSG-01 | Phase 3 | Pending |
 | MSG-02 | Phase 3 | Pending |
