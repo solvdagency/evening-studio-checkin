@@ -154,7 +154,7 @@ Plans:
 Plans:
 **Wave 1**
 
-- [ ] 05-01-PLAN.md — Prose-only LLM renderer behind the swappable contract + number-fidelity & fallback-integrity tests + flag-gated DI wiring (LLM-01)
+- [x] 05-01-PLAN.md — Prose-only LLM renderer behind the swappable contract + number-fidelity & fallback-integrity tests + flag-gated DI wiring (LLM-01)
 
 **Wave 2** *(blocked on Wave 1)*
 
@@ -186,5 +186,5 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | 2. Productive Pull & Briefed Discovery | 4/4 | Complete   | 2026-06-03 |
 | 3. Template Renderer & Chat Delivery | 4/4 | Complete   | 2026-06-04 |
 | 4. Calendar & Meeting Reconciliation | 4/4 | Complete   | 2026-06-04 |
-| 5. LLM Renderer (optional) | 0/2 | Not started | - |
+| 5. LLM Renderer (optional) | 1/2 | In Progress|  |
 | 6. Hardening | 0/TBD | Not started | - |
