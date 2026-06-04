@@ -129,6 +129,18 @@ export const renderTemplate: RenderMessage = (report, ctx) => {
       textParagraph: { text: `<font color="${BRAND_COLORS.muted}">${CLEAN_STATUS_LINE}</font>` },
     });
   }
+  // Calendar-only failure (figures intact, REL-01): one soft muted note alongside
+  // the status line. NEVER on the degraded/holiday/closure paths (they return
+  // before this block). Carries NO error text, NO names, NO key reference (D-04
+  // soft voice). A calendar-only failure also yields an empty worthALook → the 📅
+  // lines are absent automatically, so no special-casing is needed.
+  if (ctx.calendarUnavailable) {
+    verdictWidgets.push({
+      textParagraph: {
+        text: `<font color="${BRAND_COLORS.muted}">couldn't check calendars tonight — meeting flags skipped</font>`,
+      },
+    });
+  }
   sections.push({ widgets: verdictWidgets });
 
   // 2 — per-designer rows (busy nights only), divider-separated (D-09 / D-17).

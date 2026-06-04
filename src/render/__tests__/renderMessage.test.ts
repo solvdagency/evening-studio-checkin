@@ -234,6 +234,81 @@ describe("renderTemplate — degraded scenario (REL-01 / D-18)", () => {
     assert.ok("textParagraph" in verdict);
     assert.match(verdict.textParagraph.text, /Couldn't reach Calendar tonight\./);
   });
+
+  it("renders Productive-only — never leaks the GOOGLE_SA_KEY reason or a doubled prefix", () => {
+    // Production now passes ctx.sourceErrors a Productive label ONLY; the raw
+    // calendar error (with the GOOGLE_SA_KEY reason) never reaches the card.
+    const report: StudioReport = {
+      targetDay: "2026-06-04",
+      window: ["2026-06-04"],
+      designers: [],
+      rollup: { totalMin: 0, openMin: 0, totalHours: 0, openHours: 0 },
+      missingDesigners: [],
+    };
+
+    const out = renderTemplate(report, ctx({ sourceErrors: ["Productive"] }));
+    const json = JSON.stringify(out);
+    assert.ok(!json.includes("GOOGLE_SA_KEY"), "no SA-key reason in the degraded card");
+    assert.ok(
+      !json.includes("Couldn't reach Couldn't reach"),
+      "no doubled 'Couldn't reach' prefix",
+    );
+    assert.ok(!json.includes("Calendar for"), "no raw per-designer calendar error text");
+  });
+});
+
+describe("renderTemplate — calendar-unavailable note (REL-01, figures intact)", () => {
+  /** A busy report so the normal card path (rows + button + week bar) renders. */
+  function busyReport(): StudioReport {
+    return {
+      targetDay: "2026-06-04",
+      window: ["2026-06-04"],
+      designers: [
+        designer({
+          designerId: ANISHA,
+          status: "underbooked",
+          openHours: 7.5,
+          openMin: h(7.5),
+          bookedHours: 0,
+        }),
+        designer({
+          designerId: ELLA,
+          status: "underbooked",
+          confirmedMin: h(4.5),
+          openMin: h(3),
+          availableHours: 7.5,
+          bookedHours: 4.5,
+          openHours: 3.0,
+        }),
+        designer({ designerId: LIAM, status: "ok", confirmedMin: h(7.5), bookedHours: 7.5 }),
+      ],
+      rollup: { totalMin: h(45), openMin: h(10.5), totalHours: 45, openHours: 10.5 },
+      missingDesigners: [],
+    };
+  }
+
+  it("calendarUnavailable=true on a normal card → exactly one muted note, no 📅, still the normal card", () => {
+    const out = renderTemplate(busyReport(), ctx({ calendarUnavailable: true }));
+    const json = JSON.stringify(out);
+    assert.ok(
+      json.includes("couldn't check calendars tonight — meeting flags skipped"),
+      "the muted calendars-unavailable note is present",
+    );
+    assert.ok(!json.includes("📅"), "no 📅 worth-a-look line on a calendar-only failure");
+    assert.ok(
+      json.includes("Open in Productive"),
+      "still the NORMAL card (degraded card has no button)",
+    );
+    // Exactly one note — count occurrences of the note text.
+    const count = json.split("couldn't check calendars tonight").length - 1;
+    assert.equal(count, 1, "the muted note appears exactly once");
+  });
+
+  it("calendarUnavailable absent → no calendars-unavailable note", () => {
+    const out = renderTemplate(busyReport(), ctx({}));
+    const json = JSON.stringify(out);
+    assert.ok(!json.includes("couldn't check calendars"), "no note when calendar is fine");
+  });
 });
 
 describe("renderTemplate — per-designer miss (D-19 / MSG-07)", () => {
