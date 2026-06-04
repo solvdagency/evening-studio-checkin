@@ -48,8 +48,15 @@ import {
   WorkflowStatusResource,
   ProjectResource,
   AllocationResource,
+  PersonResource,
 } from "./schemas.ts";
-import { mapToBookingsAndAbsences, type RawBookingForMapping } from "./mappers.ts";
+import {
+  mapToBookingsAndAbsences,
+  availabilityToWeekdayMinutes,
+  rosteredMinutesForWeekday,
+  type RawBookingForMapping,
+  type RawAvailabilityForMapping,
+} from "./mappers.ts";
 import { buildBriefedPositionMap, type RawWorkflowStatus } from "./briefed.ts";
 import { assessBriefs, type AssessBookingInput, type BriefFlag } from "./brief.ts";
 import { buildHolidaySet, yearsForWindow } from "../holidays.ts";
@@ -71,6 +78,18 @@ export interface GatherResult {
   holidays: HolidaySet;
   /** ONLY the designers the pull actually reached (report → missingDesigners). */
   assessedDesigners: DesignerId[];
+  /**
+   * Per-designer per-day ROSTERED minutes (CAP-06 / D-01 / D-02) — the lookup the
+   * report's available-minutes basis is built from. Given a designer id and a
+   * studio-zone "yyyy-MM-dd" date key, returns that designer's real rostered
+   * minutes for the matching weekday (e.g. Anisha = 0 on Wed/Fri). Sourced from the
+   * /people `availabilities` pull, parsed at the zod boundary and mapped to exact
+   * integer minutes. A designer with NO readable availability returns 0 here AND is
+   * omitted from `assessedDesigners` (D-06) — so the report names them "couldn't
+   * read", never silently invents a flat-7.5h day. Satisfies the Plan-01
+   * StudioReportInput.rosteredMinutes contract; src/index.ts passes it straight in.
+   */
+  rosteredMinutes: (designerId: DesignerId, dateKey: string) => number;
   /** Accumulated source failures — non-empty means a degraded run, never a crash. */
   sourceErrors: string[];
   /**
@@ -395,6 +414,7 @@ export async function gather(deps: GatherDeps): Promise<GatherResult> {
     holidays,
     assessedDesigners: [], // reached nobody → report names the whole roster missing
     sourceErrors,
+    rosteredMinutes: () => 0, // reached nobody → no rostered data → 0 (degrade-safe, D-06)
     bookedClientsByDesignerDay: {}, // reached nobody → no per-designer sets
   });
 
@@ -561,22 +581,74 @@ export async function gather(deps: GatherDeps): Promise<GatherResult> {
   const assessInputs = buildAssessInputs(rawBookings, targetKey, tasksById, taskIdByBooking);
   const briefFlags = assessBriefs(assessInputs, briefedMap);
 
-  // (8) assessedDesigners = the whole roster. Reaching this point means the
-  //     /bookings pull SUCCEEDED — a failure returns degraded() (assessedDesigners
-  //     []) above. That pull is person-scoped to DESIGNER_PERSON_IDS, so a
-  //     successful response COVERS all three designers: every rostered designer was
-  //     reached, including those with zero rows of their own (reached-but-empty →
-  //     "open / nothing booked", NOT "couldn't read"). This supersedes the old
-  //     row-based assessment + the T-02-15 partial-result guard, which mislabelled
-  //     genuinely empty designers as unread (live-surfaced 2026-06-04: an all-empty
-  //     Friday rendered every unbooked designer "couldn't read").
+  // (7b) CAP-06 — pull each designer's working-day availability via a DEDICATED
+  //      /people?filter[id]=... call (D-01 resolved: a person-scoped pull, NOT a
+  //      /bookings sideload — availabilities is a person ATTRIBUTE, and the bookings
+  //      include chain already broke once when relationships weren't included). Each
+  //      entry is parsed through PersonResource.safeParse (the indexProjects idiom):
+  //      on success, map its availabilities → per-weekday minutes for the target
+  //      week and record them in availabilityByDesigner. A Result error degrades —
+  //      NO designer is added (so all fall through to missing, never a flat-450,
+  //      D-06). A single-entry safeParse failure skips ONLY that designer.
   //
-  //     NOTE: this coverage assumption holds ONLY because the roster is fetched in
-  //     ONE all-or-nothing person-scoped query. If this is ever split into
-  //     per-designer pulls, restore a per-designer reachability signal so a designer
-  //     whose individual pull failed falls through to `missingDesigners` instead of
-  //     falsely showing as open.
-  const assessedDesigners = DESIGNER_PERSON_IDS.map((id) => id as DesignerId);
+  //      D-06 per-designer degrade — DISTINCT from the /allocations confirmed-only
+  //      GLOBAL degrade: a designer whose availability can't be read is UNKNOWN
+  //      (omitted from assessedDesigners → "couldn't read"); we NEVER fall back to a
+  //      flat-7.5h baseline for them (that re-introduces the exact CAP-06 bug).
+  const availabilityByDesigner = new Map<DesignerId, number[]>();
+  const peopleQuery = `filter[id]=${personFilter}`;
+  const peopleResult = await fetchPages("/people", peopleQuery);
+  if (!peopleResult.ok) {
+    sourceErrors.push(`people availability pull failed: ${peopleResult.error}`);
+    // Degrade: no availability for anyone → all omitted from assessed (D-06). Do
+    // NOT return — confirmed bookings still stand; the report names them missing.
+  } else {
+    for (const entry of peopleResult.value.data) {
+      const parsed = PersonResource.safeParse(entry);
+      if (!parsed.success) {
+        sourceErrors.push("a person availability entry failed validation (skipped)");
+        continue;
+      }
+      const personId = parsed.data.id as DesignerId;
+      if (!ROSTER.has(personId)) continue; // not a monitored designer → ignore
+      const availabilities = (parsed.data.attributes.availabilities ??
+        []) as RawAvailabilityForMapping[];
+      const weekdayMinutes = availabilityToWeekdayMinutes(availabilities, targetKey);
+      // D-06: a present designer with NO USABLE rostered data (no covering period,
+      // or a defensively-zeroed unexpected shape → an all-zero week) is treated as
+      // UNKNOWN, not "works zero days". Omit them so the report reads "couldn't
+      // read" rather than silently inventing a 7-day-off week. A designer who is
+      // genuinely rostered at least one day has a non-zero entry and is recorded.
+      if (weekdayMinutes.every((m) => m === 0)) {
+        sourceErrors.push("a designer has no readable working-day availability (skipped)");
+        continue;
+      }
+      availabilityByDesigner.set(personId, weekdayMinutes);
+    }
+  }
+
+  // The lookup the report consumes: index a designer's per-weekday minutes by the
+  // weekday of `dateKey` (D-02). An unreadable designer is absent from the map →
+  // 0 (degrade-safe); but they are ALSO omitted from assessedDesigners below, so
+  // the report shows them "couldn't read", not "0 / open" (D-06). Never throws.
+  const rosteredMinutes = (designerId: DesignerId, dateKey: string): number => {
+    const weekdayMinutes = availabilityByDesigner.get(designerId);
+    if (weekdayMinutes === undefined) return 0;
+    return rosteredMinutesForWeekday(weekdayMinutes, dateKey);
+  };
+
+  // (8) assessedDesigners — reaching this point means the /bookings pull SUCCEEDED
+  //     (a failure returns degraded() above), so the person-scoped bookings pull
+  //     COVERS all three designers (reached-but-empty → open, NOT "couldn't read").
+  //     CAP-06 / D-06 narrows this: a designer must ALSO have readable availability
+  //     to be assessed. assessedDesigners is therefore the INTERSECTION of the
+  //     bookings-coverage roster AND the designers whose availability parsed into
+  //     availabilityByDesigner. A designer with unreadable availability is omitted
+  //     → report names them in missingDesigners ("couldn't read"); we NEVER
+  //     substitute a flat-7.5h day for them (that is the bug D-06 forbids).
+  const assessedDesigners = DESIGNER_PERSON_IDS.map((id) => id as DesignerId).filter((id) =>
+    availabilityByDesigner.has(id),
+  );
 
   // (9) Open Q1 — per-designer booked CLIENT company ids for the TARGET day, read
   //     from the SAME already-fetched `included` (no second /bookings call). Build
@@ -609,6 +681,7 @@ export async function gather(deps: GatherDeps): Promise<GatherResult> {
     holidays,
     assessedDesigners,
     sourceErrors,
+    rosteredMinutes,
     bookedClientsByDesignerDay,
   };
 }

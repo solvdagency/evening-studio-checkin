@@ -114,6 +114,10 @@ function stubGatherResult(sourceErrors: string[] = []): GatherResult {
     holidays: new Set<string>(),
     assessedDesigners: [...ROSTER],
     sourceErrors,
+    // Flat standard 7.5h day for every designer-date: keeps these end-to-end render
+    // assertions on the pre-CAP-06 "present-but-empty → underbooked" rows; the
+    // per-designer availability behaviour is exercised directly in gather.test.ts.
+    rosteredMinutes: () => 450,
     bookedClientsByDesignerDay: {
       [LIAM]: new Set<string>(), // no FDC booking → the WORTH meeting flags
       [ANISHA]: new Set<string>(),

@@ -62,13 +62,20 @@ function workflowStatusesPage(): Page {
 
 /**
  * Build a deps object with a stubbed fetcher routed by path. Any path not in
- * `pages` returns an empty successful page.
+ * `pages` returns an empty successful page — EXCEPT `/people`, which defaults to
+ * the full-roster availabilities page (plan 06-02) so a test that does not care
+ * about availability still has all three designers rostered (and therefore
+ * assessed). A test exercising the availability-degrade paths overrides `/people`
+ * explicitly.
  */
 function depsWith(pages: Record<string, Result<Page>>): GatherDeps {
   return {
     now: NOW,
-    fetchPages: async (path: string): Promise<Result<Page>> =>
-      pages[path] ?? { ok: true, value: { data: [], included: [] } },
+    fetchPages: async (path: string): Promise<Result<Page>> => {
+      if (pages[path] !== undefined) return pages[path];
+      if (path === "/people") return { ok: true, value: peoplePage() };
+      return { ok: true, value: { data: [], included: [] } };
+    },
   };
 }
 
@@ -112,6 +119,49 @@ function allocation(
       event:
         bookingType === "event" ? { data: { id: "evt-" + id, type: "events" } } : { data: null },
     },
+  };
+}
+
+/**
+ * A /people resource carrying a designer's availabilities (plan 06-02). `wh` is
+ * the working_hours array (7- or 14-element); an open-ended current period since
+ * 2026-03-09 (mirrors the live shape). Pass `null` working_hours to emit an entry
+ * with NO availabilities period (designer present, no rostered data).
+ */
+function personResource(id: string, wh: number[] | null): unknown {
+  return {
+    id,
+    type: "people",
+    attributes:
+      wh === null
+        ? {}
+        : {
+            availabilities: [
+              {
+                started_on: "2026-03-09",
+                ended_on: null,
+                working_hours: wh,
+                holiday_calendar_id: null,
+              },
+            ],
+          },
+  };
+}
+
+/** A standard Mon–Fri 7.5h working week (Liam / Ella). */
+const STD_WEEK = [7.5, 7.5, 7.5, 7.5, 7.5, 0, 0];
+/** Anisha's shape: Mon/Tue/Thu 7.5h, off Wed & Fri. */
+const ANISHA_WEEK = [7.5, 7.5, 0, 7.5, 0, 0, 0];
+
+/** A /people page with all three designers on standard/Anisha shapes. */
+function peoplePage(): Page {
+  return {
+    data: [
+      personResource(DESIGNER_PERSON_IDS[0], STD_WEEK), // Liam
+      personResource(DESIGNER_PERSON_IDS[1], ANISHA_WEEK), // Anisha (off Wed/Fri)
+      personResource(DESIGNER_PERSON_IDS[2], STD_WEEK), // Ella
+    ],
+    included: [],
   };
 }
 
@@ -610,6 +660,170 @@ describe("gather (composition root — pull → validate → map → assess → 
         }),
       );
       assert.ok(out.sourceErrors.length > 0);
+    });
+  });
+
+  describe("availability (CAP-06 / D-01 / D-02 / D-06 / D-08) — /people rosteredMinutes", () => {
+    const TARGET = "2026-06-04"; // Thursday
+    const WED = "2026-06-03";
+    const FRI = "2026-06-05";
+    const liam = DESIGNER_PERSON_IDS[0] as DesignerId;
+    const anisha = DESIGNER_PERSON_IDS[1] as DesignerId;
+    const ella = DESIGNER_PERSON_IDS[2] as DesignerId;
+
+    it("queries /people scoped to the three designer ids", async () => {
+      const queryByPath: Record<string, string> = {};
+      await gather({
+        now: NOW,
+        fetchPages: async (path: string, query: string): Promise<Result<Page>> => {
+          queryByPath[path] = query;
+          if (path === "/people") return { ok: true, value: peoplePage() };
+          return { ok: true, value: { data: [], included: [] } };
+        },
+      });
+      assert.ok(queryByPath["/people"] !== undefined, "the /people endpoint was queried");
+      assert.ok(
+        queryByPath["/people"].includes(`filter[id]=${DESIGNER_PERSON_IDS.join(",")}`),
+        `the /people query must scope to the roster ids; got: ${queryByPath["/people"]}`,
+      );
+    });
+
+    it("happy path: rosteredMinutes returns 450 for Liam/Ella, 0 for Anisha on Wed/Fri, 450 Thu", async () => {
+      const out = await gather(
+        depsWith({
+          "/bookings": OK({ data: [], included: [] }),
+          "/people": OK(peoplePage()),
+          "/workflow_statuses": OK(workflowStatusesPage()),
+        }),
+      );
+      // Liam & Ella standard week → 450 on the Thursday target.
+      assert.equal(out.rosteredMinutes(liam, TARGET), 450);
+      assert.equal(out.rosteredMinutes(ella, TARGET), 450);
+      // Anisha rostered Thursday (450) but OFF Wed & Fri (0) — the live truth.
+      assert.equal(out.rosteredMinutes(anisha, TARGET), 450);
+      assert.equal(out.rosteredMinutes(anisha, WED), 0);
+      assert.equal(out.rosteredMinutes(anisha, FRI), 0);
+    });
+
+    it("end-to-end: a Wed/Fri target day makes Anisha 'off' through computeStudioReport", async () => {
+      // Force the target day to a Friday by setting now to the evening before.
+      const thursdayEve = DateTime.fromISO("2026-06-04T17:00:00", { zone: STUDIO_ZONE });
+      const out = await gather({
+        now: thursdayEve,
+        fetchPages: async (path: string): Promise<Result<Page>> => {
+          if (path === "/people") return { ok: true, value: peoplePage() };
+          if (path === "/workflow_statuses")
+            return { ok: true, value: workflowStatusesPage() };
+          return { ok: true, value: { data: [], included: [] } };
+        },
+      });
+      assert.equal(out.rosteredMinutes(anisha, FRI), 0); // sanity: target day is Friday
+      const report = computeStudioReport({
+        now: thursdayEve,
+        holidays: out.holidays,
+        roster: [liam, anisha, ella],
+        bookings: out.bookings,
+        absences: out.absences,
+        rosteredMinutes: out.rosteredMinutes,
+        assessedDesigners: out.assessedDesigners,
+      });
+      assert.equal(report.targetDay, FRI);
+      const anishaResult = report.designers.find((d) => d.designerId === anisha);
+      assert.ok(anishaResult, "Anisha has a designer result");
+      assert.equal(anishaResult!.status, "off"); // 0 rostered on Friday → off, not underbooked
+    });
+
+    it("a failed /people pull → sourceError + EVERY designer omitted (all missing, never flat-450)", async () => {
+      const roster = [liam, anisha, ella];
+      const out = await gather(
+        depsWith({
+          "/bookings": OK({ data: [], included: [] }),
+          "/people": ERR("HTTP 500"),
+          "/workflow_statuses": OK(workflowStatusesPage()),
+        }),
+      );
+      assert.ok(out.sourceErrors.some((e) => /people|availabilit/i.test(e)), "people pull error surfaced");
+      // D-06: no readable availability for anyone → none assessed.
+      assert.deepEqual(out.assessedDesigners, []);
+      const report = computeStudioReport({
+        now: NOW,
+        holidays: out.holidays,
+        roster,
+        bookings: out.bookings,
+        absences: out.absences,
+        rosteredMinutes: out.rosteredMinutes,
+        assessedDesigners: out.assessedDesigners,
+      });
+      // The whole roster is named "couldn't read" — never silently flat-7.5h.
+      assert.deepEqual([...report.missingDesigners].sort(), [...roster].sort());
+    });
+
+    it("a single person entry failing validation → only that designer omitted, others assessed", async () => {
+      // Anisha's entry is malformed (working_hours is not an array of numbers).
+      const out = await gather(
+        depsWith({
+          "/bookings": OK({ data: [], included: [] }),
+          "/people": OK({
+            data: [
+              personResource(liam, STD_WEEK),
+              { id: anisha, type: "people", attributes: { availabilities: "broken" } }, // invalid
+              personResource(ella, STD_WEEK),
+            ],
+            included: [],
+          }),
+          "/workflow_statuses": OK(workflowStatusesPage()),
+        }),
+      );
+      assert.ok(out.sourceErrors.some((e) => /availabilit|person/i.test(e)));
+      // Liam & Ella assessed; Anisha omitted (her availability failed validation).
+      assert.deepEqual([...out.assessedDesigners].sort(), [liam, ella].sort());
+      assert.ok(!out.assessedDesigners.includes(anisha));
+    });
+
+    it("a designer present but with NO covering period → rosteredMinutes 0, omitted from assessed (D-06)", async () => {
+      const out = await gather(
+        depsWith({
+          "/bookings": OK({ data: [], included: [] }),
+          "/people": OK({
+            data: [
+              personResource(liam, STD_WEEK),
+              personResource(anisha, null), // present, but no availabilities period
+              personResource(ella, STD_WEEK),
+            ],
+            included: [],
+          }),
+          "/workflow_statuses": OK(workflowStatusesPage()),
+        }),
+      );
+      // No rostered data for Anisha → 0 (degrade-safe, not 450) AND omitted.
+      assert.equal(out.rosteredMinutes(anisha, TARGET), 0);
+      assert.deepEqual([...out.assessedDesigners].sort(), [liam, ella].sort());
+    });
+
+    it("rosteredMinutes returns 0 for an unknown designer/date (never throws)", async () => {
+      const out = await gather(
+        depsWith({
+          "/bookings": OK({ data: [], included: [] }),
+          "/people": OK(peoplePage()),
+          "/workflow_statuses": OK(workflowStatusesPage()),
+        }),
+      );
+      assert.equal(out.rosteredMinutes("999999" as DesignerId, TARGET), 0);
+      assert.equal(out.rosteredMinutes(liam, "not-a-date"), 0);
+    });
+
+    it("a designer assessed by availability still needs a covered bookings pull (intersection)", async () => {
+      // bookings pull FAILS → degraded() → assessedDesigners [] regardless of /people.
+      const out = await gather(
+        depsWith({
+          "/bookings": ERR("network down"),
+          "/people": OK(peoplePage()),
+          "/workflow_statuses": OK(workflowStatusesPage()),
+        }),
+      );
+      assert.deepEqual(out.assessedDesigners, []);
+      // The degraded() early-return still exposes a safe rosteredMinutes (→ 0).
+      assert.equal(out.rosteredMinutes(liam, TARGET), 0);
     });
   });
 });
