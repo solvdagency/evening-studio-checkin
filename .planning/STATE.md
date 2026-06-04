@@ -95,8 +95,9 @@ None yet.
 
 [Issues that affect future work]
 
-- [Phase 4]: Google Calendar needs domain-wide delegation authorised by a Google Workspace admin (`calendar.readonly`). Confirm this external dependency before planning Phase 4.
-- [Phase 5]: Production LLM cutover needs an org-sanctioned Anthropic API key. A personal $5-credit key covers dev/test. Phase 5 is cuttable if the key is not approved.
+- [Phase 4]: Google Calendar needs domain-wide delegation (`calendar.readonly`) + a service-account JSON key + the 3 designers' calendar emails. **UNBLOCKING 2026-06-04** — Liam confirmed he can obtain full Workspace admin perms (DWD) today. Confirm the service account + DWD scope are actually granted before Phase 4 execution.
+- [Phase 5]: Production LLM needs an org-sanctioned Anthropic API key (`ANTHROPIC_API_KEY`). **UNBLOCKING 2026-06-04** — Liam confirmed he can obtain a sanctioned API key today, removing the post-15-Jun-2026 metered-Pro-credit concern. Phase 5 no longer "cuttable" once the key lands.
+- [Phase 3 → production]: The nightly GitHub Actions cron will not fire until `GCHAT_WEBHOOK_URL` (real studio space, not the test space), `PRODUCTIVE_AUTH_TOKEN`, and `PRODUCTIVE_ORG_ID` are added as GitHub Actions repository secrets. They currently exist only in the local gitignored `.env`. Phase 3 code is shippable; production delivery is gated on these secrets.
 
 ## Deferred Items
 
