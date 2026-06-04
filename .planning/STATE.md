@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Phase 06 complete (CAP-06 done); Phase 5 plan 2 + Phase 7 remain
-last_updated: "2026-06-04T09:30:00.000Z"
-last_activity: 2026-06-04 -- Phase 6 complete (CAP-06), smoke check approved
+stopped_at: Paused at 05-02 Task 4 human-verify checkpoint (blocking) — operator must run scripts/eval-llm-renderer.ts with the dev key and approve flag fairness
+last_updated: "2026-06-04T09:35:00.000Z"
+last_activity: 2026-06-04 -- 05-02 Tasks 1-3 complete (fuzzy meeting judgment, default OFF); paused at the blocking flag-fairness checkpoint
 progress:
   total_phases: 7
   completed_phases: 5
   total_plans: 20
   completed_plans: 19
-  percent: 95
+  percent: 71
 ---
 
 # Project State
@@ -21,18 +21,23 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-02)
 
 **Core value:** Every evening the team gets one clear, trustworthy heads-up of exactly what needs fixing before tomorrow — so the three designers start the day with full, briefed workloads instead of chasing the work themselves.
-**Current focus:** Phase 06 complete — next: Phase 5 plan 2 (LLM renderer) and Phase 7 (hardening)
+**Current focus:** Phase 05 — llm-renderer-optional
 
 ## Current Position
 
-Phase: 06 (designer-working-day-availability) — COMPLETE (CAP-06)
-Plan: 3 of 3 (all complete)
-Status: COMPLETE. All three plans executed and committed; full suite 305/305, tsc
+Phase: 05 (llm-renderer-optional) — EXECUTING
+Plan: 2 of 2
+Status: 05-02 Tasks 1-3 done (fuzzy meeting keep/soften/drop behind a default-OFF
+toggle + offline flag-fairness eval harness); PAUSED at Task 4 — a blocking
+human-verify checkpoint. LLM-02 stays Pending until the operator runs
+`ANTHROPIC_API_KEY=$DEV_KEY npx tsx scripts/eval-llm-renderer.ts`, confirms ZERO drops
+of genuine client work, and approves. Suite 319 green, tsc clean, toggle OFF =
+byte-identical to Slice 1.
 clean. The 06-03 live smoke check caught a real fixtures-vs-live bug
 (`person.availabilities` is a JSON-string-of-tuples, not array-of-objects) — fixed at
 the zod boundary (commit a042430) and re-verified live; Liam approved. One degrade-path
 quality issue (D-06 vs D-18) was reviewed and deferred to a follow-up (see 06-03-SUMMARY).
-Last activity: 2026-06-04
+Last activity: 2026-06-04 -- Phase 05 execution started
 
 Progress: [█████████▓] 95%
 
@@ -106,6 +111,10 @@ Recent decisions affecting current work:
 - [Phase 06]: StudioReportInput.rosteredMinutes(designerId, dateKey) is the injected lookup the rollup + target-day path use; omitted = flat TARGET_MINUTES fallback, a missing/0 entry resolves to 0 and never fabricates capacity (CAP-05 fix / D-06 / D-07).
 - [Phase 06]: Availability pulled via a dedicated /people?filter[id]=... call (D-01), parsed at the zod boundary into per-weekday minutes (hours x 60, Mon=0..Sun=6); GatherResult.rosteredMinutes(designerId,dateKey) feeds StudioReportInput.rosteredMinutes so Anisha's 0 on Wed/Fri flows through as real off-days.
 - [Phase 06]: D-06 per-designer degrade: assessedDesigners = bookings-coverage intersection readable-availability; an unreadable or no-usable-period designer is omitted so the report names them 'couldn't read', never a flat-450 fallback. 14-element identical uses week1 silently, differing warns + uses week1 (parity deferred, D-08).
+- [Phase 05-02]: Fuzzy meeting judgment (keep/soften/drop) is applied by PURE code (`applyVerdicts`) BEFORE rendering, keyed by the buildFacts stable flattened index; the function can only shrink/reword the reconciler's worth-a-look list, never grow it — unknown/invented ids are no-ops (the model can never invent a flag, AI-SPEC §6 / T-05-05).
+- [Phase 05-02]: Ships behind `USE_LLM_MEETING_JUDGMENT`, DEFAULT OFF — with it off the card is byte-identical to Slice-1-only; judgment only applies when BOTH USE_LLM_RENDERER and USE_LLM_MEETING_JUDGMENT are on. Cleanly separable from Slice 1.
+- [Phase 05-02]: `soften` carries the RAW model line into the worth-a-look title; escaping happens once at the renderer boundary (rows.ts escapeHtml, T-05-07) — `applyVerdicts` deliberately does NOT pre-escape (avoids double-escape; deviates from the literal plan must_have wording).
+- [Phase 05-02]: The never-drop-a-genuine-flag rule has two halves — STRUCTURAL (flagFairness.test.ts, network-free, in CI: a genuine flag survives no-verdict/keep/unknown-id) + BEHAVIOURAL (scripts/eval-llm-renderer.ts, dev key, OFF-CI: hard-fails if the model EMITS a drop for a genuine-labelled meeting). LLM-02 trusted only after the operator runs the harness and approves.
 
 ### Pending Todos
 

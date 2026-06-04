@@ -159,7 +159,7 @@ Plans:
 
 **Wave 2** *(blocked on Wave 1)*
 
-- [ ] 05-02-PLAN.md — Fuzzy keep/soften/drop meeting judgment behind a default-OFF toggle + offline flag-fairness eval over the Phase-4 labelled set (LLM-02)
+- [ ] 05-02-PLAN.md — Fuzzy keep/soften/drop meeting judgment behind a default-OFF toggle + offline flag-fairness eval over the Phase-4 labelled set (LLM-02) — Tasks 1-3 built & committed (suite 319 green, tsc clean); PAUSED at Task 4, a blocking human-verify checkpoint (operator runs scripts/eval-llm-renderer.ts with the dev key and approves flag fairness before LLM-02 is validated)
 
 **Dependencies (external)**: Anthropic API key — a personal $5-credit key for development/testing, and an org-sanctioned key for production. Production cutover is gated on org approval of the sanctioned key; the Pro/Max subscription OAuth route is prohibited and must not be used. This entire phase is cuttable without affecting the shipped product.
 
