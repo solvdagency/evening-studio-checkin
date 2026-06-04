@@ -135,6 +135,109 @@ function linkedId(
 }
 
 /**
+ * The shape this mapper reads from a zod-validated `/people` availability entry
+ * (plan 06-02). One availabilities period: an inclusive [started_on, ended_on]
+ * date range (ended_on null = open-ended/current, D-01) and a `working_hours`
+ * numeric array of hours-per-weekday. `working_hours` is accepted at any length
+ * here; only 7 or 14 are honoured by the mapper (D-08) — any other length is a
+ * defensive all-zero. Stays INSIDE src/productive (boundary rule).
+ */
+export interface RawAvailabilityForMapping {
+  /** Period start, "yyyy-MM-dd" studio-zone calendar date. */
+  started_on: string;
+  /** Period end, "yyyy-MM-dd"; null = open-ended/current (D-01). */
+  ended_on: string | null;
+  /** Hours-per-weekday, Mon=0..Sun=6; 7-element, or 14-element alternating (D-08). */
+  working_hours: number[];
+  /** Productive holiday calendar id — NOT used (the app keeps its own NSW set). */
+  holiday_calendar_id?: number | null;
+}
+
+/**
+ * Is `dayKey` covered by an availability period? Mirrors `dayInRange` but treats a
+ * null `ended_on` as open-ended (D-01): a current period with no end date covers
+ * every date on/after its start.
+ */
+function availabilityCovers(
+  dayKey: string,
+  started_on: string,
+  ended_on: string | null,
+): boolean {
+  if (started_on > dayKey) return false;
+  return ended_on === null || dayKey <= ended_on;
+}
+
+/**
+ * Map a designer's `availabilities` to EXACT per-weekday rostered minutes for the
+ * week containing `dayKey` (CAP-06 / D-01 / D-02 / D-08). Returns a 7-element
+ * array indexed Mon=0..Sun=6; each entry is `round(safe(hours) × 60)`.
+ *
+ * Steps (degrade-safe — never throws, never invents capacity):
+ *  1. Select the period whose [started_on, ended_on] covers `dayKey` (ended_on
+ *     null = open-ended, D-01). If none covers, return all-zero (no rostered data).
+ *  2. Read its `working_hours`: length 7 → use directly; length 14 → compare
+ *     week 1 (slice 0–7) vs week 2 (slice 7–14): equal → week 1, differing →
+ *     console.warn + week 1 (true week-parity deferred, D-08); any other length →
+ *     all-zero (defensive, T-06-04).
+ *  3. Map each weekday to `Math.round(safe(hours) × 60)` so a non-finite figure
+ *     can never surface as NaN/Infinity (T-06-03).
+ *
+ * Only clean primitive minutes leave this file (boundary rule).
+ */
+export function availabilityToWeekdayMinutes(
+  availabilities: readonly RawAvailabilityForMapping[],
+  dayKey: string,
+): number[] {
+  const allZero = (): number[] => [0, 0, 0, 0, 0, 0, 0];
+
+  // (1) Pick the covering period. First match wins; a current open-ended period is
+  //     authored as the last/active one, but any covering period is valid (D-01).
+  const period = availabilities.find((a) =>
+    availabilityCovers(dayKey, a.started_on, a.ended_on),
+  );
+  if (period === undefined) return allZero();
+
+  // (2) Resolve the week to use from working_hours length (D-08).
+  const wh = period.working_hours;
+  let week: number[];
+  if (wh.length === 7) {
+    week = wh;
+  } else if (wh.length === 14) {
+    const w1 = wh.slice(0, 7);
+    const w2 = wh.slice(7, 14);
+    const identical = w1.every((h, i) => h === w2[i]);
+    if (!identical) {
+      console.warn(
+        "availabilityToWeekdayMinutes: 14-element alternating-week schedule with " +
+          "differing weeks; using week 1 (true parity deferred, D-08).",
+      );
+    }
+    week = w1;
+  } else {
+    // Unexpected length → no rostered data (defensive, never a fabricated day).
+    return allZero();
+  }
+
+  // (3) hours × 60 → exact integer minutes, every entry coerced (T-06-03).
+  return week.map((h) => Math.round(safe(h) * 60));
+}
+
+/**
+ * Index a pre-computed per-weekday minutes array (Mon=0..Sun=6) by the weekday of
+ * `dayKey` (D-02). Derives the 0-based weekday from a luxon DateTime in
+ * STUDIO_ZONE (`.weekday` is 1=Mon..7=Sun → subtract 1). An out-of-range index or
+ * an invalid date returns 0; the stored minute is passed through `safe(...)` so a
+ * garbage figure can never surface (T-06-03). Never throws.
+ */
+export function rosteredMinutesForWeekday(weekdayMinutes: number[], dayKey: string): number {
+  const dt = DateTime.fromISO(dayKey, { zone: STUDIO_ZONE });
+  if (!dt.isValid) return 0;
+  const idx = dt.weekday - 1; // luxon 1..7 (Mon..Sun) → 0..6
+  if (idx < 0 || idx >= weekdayMinutes.length) return 0;
+  return safe(weekdayMinutes[idx]);
+}
+
+/**
  * Split validated raw bookings into the Phase-1 `Booking[]` (work) and
  * `Absence[]` (time off) for the target day (D-11). Work bookings carry
  * `isTentative = draft===true` (D-07); absences carry only minutes and all

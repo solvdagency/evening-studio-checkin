@@ -78,6 +78,46 @@ export interface RawWorkflowStatusAttributes {
   category_id: number;
 }
 
+/**
+ * Raw `/people` availabilities period (plan 06-02, CAP-06). One entry of the
+ * `availabilities` array on a person resource's attributes block: the designer's
+ * working-day pattern for an inclusive [started_on, ended_on] date range. Boundary
+ * rule (header lines 1-11): stays INSIDE src/productive/ — the mapper converts it
+ * to clean per-weekday minutes; this raw shape MUST NOT cross into src/domain.
+ */
+export interface RawAvailability {
+  /** Period start, "yyyy-MM-dd". */
+  started_on: string;
+  /** Period end, "yyyy-MM-dd"; null = current/open-ended (D-01). */
+  ended_on: string | null;
+  /**
+   * Hours-per-weekday, indexed Mon=0..Sun=6 (D-02). 7-element for a standard week;
+   * 14-element for an alternating two-week schedule (D-08 — week 1 used today). A
+   * 0 entry means not rostered that weekday → 0 available minutes.
+   */
+  working_hours: number[];
+  /** Productive holiday calendar id — captured but unused (own NSW set kept). */
+  holiday_calendar_id?: number | null;
+}
+
+/**
+ * Raw `/people` resource attributes used by the availability pull (plan 06-02).
+ * Only `availabilities` is load-bearing; everything else on the person attributes
+ * block is tolerated and ignored. Boundary rule: src/productive/ only — the clean
+ * per-designer per-weekday minutes lookup is what crosses into the domain.
+ */
+export interface RawPersonAttributes {
+  /** The designer's working-day patterns (one per dated period); see RawAvailability. */
+  availabilities?: RawAvailability[];
+}
+
+/** A raw `/people` resource carrying the availability attributes (plan 06-02). */
+export interface RawPersonResource {
+  id: string;
+  type: string;
+  attributes: RawPersonAttributes;
+}
+
 /** JSON:API page envelope: `data` array, optional `included`, and a `meta` block. */
 export interface RawJsonApiPage {
   data: unknown[];

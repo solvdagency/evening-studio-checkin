@@ -203,6 +203,45 @@ export const ProjectResource = z.object({
 });
 
 /**
+ * A single `availabilities` period on a `/people` resource (plan 06-02, CAP-06).
+ * Productive returns the designer's working-day pattern as an array of these on the
+ * person ATTRIBUTES block: `[{ started_on, ended_on, working_hours, holiday_calendar_id }]`.
+ * Boundary discipline (header lines 1-15): validate only the fields used, tolerate
+ * extras (`.loose()`), and only ever `.safeParse` this — never `.parse`.
+ *  - `ended_on` is nullable (D-01): null = current/open-ended period.
+ *  - `working_hours` is a numeric array; length is NOT pinned here (7 vs 14 is the
+ *    mapper's job, D-08 — see mappers.ts availabilityToWeekdayMinutes).
+ *  - `holiday_calendar_id` is captured-but-unused (the app keeps its own NSW set).
+ */
+export const AvailabilityPeriod = z
+  .object({
+    started_on: z.string(),
+    ended_on: z.string().nullable(),
+    working_hours: z.array(z.number()),
+    holiday_calendar_id: z.number().nullable().optional(),
+  })
+  .loose();
+
+/**
+ * A `/people` resource carrying the designer's working-day availability (plan
+ * 06-02, CAP-06). Mirrors `AllocationResource`'s id/type/attributes shape. The
+ * load-bearing field is `attributes.availabilities`; the attributes object is
+ * `.loose()` so every other person attribute (name, email, etc.) is tolerated and
+ * never breaks the parse. `availabilities` is OPTIONAL so a person row missing it
+ * still parses (the mapper then yields all-zero → that designer reads as missing,
+ * D-06, never a fabricated capacity). safeParse-only (header lines 1-15).
+ */
+export const PersonResource = z.object({
+  id: z.string(),
+  type: z.literal("people"),
+  attributes: z
+    .object({
+      availabilities: z.array(AvailabilityPeriod).optional(),
+    })
+    .loose(),
+});
+
+/**
  * JSON:API page envelope. `data` is an untyped array (each element is validated
  * by the resource schema appropriate to the call); `included` is optional;
  * `meta` carries the pagination figures the client's paginate loop reads.

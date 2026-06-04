@@ -18,7 +18,10 @@ import {
   minutesOnDay,
   workingDaysInRange,
   mapToBookingsAndAbsences,
+  availabilityToWeekdayMinutes,
+  rosteredMinutesForWeekday,
   type RawBookingForMapping,
+  type RawAvailabilityForMapping,
 } from "../mappers.ts";
 import { TARGET_MINUTES } from "../../domain/types.ts";
 
@@ -187,5 +190,147 @@ describe("mapToBookingsAndAbsences (D-07 / D-11 / D-12)", () => {
     const { bookings, absences } = mapToBookingsAndAbsences(raw, TARGET, NO_HOLIDAYS);
     assert.equal(bookings.length, 0);
     assert.equal(absences.length, 0);
+  });
+});
+
+/**
+ * Availability → per-weekday rostered minutes (plan 06-02, CAP-06 / D-01 / D-02 / D-08).
+ *
+ * Trust-critical arithmetic: working_hours is hours-per-weekday (Mon=0..Sun=6);
+ * minutes = round(hours × 60), every entry coerced through `safe(...)` so a
+ * non-finite figure can never surface as NaN/Infinity (T-06-03). The period whose
+ * [started_on, ended_on] covers the target date is selected (ended_on null =
+ * open-ended, D-01); a 14-element pattern uses week 1 (warns if weeks differ, D-08).
+ */
+
+/** An open-ended availability period builder (ended_on null = current). */
+function avail(
+  working_hours: number[],
+  started_on = "2026-03-09",
+  ended_on: string | null = null,
+): RawAvailabilityForMapping {
+  return { started_on, ended_on, working_hours, holiday_calendar_id: null };
+}
+
+// 2026-06-04 is a Thursday; 2026-06-03 Wed; 2026-06-05 Fri; 2026-06-08 Mon; 2026-06-06 Sat; 2026-06-07 Sun.
+const THU = "2026-06-04";
+const WED = "2026-06-03";
+const FRI = "2026-06-05";
+const MON = "2026-06-08";
+const SAT = "2026-06-06";
+const SUN = "2026-06-07";
+
+describe("availabilityToWeekdayMinutes (CAP-06 / D-01 / D-02)", () => {
+  it("7-element standard week [7.5×5,0,0] → Mon..Fri 450, Sat/Sun 0", () => {
+    const mins = availabilityToWeekdayMinutes([avail([7.5, 7.5, 7.5, 7.5, 7.5, 0, 0])], THU);
+    assert.deepEqual(mins, [450, 450, 450, 450, 450, 0, 0]);
+  });
+
+  it("Anisha shape [7.5,7.5,0,7.5,0,0,0] → Mon=450,Tue=450,Wed=0,Thu=450,Fri=0", () => {
+    const mins = availabilityToWeekdayMinutes([avail([7.5, 7.5, 0, 7.5, 0, 0, 0])], THU);
+    assert.equal(mins[0], 450); // Mon
+    assert.equal(mins[1], 450); // Tue
+    assert.equal(mins[2], 0); // Wed
+    assert.equal(mins[3], 450); // Thu
+    assert.equal(mins[4], 0); // Fri
+  });
+
+  it("a weekday entry of 0 → 0 rostered minutes (not rostered)", () => {
+    const mins = availabilityToWeekdayMinutes([avail([0, 7.5, 7.5, 7.5, 7.5, 0, 0])], THU);
+    assert.equal(mins[0], 0);
+  });
+
+  it("14-element with identical weeks uses week 1 (no warning)", () => {
+    const week = [7.5, 7.5, 0, 7.5, 0, 0, 0];
+    const mins = availabilityToWeekdayMinutes([avail([...week, ...week])], THU);
+    assert.deepEqual(mins, [450, 450, 0, 450, 0, 0, 0]);
+  });
+
+  it("14-element with DIFFERING weeks uses week 1 (and warns)", () => {
+    const week1 = [7.5, 7.5, 0, 7.5, 0, 0, 0];
+    const week2 = [7.5, 7.5, 7.5, 7.5, 7.5, 0, 0];
+    const mins = availabilityToWeekdayMinutes([avail([...week1, ...week2])], THU);
+    // Week 1 used → Wed (index 2) is 0, NOT 450 from week 2.
+    assert.deepEqual(mins, [450, 450, 0, 450, 0, 0, 0]);
+  });
+
+  it("period selection: ended_on null = open-ended, covers any later date", () => {
+    const mins = availabilityToWeekdayMinutes(
+      [avail([7.5, 7.5, 7.5, 7.5, 7.5, 0, 0], "2026-03-09", null)],
+      THU,
+    );
+    assert.equal(mins[3], 450); // Thu rostered
+  });
+
+  it("a dayKey BEFORE all periods → 7-element all-zero (no rostered data)", () => {
+    const mins = availabilityToWeekdayMinutes(
+      [avail([7.5, 7.5, 7.5, 7.5, 7.5, 0, 0], "2026-03-09", "2026-12-31")],
+      "2026-01-01",
+    );
+    assert.deepEqual(mins, [0, 0, 0, 0, 0, 0, 0]);
+  });
+
+  it("the covering closed period is selected over a non-covering one", () => {
+    const mins = availabilityToWeekdayMinutes(
+      [
+        avail([7.5, 7.5, 7.5, 7.5, 7.5, 0, 0], "2026-01-01", "2026-02-01"), // old, not covering
+        avail([7.5, 7.5, 0, 7.5, 0, 0, 0], "2026-03-09", null), // current, covers THU
+      ],
+      THU,
+    );
+    assert.deepEqual(mins, [450, 450, 0, 450, 0, 0, 0]); // current Anisha-shape period
+  });
+
+  it("a non-finite working_hours entry coerces to 0 (never NaN, T-06-03)", () => {
+    const mins = availabilityToWeekdayMinutes(
+      [avail([Number.NaN, 7.5, 7.5, 7.5, 7.5, 0, 0])],
+      THU,
+    );
+    assert.equal(mins[0], 0);
+    assert.equal(Number.isFinite(mins[0]), true);
+  });
+
+  it("an unexpected working_hours length (e.g. 5) → 7-element all-zero (defensive)", () => {
+    const mins = availabilityToWeekdayMinutes([avail([7.5, 7.5, 7.5, 7.5, 7.5])], THU);
+    assert.deepEqual(mins, [0, 0, 0, 0, 0, 0, 0]);
+  });
+
+  it("an empty availabilities array → 7-element all-zero", () => {
+    const mins = availabilityToWeekdayMinutes([], THU);
+    assert.deepEqual(mins, [0, 0, 0, 0, 0, 0, 0]);
+  });
+});
+
+describe("rosteredMinutesForWeekday (Mon=0..Sun=6 indexing, D-02)", () => {
+  const anisha = [450, 450, 0, 450, 0, 0, 0]; // Mon,Tue,Wed,Thu,Fri,Sat,Sun
+
+  it("Thursday 2026-06-04 → index 3 → 450", () => {
+    assert.equal(rosteredMinutesForWeekday(anisha, THU), 450);
+  });
+
+  it("Wednesday 2026-06-03 → index 2 → 0 (Anisha off Wed)", () => {
+    assert.equal(rosteredMinutesForWeekday(anisha, WED), 0);
+  });
+
+  it("Friday 2026-06-05 → index 4 → 0 (Anisha off Fri)", () => {
+    assert.equal(rosteredMinutesForWeekday(anisha, FRI), 0);
+  });
+
+  it("Monday 2026-06-08 → index 0 → 450", () => {
+    assert.equal(rosteredMinutesForWeekday(anisha, MON), 450);
+  });
+
+  it("Saturday → index 5 → 0; Sunday → index 6 → 0", () => {
+    assert.equal(rosteredMinutesForWeekday(anisha, SAT), 0);
+    assert.equal(rosteredMinutesForWeekday(anisha, SUN), 0);
+  });
+
+  it("a non-finite stored minute coerces to 0 (never NaN)", () => {
+    const mins = [Number.NaN, 450, 450, 450, 450, 0, 0];
+    assert.equal(rosteredMinutesForWeekday(mins, MON), 0);
+  });
+
+  it("an invalid date key → 0 (never throws)", () => {
+    assert.equal(rosteredMinutesForWeekday(anisha, "not-a-date"), 0);
   });
 });
