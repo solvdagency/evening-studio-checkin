@@ -2,10 +2,10 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: executing
-stopped_at: Completed 05-02 — Task 4 blocking flag-fairness checkpoint APPROVED; Phase 5 complete (2/2), LLM-02 validated. Only Phase 7 (Hardening) remains.
-last_updated: "2026-06-04T10:05:00.000Z"
-last_activity: 2026-06-04 -- 05-02 finalized: operator approved the live flag-fairness eval (haiku-4-5, drops-of-genuine=0); LLM-02 complete, Phase 5 closed
+status: completed
+stopped_at: Phase 7 context gathered
+last_updated: "2026-06-04T10:33:45.193Z"
+last_activity: 2026-06-04 -- Phase 05 closed (LLM-02 approved)
 progress:
   total_phases: 7
   completed_phases: 6
@@ -151,6 +151,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-06-04T10:05:00.000Z
-Stopped at: Completed 05-02 — flag-fairness checkpoint approved, Phase 5 closed (LLM-02 validated). Next: Phase 7 (Hardening), not yet planned.
-Resume file: .planning/phases/05-llm-renderer-optional/05-02-SUMMARY.md
+Last session: 2026-06-04T10:33:45.181Z
+Stopped at: Phase 7 context gathered
+Resume file: .planning/phases/07-hardening/07-CONTEXT.md
