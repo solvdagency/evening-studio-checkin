@@ -140,8 +140,12 @@ export interface Button {
 export interface TentativeNote {
   /** Pre-rounded additive tentative hours, display-only (e.g. 3.5 → "3.5h"). */
   tentativeHours: number;
-  /** The client/job the tentative time is against — escaped before insertion. */
-  client: string;
+  /**
+   * The client/job the tentative time is against — escaped before insertion.
+   * Optional: when the pull doesn't surface per-designer tentative detail, the
+   * line shows hours alone (omitted rather than an empty " · " suffix).
+   */
+  client?: string;
 }
 
 /**

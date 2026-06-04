@@ -132,11 +132,14 @@ export function buildRow(
   }
 
   // ⚠️ tentative (on top) — additive, never folded into booked/open (D-15 / MSG-07).
+  // The client/job suffix is optional: when the per-designer tentative detail isn't
+  // available (the current pull doesn't surface it), show the hours alone rather than
+  // hiding the tentative time entirely (live-corrected 2026-06-04 — a designer with
+  // only tentative work was misreading as fully open).
   const tentative = ctx.tentativeNotes[d.designerId];
   if (tentative) {
-    lines.push(
-      `⚠️ ${oneDecimal(tentative.tentativeHours)}h tentative (on top) · ${muted(escapeHtml(tentative.client))}`,
-    );
+    const client = tentative.client ? ` · ${muted(escapeHtml(tentative.client))}` : "";
+    lines.push(`⚠️ ${oneDecimal(tentative.tentativeHours)}h tentative (on top)${client}`);
   }
 
   // 📄 brief line(s) for this designer's flags (D-16): label · CODE · {X}h.

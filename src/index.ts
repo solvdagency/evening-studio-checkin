@@ -37,6 +37,7 @@ import type { DesignerId } from "./domain/types.ts";
 import { gather } from "./productive/gather.ts";
 import { computeStudioReport } from "./domain/report.ts";
 import type { StudioReportInput } from "./domain/report.ts";
+import { minutesToHours, roundToQuarterHour } from "./domain/round.ts";
 import { renderTemplate } from "./render/renderMessage.ts";
 import type { RenderContext } from "./render/cards.ts";
 import { postToChat } from "./chat/postToChat.ts";
@@ -86,11 +87,24 @@ function buildRenderContext(
   briefFlags: RenderContext["briefFlags"],
   holidays: ReadonlySet<string>,
 ): RenderContext {
+  // Tentative (shaky) hours surfaced from the deterministic report so a designer
+  // with only tentative work doesn't read as fully open (live-corrected 2026-06-04).
+  // Display-rounded via round.ts (D-15/D-16, display-only — never re-enters math).
+  // The client/job detail stays omitted until the pull surfaces it per designer.
+  const tentativeNotes: RenderContext["tentativeNotes"] = {};
+  for (const d of report.designers) {
+    if (d.tentativeMin > 0) {
+      tentativeNotes[d.designerId] = {
+        tentativeHours: roundToQuarterHour(minutesToHours(d.tentativeMin)),
+      };
+    }
+  }
+
   const ctx: RenderContext = {
     designerNames: { ...DESIGNER_NAMES },
     sourceErrors,
     briefFlags,
-    tentativeNotes: {},
+    tentativeNotes,
     header: {
       subtitle: subtitleFor(report.targetDay),
       targetDate: report.targetDay,

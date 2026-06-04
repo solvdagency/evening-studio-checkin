@@ -126,6 +126,35 @@ describe("renderTemplate — busy two-open scenario (MSG-01/02/03/07)", () => {
     );
     assert.deepStrictEqual(out, loadFixture("two-open"));
   });
+
+  it("tentative line shows hours alone when no client detail is supplied (live-corrected 2026-06-04)", () => {
+    const report: StudioReport = {
+      targetDay: "2026-06-04",
+      window: ["2026-06-04"],
+      designers: [
+        designer({
+          designerId: ELLA,
+          status: "underbooked",
+          availableHours: 7.5,
+          bookedHours: 0,
+          openHours: 7.5,
+          openMin: h(7.5),
+          tentativeMin: h(7),
+          shaky: true,
+        }),
+      ],
+      rollup: { totalMin: h(7.5), openMin: h(7.5), totalHours: 7.5, openHours: 7.5 },
+      missingDesigners: [],
+    };
+    // tentativeHours present, client omitted entirely.
+    const out = renderTemplate(report, ctx({ tentativeNotes: { [ELLA]: { tentativeHours: 7 } } }));
+    const json = JSON.stringify(out);
+    assert.ok(json.includes("7.0h tentative (on top)"), "tentative hours render");
+    assert.ok(
+      !json.includes("tentative (on top) · "),
+      "no empty ' · ' client suffix when client omitted",
+    );
+  });
 });
 
 describe("renderTemplate — clean scenario (MSG-04/05)", () => {
