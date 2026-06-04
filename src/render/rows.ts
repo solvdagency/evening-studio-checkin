@@ -48,10 +48,16 @@ const BRIEF_LABEL: Record<BriefFlag["reason"], string> = {
  * Status carries state via emoji + colour + words (never colour alone, D-10 / a11y):
  *  - underbooked → 🔴 red   "{X.X}h open"
  *  - overbooked  → 🟠 amber "{X.X}h over"
- *  - off         → ⚪ (muted) "on leave"   (minimal, D-22)
+ *  - off         → ⚪ (muted) "on leave" — OR the routine-not-rostered note when
+ *                  supplied (e.g. "not in Wednesday"), so a routine non-working day
+ *                  does not read as booked leave (D-05). Minimal one-line row (D-22).
  *  - ok          → 🟢 green "full day"
+ *
+ * `offNote` (optional): the routine-not-rostered wording for an "off" designer,
+ * already plain text — escaped here before insertion (threat T-06-07). When absent,
+ * the off line keeps the existing "on leave / Full day off." copy (booked leave).
  */
-function statusLine(d: DesignerResult, escapedName: string): string {
+function statusLine(d: DesignerResult, escapedName: string, offNote?: string): string {
   const name = `<b>${escapedName}</b>`;
   if (d.status === "underbooked") {
     return `🔴 ${name} — <font color="${BRAND_COLORS.open}">${oneDecimal(d.openHours)}h open</font>`;
@@ -60,7 +66,8 @@ function statusLine(d: DesignerResult, escapedName: string): string {
     return `🟠 ${name} — <font color="${BRAND_COLORS.over}">${oneDecimal(Math.abs(d.openHours))}h over</font>`;
   }
   if (d.status === "off") {
-    return `⚪ ${name} — ${muted("on leave / Full day off.")}`;
+    const offText = offNote ? escapeHtml(offNote) : "on leave / Full day off.";
+    return `⚪ ${name} — ${muted(offText)}`;
   }
   return `🟢 ${name} — <font color="${BRAND_COLORS.full}">full day</font>`;
 }
@@ -117,19 +124,26 @@ export function buildRow(
     return missingDesignerRow(escapedName);
   }
 
-  const lines: string[] = [statusLine(d, escapedName)];
+  // A routine non-working day (D-05) is carried in leaveNotes and consumed by the
+  // "off" branch below as the status-line wording, so it never reads as booked leave.
+  const leaveNote = ctx.leaveNotes?.[d.designerId];
 
-  // On-leave "off" day stays minimal (D-22): the locked "/ Full day off." line and
-  // nothing more — no booked detail, no flags.
+  // On-leave / not-rostered "off" day stays minimal (D-22): just the status line and
+  // nothing more — no booked detail, no flags. A routine-not-rostered note (if any)
+  // replaces the "on leave / Full day off." wording right in the status line.
   if (d.status === "off") {
-    return { decoratedText: { text: lines.join("<br>"), wrapText: true } };
+    const offLine = statusLine(d, escapedName, leaveNote);
+    return { decoratedText: { text: offLine, wrapText: true } };
   }
+
+  const lines: string[] = [statusLine(d, escapedName)];
 
   lines.push(bookedLine(d));
 
   // Half-day / partial leave (D-22): a normal availability row PLUS a greyed leave
-  // note carried in RenderContext (Open Item 2) — the domain stays untouched.
-  const leaveNote = ctx.leaveNotes?.[d.designerId];
+  // note carried in RenderContext (Open Item 2) — the domain stays untouched. The
+  // routine-not-rostered note only applies to "off" days (handled above), so a
+  // partial-leave note here is the booked-leave wording set by an upstream plan.
   if (leaveNote) {
     lines.push(muted(escapeHtml(leaveNote)));
   }

@@ -82,9 +82,17 @@ function subtitleFor(targetDayKey: string): string {
  * Build the presentation-only RenderContext from the gather result + report.
  * Everything here is display detail the deterministic report does not carry:
  * names (from config), the degraded source list, brief flags, and the
- * pre-formatted header. tentativeNotes/leaveNotes are left empty — the half-day
- * leave + tentative-client detail needs absence wording the current pull does not
- * surface per designer (carried in RenderContext when a later plan adds it).
+ * pre-formatted header. tentativeNotes carries the tentative hours; leaveNotes
+ * carries the routine-not-rostered "not in <day>" wording (D-05) derived below.
+ *
+ * Routine-not-rostered wording (CAP-06 / D-05): the domain reuses the existing
+ * "off" status for BOTH a routine non-working day (rostered 0) and booked full-day
+ * leave (rostered > 0, absence consumed it). The renderer's default "off" copy
+ * reads "on leave / Full day off." — wrong for a routine off-day. We distinguish
+ * the two HERE (the renderer stays a pure consumer of the note, src/domain
+ * untouched, per cards.ts leaveNotes doc): a designer whose status is "off" AND
+ * whose target-day rostered minutes are 0 is routine-not-rostered, so we set a
+ * leaveNote of "not in <Weekday>". Booked full-day leave keeps the existing copy.
  *
  * holiday/closure detection (per the plan): distinguish a public-holiday target
  * (in the holiday set but NOT a studio closure) from a studio-closure target (in
@@ -99,6 +107,7 @@ function buildRenderContext(
   holidays: ReadonlySet<string>,
   worthALook: RenderContext["worthALook"],
   calendarUnavailable: boolean,
+  rosteredMinutes: (designerId: DesignerId, dateKey: string) => number,
 ): RenderContext {
   // Tentative (shaky) hours surfaced from the deterministic report so a designer
   // with only tentative work doesn't read as fully open (live-corrected 2026-06-04).
@@ -113,6 +122,23 @@ function buildRenderContext(
     }
   }
 
+  // Routine-not-rostered wording (D-05): a status-"off" designer whose target-day
+  // rostered minutes are 0 is on a routine non-working day, NOT booked leave. The
+  // weekday name is formatted from the target day in the studio zone (the same luxon
+  // `cccc` the header subtitle uses). Booked full-day leave (rostered > 0, absence
+  // consumed it) is intentionally NOT given a note — it keeps the existing "on leave"
+  // copy. The renderer reads this note in its "off" branch; src/domain stays untouched.
+  const targetWeekday = (() => {
+    const d = DateTime.fromISO(report.targetDay, { zone: STUDIO_ZONE });
+    return d.isValid ? d.toFormat("cccc") : report.targetDay;
+  })();
+  const leaveNotes: Record<string, string> = {};
+  for (const d of report.designers) {
+    if (d.status === "off" && rosteredMinutes(d.designerId, report.targetDay) === 0) {
+      leaveNotes[d.designerId] = `not in ${targetWeekday}`;
+    }
+  }
+
   const ctx: RenderContext = {
     designerNames: { ...DESIGNER_NAMES },
     sourceErrors,
@@ -124,6 +150,12 @@ function buildRenderContext(
       targetDate: report.targetDay,
     },
   };
+
+  // Presentation-only: only set when at least one routine-not-rostered note exists,
+  // so existing snapshot fixtures with no leaveNotes field stay byte-identical.
+  if (Object.keys(leaveNotes).length > 0) {
+    ctx.leaveNotes = leaveNotes;
+  }
 
   // Presentation-only: set ONLY when true so existing snapshot fixtures with no
   // field stay byte-identical (mirrors the closureTomorrow/holidayTomorrow
@@ -209,6 +241,10 @@ export async function runNightly(now: DateTime, deps?: Partial<RunNightlyDeps>):
     roster: DESIGNER_PERSON_IDS.map((id) => id as DesignerId),
     bookings: g.bookings,
     absences: g.absences,
+    // CAP-06 (D-02/D-03): the live per-designer working-day pattern is the
+    // available-minutes basis. Without this, the report falls back to a flat 7.5h
+    // day and a non-working day (e.g. Anisha Wed/Fri) gets wrongly flagged as open.
+    rosteredMinutes: g.rosteredMinutes,
     assessedDesigners: g.assessedDesigners,
   };
   const report = computeStudioReport(input);
@@ -251,6 +287,7 @@ export async function runNightly(now: DateTime, deps?: Partial<RunNightlyDeps>):
     g.holidays,
     worthALook,
     cal.sourceErrors.length > 0,
+    g.rosteredMinutes,
   );
   // The injected renderer may be async (the LLM path). An LLM failure degrades and
   // still returns a complete payload here (REL-01) — only the POST below can exit 1.
