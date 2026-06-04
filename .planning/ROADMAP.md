@@ -18,7 +18,8 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 3: Template Renderer & Chat Delivery** - Shippable v1: on-brand Cards v2 message, scheduled weekday posting, always-post and degraded mode (no LLM, no Calendar) (completed 2026-06-04)
 - [x] **Phase 4: Calendar & Meeting Reconciliation** - Read designer calendars and reconcile ad-hoc meetings against bookings, behind a real-evening pilot gate (completed 2026-06-04)
 - [ ] **Phase 5: LLM Renderer (optional)** - Swappable LLM renderer for prose and fuzzy meeting judgment, with templated fallback; cuttable
-- [ ] **Phase 6: Hardening** - Idempotency and structured run logging so a stable, unattended automation stays trustworthy
+- [ ] **Phase 6: Designer Working-Day Availability** - Per-designer working days read from Productive so non-standard weeks (e.g. a 4-day week) are never mis-flagged as open time
+- [ ] **Phase 7: Hardening** - Idempotency and structured run logging so a stable, unattended automation stays trustworthy
 
 ## Phase Details
 
@@ -162,7 +163,23 @@ Plans:
 
 **Dependencies (external)**: Anthropic API key — a personal $5-credit key for development/testing, and an org-sanctioned key for production. Production cutover is gated on org approval of the sanctioned key; the Pro/Max subscription OAuth route is prohibited and must not be used. This entire phase is cuttable without affecting the shipped product.
 
-### Phase 6: Hardening
+### Phase 6: Designer Working-Day Availability
+
+**Goal**: Each designer's available hours for the target day reflect their real working-day pattern read from Productive — so a designer on a non-standard week (e.g. Anisha's 4-day week, off Wed & Fri) is never wrongly flagged as having open time on a day they aren't rostered, and the studio keeps trusting the numbers.
+**Mode:** mvp
+**Depends on**: Phase 2 (Productive pull) — independent of Phases 4 and 5
+**Requirements**: CAP-06
+**Success Criteria** (what must be TRUE):
+
+  1. Available hours per designer for the target day come from that person's Productive working-day pattern (per-weekday `working_hours`), not a flat 7.5h every weekday
+  2. A designer not rostered on the target day is never flagged as underbooked; they are mentioned with no open-time flag (a quiet "not in <day>" line)
+  3. The alternating two-week (14-element) schedule format and the period covering the target date are handled correctly; the rest-of-week rollup (CAP-05) reflects real per-designer working days
+  4. If Productive availability can't be read, the run degrades safely (does not silently invent open time) and still posts
+  5. All capacity arithmetic stays deterministic and unit-tested; no regression to Phases 1–5
+
+**Plans**: TBD
+
+### Phase 7: Hardening
 
 **Goal**: The unattended automation is durable over time — it never double-posts and every run leaves a structured, inspectable trace — so a stable repo keeps delivering a trustworthy nightly nudge.
 **Mode:** mvp
@@ -178,7 +195,7 @@ Plans:
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
+Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
@@ -187,4 +204,5 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | 3. Template Renderer & Chat Delivery | 4/4 | Complete   | 2026-06-04 |
 | 4. Calendar & Meeting Reconciliation | 4/4 | Complete   | 2026-06-04 |
 | 5. LLM Renderer (optional) | 1/2 | In Progress|  |
-| 6. Hardening | 0/TBD | Not started | - |
+| 6. Designer Working-Day Availability | 0/TBD | Not started | - |
+| 7. Hardening | 0/TBD | Not started | - |
