@@ -185,7 +185,7 @@ Plans:
 
 **Wave 2** *(blocked on Wave 1)*
 
-- [ ] 06-02-PLAN.md — /people availabilities pull + per-weekday minutes mapper + per-designer degrade (rosteredMinutes on GatherResult)
+- [x] 06-02-PLAN.md — /people availabilities pull + per-weekday minutes mapper + per-designer degrade (rosteredMinutes on GatherResult)
 
 **Wave 3** *(blocked on Wave 1 + Wave 2)*
 
@@ -216,5 +216,5 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7
 | 3. Template Renderer & Chat Delivery | 4/4 | Complete   | 2026-06-04 |
 | 4. Calendar & Meeting Reconciliation | 4/4 | Complete   | 2026-06-04 |
 | 5. LLM Renderer (optional) | 1/2 | In Progress|  |
-| 6. Designer Working-Day Availability | 1/3 | In Progress|  |
+| 6. Designer Working-Day Availability | 2/3 | In Progress|  |
 | 7. Hardening | 0/TBD | Not started | - |

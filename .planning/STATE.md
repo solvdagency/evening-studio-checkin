@@ -4,13 +4,13 @@ milestone: v1.0
 milestone_name: milestone
 status: executing
 stopped_at: Completed 06-01-PLAN.md
-last_updated: "2026-06-04T08:24:19.224Z"
+last_updated: "2026-06-04T08:33:28.633Z"
 last_activity: 2026-06-04
 progress:
   total_phases: 7
   completed_phases: 4
   total_plans: 20
-  completed_plans: 17
+  completed_plans: 18
   percent: 57
 ---
 
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-06-02)
 ## Current Position
 
 Phase: 06 (designer-working-day-availability) — EXECUTING
-Plan: 2 of 3
+Plan: 3 of 3
 Status: Ready to execute
 Last activity: 2026-06-04
 
-Progress: [█████████░] 85%
+Progress: [█████████░] 90%
 
 ## Performance Metrics
 
@@ -65,6 +65,7 @@ Progress: [█████████░] 85%
 | Phase 04 P03 | 6min | 2 tasks | 4 files |
 | Phase 04 P04 | 3min | 2 tasks | 6 files |
 | Phase 06 P01 | 3min | 2 tasks tasks | 5 files files |
+| Phase 06 P02 | 9min | 2 tasks | 7 files |
 
 ## Accumulated Context
 
@@ -99,6 +100,8 @@ Recent decisions affecting current work:
 - [Phase ?]: [Phase 4]: calendar wired into runNightly as an ADDITIVE degradable source — cal.sourceErrors concatenated into the degrade list before render (REL-01), so a Calendar outage degrades to the 🤖 card and still posts; calendar is never the exit-1 POST-failure path (two-path rule).
 - [Phase 06]: availableMinutes basis is now per-designer rostered minutes (rostered - absence, floored), not flat TARGET_MINUTES; a 0-rostered day reuses the existing "off" status with no new DayStatus value (CAP-06 / D-02 / D-03 / D-04).
 - [Phase 06]: StudioReportInput.rosteredMinutes(designerId, dateKey) is the injected lookup the rollup + target-day path use; omitted = flat TARGET_MINUTES fallback, a missing/0 entry resolves to 0 and never fabricates capacity (CAP-05 fix / D-06 / D-07).
+- [Phase 06]: Availability pulled via a dedicated /people?filter[id]=... call (D-01), parsed at the zod boundary into per-weekday minutes (hours x 60, Mon=0..Sun=6); GatherResult.rosteredMinutes(designerId,dateKey) feeds StudioReportInput.rosteredMinutes so Anisha's 0 on Wed/Fri flows through as real off-days.
+- [Phase 06]: D-06 per-designer degrade: assessedDesigners = bookings-coverage intersection readable-availability; an unreadable or no-usable-period designer is omitted so the report names them 'couldn't read', never a flat-450 fallback. 14-element identical uses week1 silently, differing warns + uses week1 (parity deferred, D-08).
 
 ### Pending Todos
 
@@ -135,6 +138,6 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-06-04T08:24:19.219Z
+Last session: 2026-06-04T08:32:34.447Z
 Stopped at: Completed 06-01-PLAN.md
 Resume file: None
