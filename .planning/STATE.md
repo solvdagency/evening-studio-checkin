@@ -2,9 +2,9 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: verifying
-stopped_at: Completed 07-02-PLAN.md (idempotency + run-log wired into runNightly)
-last_updated: "2026-06-04T11:30:00.000Z"
+status: milestone-complete
+stopped_at: Phase 07 complete & verified (2/2 criteria); all 7 phases done — v1.0 feature-complete
+last_updated: "2026-06-04T11:55:00.000Z"
 last_activity: 2026-06-04
 progress:
   total_phases: 7
@@ -21,13 +21,13 @@ progress:
 See: .planning/PROJECT.md (updated 2026-06-02)
 
 **Core value:** Every evening the team gets one clear, trustworthy heads-up of exactly what needs fixing before tomorrow — so the three designers start the day with full, briefed workloads instead of chasing the work themselves.
-**Current focus:** Phase 07 — hardening
+**Current focus:** v1.0 feature-complete — all 7 phases done & verified. Next: `/gsd:complete-milestone` (and the REQUIREMENTS.md Phase-3 traceability cleanup, see Deferred).
 
 ## Current Position
 
-Phase: 07 (hardening) — COMPLETE (all 22 plans done; ready for phase verification)
-Plan: 2 of 2
-Status: Plan 07-02 complete — REL-03 closed; idempotency + structured run log live in runNightly
+Phase: 07 (hardening) — COMPLETE & VERIFIED (2/2 success criteria; goal achieved)
+Plan: 2 of 2 — both done; post-verify test-isolation leak (tests writing real .runs/) found and FIXED (commit 44732de)
+Status: Milestone v1.0 feature-complete — 7/7 phases, 22/22 plans, full suite 334 green, tsc clean
 Plan 07-02 (wire marker into runNightly) DONE: scheduled-only idempotency guard +
 post-success run-log build/print/write wired into `runNightly` via the RunNightlyDeps
 marker seam (readMarker/writeMarker/eventName, default-to-real). The guard engages ONLY
@@ -156,9 +156,11 @@ Items acknowledged and carried forward from previous milestone close:
 | Category | Item | Status | Deferred At |
 |----------|------|--------|-------------|
 | Phase 05 (LLM-02) | Expand `labelled-events.json` with 2-3 borderline/overhead cases and re-run `scripts/eval-llm-renderer.ts` to confirm over-flagging drops (the soften/drop side of the rubric) — REQUIRED before `USE_LLM_MEETING_JUDGMENT` is ever turned ON in production. Current eval proves only the never-drop (keep-genuine) path on a single genuine case. | Open | 2026-06-04 |
+| Tracking hygiene (REQUIREMENTS.md) | The Traceability table + checkboxes still show several already-shipped Phase 3 requirements (SCHED-01/02, MSG-01..07, REL-01, REL-02) as "Pending" even though Phase 3 is Complete — stale bookkeeping drift, not a code gap. Reconcile (tick delivered reqs) during `/gsd:complete-milestone` or a docs pass. | Open | 2026-06-04 |
+| Phase 06 (D-06) | Availability-read failure trips the whole-card D-18 degrade instead of a per-designer 🤖 row (D-06). Pre-existing, logged, not urgent. | Open | 2026-06-04 |
 
 ## Session Continuity
 
-Last session: 2026-06-04T11:30:00.000Z
-Stopped at: Completed 07-02-PLAN.md (idempotency + run log wired into runNightly — Phase 7 done)
-Resume file: None (all 22 plans complete; Phase 7 ready for phase verification)
+Last session: 2026-06-04T11:55:00.000Z
+Stopped at: Phase 07 complete & verified; v1.0 feature-complete (7/7 phases). Post-verify test-isolation leak found & fixed (44732de).
+Resume file: None — next is `/gsd:complete-milestone` (optionally after the REQUIREMENTS.md traceability cleanup above)
