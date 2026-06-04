@@ -27,6 +27,10 @@ npm-debug.log*
 # Local screenshots / scratch captures — kept on disk, never committed
 screenshots/
 
+# Phase 4 labelling-spike scratch output (real calendar contents — T-04-06) — never commit
+spike-output*.md
+spike-output*.json
+
 # OS / editor cruft
 .DS_Store
 Thumbs.db
