@@ -20,11 +20,7 @@ import { fileURLToPath } from "node:url";
 import type { FilteredEvent } from "../gather.ts";
 import type { DesignerId } from "../../domain/types.ts";
 import { CLIENT_ALIAS_MAP, MEETING_IGNORE_LIST } from "../../config.ts";
-import {
-  reconcileMeetings,
-  matchTitleToClient,
-  type WorthALookItem,
-} from "../reconcile.ts";
+import { reconcileMeetings, matchTitleToClient, type WorthALookItem } from "../reconcile.ts";
 
 const LIAM = "686717" as DesignerId;
 
