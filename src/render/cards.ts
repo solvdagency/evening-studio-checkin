@@ -170,6 +170,13 @@ export interface RenderContext {
    * insertion (threat T-04-11). Absent/empty ⇒ no 📅 line (no regression).
    */
   worthALook?: Record<string, Array<{ title: string; start: string; link: string }>>;
+  /**
+   * Set when the Calendar source failed but the figures are intact (REL-01).
+   * Drives a single muted note in the NORMAL card; NEVER a top-level variant —
+   * figures stay trusted. Carries no raw error text (the GOOGLE_SA_KEY/
+   * per-designer detail stays in console logging only, T-03-09 posture).
+   */
+  calendarUnavailable?: boolean;
   /** Set when tomorrow is a public holiday (D-20) — short warm message, no rows. */
   holidayTomorrow?: { dateLabel: string };
   /** Set when tomorrow is a studio closure/offsite (D-21). */

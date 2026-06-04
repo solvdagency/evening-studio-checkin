@@ -97,6 +97,7 @@ function buildRenderContext(
   briefFlags: RenderContext["briefFlags"],
   holidays: ReadonlySet<string>,
   worthALook: RenderContext["worthALook"],
+  calendarUnavailable: boolean,
 ): RenderContext {
   // Tentative (shaky) hours surfaced from the deterministic report so a designer
   // with only tentative work doesn't read as fully open (live-corrected 2026-06-04).
@@ -122,6 +123,13 @@ function buildRenderContext(
       targetDate: report.targetDay,
     },
   };
+
+  // Presentation-only: set ONLY when true so existing snapshot fixtures with no
+  // field stay byte-identical (mirrors the closureTomorrow/holidayTomorrow
+  // conditional-assign style). Carries no raw error text — a boolean signal only.
+  if (calendarUnavailable) {
+    ctx.calendarUnavailable = true;
+  }
 
   const isClosure = STUDIO_CLOSURES.includes(report.targetDay);
   const isHoliday = holidays.has(report.targetDay) && !isClosure;
@@ -201,17 +209,30 @@ export async function runNightly(now: DateTime, deps?: Partial<RunNightlyDeps>):
     MEETING_IGNORE_LIST,
   );
 
-  // (4) Presentation context + (5) render the Cards v2 payload. ANY source failure
-  //     — Productive OR Calendar — is concatenated into the degrade list here, so a
-  //     calendar outage flows through the existing 🤖 degraded card and STILL posts
-  //     (REL-01). The two-path rule: calendar is a DATA source (degrade + exit 0),
-  //     never the POST-failure exit-1 branch below.
+  // (4) Presentation context + (5) render the Cards v2 payload. Calendar and
+  //     Productive degrade INDEPENDENTLY (REL-01):
+  //       - Productive/figures failure (g.sourceErrors) → 🤖 degraded card. The
+  //         figures are untrusted, so we drop to the degraded variant and still post.
+  //       - Calendar-only failure (cal.sourceErrors, figures intact) → the NORMAL
+  //         card with real figures + ONE muted "couldn't check calendars" note;
+  //         the 📅 worth-a-look lines are simply absent (empty worthALook). NOT a
+  //         degraded card — the trusted figures stay shown.
+  //       - Both fail → degraded card (Productive dominates); no calendar noise is
+  //         appended (the muted note lives only in the normal-card path).
+  //     The two-path rule still holds: calendar is a DATA source (degrade + exit 0),
+  //     never the POST-failure exit-1 branch below. Raw calendar error detail (incl.
+  //     the GOOGLE_SA_KEY reason) is logged to the Actions console ONLY — never into
+  //     the card and never the webhook URL (threat T-03-09 / T-L0J-01).
+  if (cal.sourceErrors.length > 0) {
+    console.warn(`calendar source degraded: ${cal.sourceErrors.join("; ")}`);
+  }
   const ctx = buildRenderContext(
     report,
-    [...g.sourceErrors, ...cal.sourceErrors],
+    g.sourceErrors,
     g.briefFlags,
     g.holidays,
     worthALook,
+    cal.sourceErrors.length > 0,
   );
   const payload = renderTemplate(report, ctx);
 
