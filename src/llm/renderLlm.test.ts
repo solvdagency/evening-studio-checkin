@@ -105,16 +105,30 @@ function throwingClient(message: string): LlmClient {
 function respondingClient(opts: {
   stop_reason?: string;
   text?: string;
+  inputTokens?: number;
+  outputTokens?: number;
 }): LlmClient {
   return {
     messages: {
       create: async () => ({
         stop_reason: opts.stop_reason ?? "end_turn",
         content: [{ type: "text", text: opts.text ?? "" }],
-        usage: { input_tokens: 100, output_tokens: 50 },
+        usage: {
+          input_tokens: opts.inputTokens ?? 100,
+          output_tokens: opts.outputTokens ?? 50,
+        },
       }),
     },
   } as unknown as LlmClient;
+}
+
+/**
+ * A SUCCESS-path stub: returns a valid JSON body (minus the prefilled "{", which the
+ * renderer re-attaches). The prose becomes the verdict header; meetingVerdicts empty.
+ */
+function successClient(headerSentence: string): LlmClient {
+  const body = `"headerSentence":${JSON.stringify(headerSentence)},"meetingVerdicts":[]}`;
+  return respondingClient({ stop_reason: "end_turn", text: body });
 }
 
 // --- console.warn capture ---------------------------------------------------------
@@ -196,4 +210,53 @@ describe("fallback integrity — every failure class degrades to a complete temp
       assert.ok(!/chat\.googleapis\.com/.test(all), "no webhook host in logs");
     });
   }
+});
+
+describe("structured run-log line (AI-SPEC §7) — both paths, no secret leakage", () => {
+  it("success path emits exactly one run-log line with renderPath:llm, model, tokens and latencyMs", async () => {
+    const out = await renderLlmOrTemplate(
+      busyReport(),
+      ctx(),
+      successClient("A couple of designers have open time tomorrow."),
+    );
+
+    // The model prose became the verdict header (success path, not a fallback).
+    const json = JSON.stringify(out);
+    assert.ok(
+      json.includes("A couple of designers have open time tomorrow."),
+      "the model header sentence rendered",
+    );
+    assert.ok(!json.includes("LLM unavailable"), "no degraded note on the success path");
+    assert.equal(warnings.length, 0, "no warn on the success path");
+
+    const runLogs = logs.filter((l) => l.startsWith("run-log "));
+    assert.equal(runLogs.length, 1, "exactly one run-log line");
+    const fields = JSON.parse(runLogs[0].replace(/^run-log /, "")) as Record<string, unknown>;
+    assert.equal(fields.renderPath, "llm");
+    assert.equal(fields.model, "claude-haiku-4-5-20251001");
+    assert.equal(typeof fields.inputTokens, "number");
+    assert.equal(typeof fields.outputTokens, "number");
+    assert.equal(typeof fields.estCostUsd, "number");
+    assert.equal(typeof fields.latencyMs, "number");
+    assert.equal(fields.fallbackReason, "none");
+  });
+
+  it("fallback path's run-log carries renderPath:template + the fallbackReason class", async () => {
+    await renderLlmOrTemplate(busyReport(), ctx(), respondingClient({ stop_reason: "refusal" }));
+    const runLogs = logs.filter((l) => l.startsWith("run-log "));
+    assert.equal(runLogs.length, 1, "exactly one run-log line on fallback");
+    const fields = JSON.parse(runLogs[0].replace(/^run-log /, "")) as Record<string, unknown>;
+    assert.equal(fields.renderPath, "template");
+    assert.equal(fields.fallbackReason, "refusal");
+  });
+
+  it("neither the run-log nor the warn line contains sk-ant, the key env name, or the webhook host", async () => {
+    // Drive both a success and a fallback so both run-log shapes are covered.
+    await renderLlmOrTemplate(busyReport(), ctx(), successClient("All sorted for tomorrow."));
+    await renderLlmOrTemplate(busyReport(), ctx(), throwingClient("ECONNRESET"));
+    const all = [...warnings, ...logs].join("\n");
+    assert.ok(!all.includes("sk-ant"), "no API key fragment");
+    assert.ok(!all.includes("ANTHROPIC_API_KEY"), "no key env name");
+    assert.ok(!/chat\.googleapis\.com/.test(all), "no webhook host");
+  });
 });

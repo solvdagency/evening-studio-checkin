@@ -34,6 +34,7 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { DateTime } from "luxon";
 import { runNightly } from "../index.ts";
+import { renderTemplate } from "../render/renderMessage.ts";
 import { STUDIO_ZONE } from "../domain/types.ts";
 import type { DesignerId } from "../domain/types.ts";
 import type { GatherResult } from "../productive/gather.ts";
@@ -221,6 +222,49 @@ describe("runNightly — orchestration paths (REL-01 / REL-02 / MEET-04)", () =>
 
     assert.equal(code, 1, "a POST failure exits non-zero so GitHub's failed-run email fires");
     assert.equal(post.calls.length, 1, "postToChat was attempted before the non-zero exit");
+  });
+
+  it("(e) flag-OFF byte-identity: with USE_LLM_RENDERER unset the posted card equals renderTemplate (slice-1 independently-shippable guarantee)", async () => {
+    // The flag-off default must be byte-identical to renderTemplate. We assert it by
+    // capturing the payload runNightly posts when no renderMessage is injected (so it
+    // resolves the env-driven default) against the payload it posts when renderTemplate
+    // is injected explicitly — over the SAME stubbed inputs. Equal ⇒ the default-off
+    // path is renderTemplate, with no LLM influence.
+    const wasFlag = process.env.USE_LLM_RENDERER;
+    delete process.env.USE_LLM_RENDERER;
+    try {
+      const sharedStubs = {
+        gather: async () => stubGatherResult(),
+        gatherCalendar: async () => stubCalendarResult(),
+        webhookUrl: STUB_WEBHOOK,
+      };
+
+      const defaultPost = makePostStub({ ok: true, value: undefined });
+      const codeDefault = await runNightly(NOW, {
+        ...sharedStubs,
+        postToChat: defaultPost.postToChat,
+      });
+
+      const templatePost = makePostStub({ ok: true, value: undefined });
+      const codeTemplate = await runNightly(NOW, {
+        ...sharedStubs,
+        postToChat: templatePost.postToChat,
+        renderMessage: renderTemplate,
+      });
+
+      assert.equal(codeDefault, 0, "flag-off default path returns 0");
+      assert.equal(codeTemplate, 0, "explicit-template path returns 0");
+      assert.equal(defaultPost.calls.length, 1, "default path posted once");
+      assert.equal(templatePost.calls.length, 1, "template path posted once");
+      assert.deepStrictEqual(
+        defaultPost.calls[0].payload,
+        templatePost.calls[0].payload,
+        "with the flag off the posted card is byte-identical to renderTemplate",
+      );
+    } finally {
+      if (wasFlag === undefined) delete process.env.USE_LLM_RENDERER;
+      else process.env.USE_LLM_RENDERER = wasFlag;
+    }
   });
 
   it("(d) productive failure still posts the 🤖 degraded card and returns 0 (REL-01)", async () => {
