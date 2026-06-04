@@ -10,6 +10,10 @@
         "dateTime": "2026-06-05T14:30:00+10:00",
         "timeZone": "Australia/Sydney"
       },
+      "end": {
+        "dateTime": "2026-06-05T15:30:00+10:00",
+        "timeZone": "Australia/Sydney"
+      },
       "attendees": [
         { "self": true, "responseStatus": "needsAction" },
         { "self": false, "responseStatus": "accepted" }

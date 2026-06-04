@@ -12,6 +12,10 @@
       "dateTime": "2026-06-03T09:45:00+10:00",
       "timeZone": "Australia/Sydney"
     },
+    "end": {
+      "dateTime": "2026-06-03T10:15:00+10:00",
+      "timeZone": "Australia/Sydney"
+    },
     "attendees": [
       { "email": "dans@solvdagency.com.au", "responseStatus": "needsAction" },
       { "email": "georgiab@solvdagency.com.au", "organizer": true, "responseStatus": "accepted" },
@@ -29,6 +33,10 @@
     "eventType": "default",
     "start": {
       "dateTime": "2026-05-26T12:00:00+10:00",
+      "timeZone": "Australia/Sydney"
+    },
+    "end": {
+      "dateTime": "2026-05-26T13:00:00+10:00",
       "timeZone": "Australia/Sydney"
     },
     "attendees": [

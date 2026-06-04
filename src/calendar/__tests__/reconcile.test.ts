@@ -17,6 +17,7 @@ import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
+import { DateTime } from "luxon";
 import type { FilteredEvent } from "../gather.ts";
 import type { DesignerId } from "../../domain/types.ts";
 import { CLIENT_ALIAS_MAP, MEETING_IGNORE_LIST } from "../../config.ts";
@@ -35,7 +36,16 @@ interface RawFixture {
   htmlLink?: string;
   eventType?: string;
   start?: { date?: string; dateTime?: string };
+  end?: { date?: string; dateTime?: string };
   attendees?: Array<{ self?: boolean; responseStatus?: string }>;
+}
+
+function rawDurationMinutes(raw: RawFixture): number | undefined {
+  if (!raw.start?.dateTime || !raw.end?.dateTime) return undefined;
+  const s = DateTime.fromISO(raw.start.dateTime);
+  const e = DateTime.fromISO(raw.end.dateTime);
+  if (!s.isValid || !e.isValid) return undefined;
+  return Math.round(e.diff(s, "minutes").minutes);
 }
 
 function toFilteredEvent(raw: RawFixture): FilteredEvent {
@@ -51,6 +61,7 @@ function toFilteredEvent(raw: RawFixture): FilteredEvent {
     eventType: raw.eventType,
     responseStatusSelf: self?.responseStatus,
     attendeeCount: attendees.length,
+    durationMinutes: rawDurationMinutes(raw),
   };
 }
 
@@ -138,8 +149,7 @@ describe("reconcileMeetings — the two golden cases", () => {
     assert.equal(out[LIAM].length, 1);
     const item: WorthALookItem = out[LIAM][0];
     assert.equal(item.title, "FDC IPO Launch Check-In");
-    assert.equal(item.start, WORTH.startLabel);
-    assert.equal(item.link, WORTH.htmlLink);
+    assert.equal(item.durationMinutes, 60); // 12:00 → 13:00
   });
 });
 

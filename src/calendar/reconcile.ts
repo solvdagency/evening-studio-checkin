@@ -30,18 +30,19 @@ import type { FilteredEvent } from "./gather.ts";
 import { isCountingMeeting } from "./filter.ts";
 
 /**
- * One surfaced "worth a look" meeting for a designer. Rendered by plan 04 as the
- * 📅 sub-line (D-14): `📅 {title} · {start} · worth a look`, the title deep-linking
- * to the calendar event (MSG-06). Carries no hours and no client assertion — a
- * soft nudge only.
+ * One surfaced "worth a look" meeting for a designer. Rendered as the 📅 sub-line:
+ * `📅 {title} · {duration}, not in Productive` — PLAIN muted text, no deep link.
+ * Carries no hours and no client assertion — a soft nudge only.
+ *
+ * This shape OVERRIDES the earlier MSG-06 "deep-linked title" decision (no htmlLink
+ * anymore) and changes the D-14 sub-line wording (duration + "not in Productive",
+ * not start time + "worth a look") — per Liam's direct pilot feedback.
  */
 export interface WorthALookItem {
   /** The meeting title (the event summary). */
   title: string;
-  /** The studio-zone start label from gatherCalendar (e.g. "9:45am"). */
-  start: string;
-  /** The calendar deep-link (htmlLink) for MSG-06. */
-  link: string;
+  /** Meeting length in minutes (presentation-only). Undefined → duration segment omitted. */
+  durationMinutes?: number;
 }
 
 /**
@@ -97,7 +98,7 @@ export function matchTitleToClient(
  *     match the title to a client → null (uncertain/ambiguous) → skip (D-04);
  *     matched & the designer's target-day booked set has the company → skip
  *       (covered same-day, D-01/D-02);
- *     else push { title, start, link }.
+ *     else push { title, durationMinutes }.
  * Every input designer gets an entry (possibly empty). A designer absent from
  * `bookedClientsByDesignerDay` is treated as having no bookings (so a matched
  * meeting flags) — the gather step initialises every assessed designer to an
@@ -127,8 +128,7 @@ export function reconcileMeetings(
 
       worthALook.push({
         title: event.summary,
-        start: event.startLabel,
-        link: event.htmlLink,
+        durationMinutes: event.durationMinutes,
       });
     }
 

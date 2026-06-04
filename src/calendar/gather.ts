@@ -45,6 +45,10 @@ import { loadSaKey, buildCalendarClient } from "./auth.ts";
  *  - `responseStatusSelf`: the OWNER's RSVP (the `self:true` attendee) — declined
  *    detection (D-08); other attendees' statuses are not read.
  *  - `attendeeCount`: solo detection input (plan 03).
+ *  - `durationMinutes`: the studio meeting length in minutes, computed from
+ *    start.dateTime → end.dateTime; undefined when not timed or when end is
+ *    missing. PRESENTATION-ONLY (the 📅 line's humanized duration) — never
+ *    capacity/hour math, and computed from the event's own strings, not the clock.
  */
 export interface FilteredEvent {
   id: string;
@@ -56,6 +60,7 @@ export interface FilteredEvent {
   eventType?: string;
   responseStatusSelf?: string;
   attendeeCount: number;
+  durationMinutes?: number;
 }
 
 /** What `gatherCalendar` produces — per-designer events + degrade signal. */
@@ -105,6 +110,23 @@ function startLabel(start: { date?: string; dateTime?: string } | undefined): st
   }
   if (start?.date) return start.date;
   return "";
+}
+
+/**
+ * Meeting length in minutes from the event's OWN start/end strings (timed events
+ * only). RFC3339 offsets carry the zone, so a plain diff is correct without
+ * setZone. Returns undefined when either bound is missing or unparseable (all-day
+ * events have no dateTime). PRESENTATION-ONLY — never capacity math, no clock read.
+ */
+function durationMinutes(
+  start: { dateTime?: string } | undefined,
+  end: { dateTime?: string } | undefined,
+): number | undefined {
+  if (!start?.dateTime || !end?.dateTime) return undefined;
+  const s = DateTime.fromISO(start.dateTime);
+  const e = DateTime.fromISO(end.dateTime);
+  if (!s.isValid || !e.isValid) return undefined;
+  return Math.round(e.diff(s, "minutes").minutes);
 }
 
 /**
@@ -161,6 +183,7 @@ export async function gatherCalendar(deps: CalendarGatherDeps): Promise<Calendar
         eventType: e.eventType,
         responseStatusSelf: selfAttendee?.responseStatus,
         attendeeCount: attendees.length,
+        durationMinutes: durationMinutes(e.start, e.end),
       });
     }
   }

@@ -61,12 +61,16 @@ describe("gatherCalendar (fetch → validate → degrade per designer)", () => {
     assert.equal(typeof fdc!.startLabel, "string");
     assert.equal(fdc!.attendeeCount, 2);
     assert.equal(fdc!.responseStatusSelf, "needsAction");
-    // The all-day event carries startDate (not startDateTime) and a date label.
+    // Duration is computed from the event's own start↔end (14:30→15:30 = 60 min).
+    assert.equal(fdc!.durationMinutes, 60);
+    // The all-day event carries startDate (not startDateTime) and a date label,
+    // and has no duration (no dateTime bounds).
     const leave = out.eventsByDesigner[DESIGNER_PERSON_IDS[0] as DesignerId].find(
       (e) => e.id === "evt-allday-leave",
     );
     assert.ok(leave);
     assert.equal(leave!.startDate, "2026-06-05");
+    assert.equal(leave!.durationMinutes, undefined);
   });
 
   it("degrade: a failed read for one designer pushes ONE sourceError; others populate", async () => {

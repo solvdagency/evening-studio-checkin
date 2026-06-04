@@ -11,7 +11,8 @@
  *
  * Fields validated (the only ones this phase reads):
  *   id (required), status, summary, htmlLink, eventType, start{date,dateTime,
- *   timeZone}, attendeesOmitted, attendees[]{self,responseStatus}.
+ *   timeZone}, end{date,dateTime,timeZone}, attendeesOmitted,
+ *   attendees[]{self,responseStatus}.
  */
 
 import { z } from "zod";
@@ -43,6 +44,7 @@ export const CalendarEventResource = z
     htmlLink: z.string().optional(), // MSG-06 deep-link
     eventType: z.string().optional(), // default/outOfOffice/focusTime/workingLocation/...
     start: EventDateTime.optional(),
+    end: EventDateTime.optional(), // timed → duration = end.dateTime − start.dateTime
     attendeesOmitted: z.boolean().optional(),
     attendees: z
       .array(
