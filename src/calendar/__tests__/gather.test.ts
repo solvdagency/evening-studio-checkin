@@ -18,6 +18,7 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { gatherCalendar, type CalendarGatherDeps } from "../gather.ts";
 import { STUDIO_ZONE } from "../../domain/types.ts";
+import type { DesignerId } from "../../domain/types.ts";
 import type { Result } from "../../productive/client.ts";
 import { DESIGNER_PERSON_IDS, DESIGNER_CALENDAR_EMAILS } from "../../config.ts";
 
@@ -46,12 +47,12 @@ describe("gatherCalendar (fetch → validate → degrade per designer)", () => {
   it("happy path: events keyed by all three designers, empty sourceErrors", async () => {
     const out = await gatherCalendar(depsReturning(loadEventsFixture()));
     assert.deepEqual(out.sourceErrors, []);
-    for (const id of DESIGNER_PERSON_IDS) {
+    for (const id of DESIGNER_PERSON_IDS.map((id) => id as DesignerId)) {
       assert.ok(Array.isArray(out.eventsByDesigner[id]), `events for ${id}`);
       assert.equal(out.eventsByDesigner[id].length, 3);
     }
     // FilteredEvent shape: clean output, no raw Google type crosses the boundary.
-    const fdc = out.eventsByDesigner[DESIGNER_PERSON_IDS[0]].find(
+    const fdc = out.eventsByDesigner[DESIGNER_PERSON_IDS[0] as DesignerId].find(
       (e) => e.id === "evt-fdc-checkin",
     );
     assert.ok(fdc);
@@ -61,7 +62,7 @@ describe("gatherCalendar (fetch → validate → degrade per designer)", () => {
     assert.equal(fdc!.attendeeCount, 2);
     assert.equal(fdc!.responseStatusSelf, "needsAction");
     // The all-day event carries startDate (not startDateTime) and a date label.
-    const leave = out.eventsByDesigner[DESIGNER_PERSON_IDS[0]].find(
+    const leave = out.eventsByDesigner[DESIGNER_PERSON_IDS[0] as DesignerId].find(
       (e) => e.id === "evt-allday-leave",
     );
     assert.ok(leave);
@@ -81,9 +82,9 @@ describe("gatherCalendar (fetch → validate → degrade per designer)", () => {
     assert.match(out.sourceErrors[0], /Calendar/);
     assert.match(out.sourceErrors[0], /Anisha/);
     // The failed designer has an empty (well-formed) list; the others populate.
-    assert.deepEqual(out.eventsByDesigner[DESIGNER_PERSON_IDS[1]], []);
-    assert.equal(out.eventsByDesigner[DESIGNER_PERSON_IDS[0]].length, 3);
-    assert.equal(out.eventsByDesigner[DESIGNER_PERSON_IDS[2]].length, 3);
+    assert.deepEqual(out.eventsByDesigner[DESIGNER_PERSON_IDS[1] as DesignerId], []);
+    assert.equal(out.eventsByDesigner[DESIGNER_PERSON_IDS[0] as DesignerId].length, 3);
+    assert.equal(out.eventsByDesigner[DESIGNER_PERSON_IDS[2] as DesignerId].length, 3);
   });
 
   it("shape-drift: an entry missing id is skipped (noted), valid ones kept", async () => {
@@ -96,7 +97,7 @@ describe("gatherCalendar (fetch → validate → degrade per designer)", () => {
     assert.ok(out.sourceErrors.length > 0);
     assert.ok(out.sourceErrors.some((e) => /skipped|validation/i.test(e)));
     // Each designer keeps exactly the one valid event.
-    for (const id of DESIGNER_PERSON_IDS) {
+    for (const id of DESIGNER_PERSON_IDS.map((id) => id as DesignerId)) {
       assert.equal(out.eventsByDesigner[id].length, 1);
       assert.equal(out.eventsByDesigner[id][0].id, "evt-ok");
     }
@@ -109,7 +110,7 @@ describe("gatherCalendar (fetch → validate → degrade per designer)", () => {
         fetchEvents: async (): Promise<Result<unknown[]>> => ({ ok: false, error: "down" }),
       });
       assert.equal(out.sourceErrors.length, DESIGNER_PERSON_IDS.length);
-      for (const id of DESIGNER_PERSON_IDS) {
+      for (const id of DESIGNER_PERSON_IDS.map((id) => id as DesignerId)) {
         assert.deepEqual(out.eventsByDesigner[id], []);
       }
     });

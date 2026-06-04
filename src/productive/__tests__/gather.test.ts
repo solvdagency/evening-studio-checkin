@@ -528,7 +528,7 @@ describe("gather (composition root — pull → validate → map → assess → 
 
   it("Open Q1: bookedClientsByDesignerDay surfaces target-day company ids from already-fetched included", async () => {
     const TARGET = "2026-06-04";
-    const person = DESIGNER_PERSON_IDS[0]; // Liam 686717
+    const person = DESIGNER_PERSON_IDS[0] as DesignerId; // Liam 686717
     // A confirmed target-day booking linked to a task → project → company (1333899).
     const booking = {
       id: "b-fdc",
@@ -580,13 +580,13 @@ describe("gather (composition root — pull → validate → map → assess → 
     const map = out.bookedClientsByDesignerDay;
     assert.ok(map, "bookedClientsByDesignerDay present");
     // Every assessed designer is initialised to a Set (empty, not undefined).
-    for (const id of DESIGNER_PERSON_IDS) {
+    for (const id of DESIGNER_PERSON_IDS.map((id) => id as DesignerId)) {
       assert.ok(map[id] instanceof Set, `set for ${id}`);
     }
     // Liam's set carries the FDC company id for the target day.
     assert.ok(map[person].has("1333899"));
     // A designer with no client booking has an EMPTY set (not undefined).
-    assert.equal(map[DESIGNER_PERSON_IDS[1]].size, 0);
+    assert.equal(map[DESIGNER_PERSON_IDS[1] as DesignerId].size, 0);
   });
 
   it("bookedClientsByDesignerDay is an empty-Set record on a degraded (failed) pull", async () => {
