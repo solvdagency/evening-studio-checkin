@@ -19,7 +19,7 @@
             "widgets": [
               {
                 "decoratedText": {
-                  "text": "🔴 <b>Anisha Gittins</b> — <font color=\"#d93025\">7.5h open</font><br><font color=\"#5f6368\">Nothing booked</font><br>⚠️ 3.5h tentative (on top) · <font color=\"#5f6368\">Dairy Farmers</font>",
+                  "text": "🔴 <b>Anisha Gittins</b> — <font color=\"#d93025\">7.5h open</font><br><font color=\"#5f6368\">Nothing booked</font><br>⚠️ <font color=\"#5f6368\">3.5h tentative (on top)</font> · <font color=\"#5f6368\">Dairy Farmers</font>",
                   "wrapText": true
                 }
               },

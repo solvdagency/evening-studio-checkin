@@ -142,7 +142,7 @@ export function buildRow(
   const tentative = ctx.tentativeNotes[d.designerId];
   if (tentative) {
     const client = tentative.client ? ` · ${muted(escapeHtml(tentative.client))}` : "";
-    lines.push(`⚠️ ${oneDecimal(tentative.tentativeHours)}h tentative (on top)${client}`);
+    lines.push(`⚠️ ${muted(`${oneDecimal(tentative.tentativeHours)}h tentative (on top)`)}${client}`);
   }
 
   // 📄 brief line(s) for this designer's flags (D-16): label · CODE · {X}h.
