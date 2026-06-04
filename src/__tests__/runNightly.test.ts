@@ -35,6 +35,8 @@ import { fileURLToPath } from "node:url";
 import { DateTime } from "luxon";
 import { runNightly } from "../index.ts";
 import { renderTemplate } from "../render/renderMessage.ts";
+import { markerDateKey } from "../run/marker.ts";
+import type { RunLog } from "../run/marker.ts";
 import { STUDIO_ZONE } from "../domain/types.ts";
 import type { DesignerId } from "../domain/types.ts";
 import type { GatherResult } from "../productive/gather.ts";
@@ -151,6 +153,28 @@ function makePostStub(result: Result<void>) {
 }
 
 const STUB_WEBHOOK = "https://stub.invalid/webhook";
+
+/**
+ * A capturing marker seam: records every readMarker/writeMarker call and lets each
+ * test configure the existence answer and the writeMarker Result (incl. { ok:false }
+ * to exercise D-07-fail). Touches NO real fs/env — everything is injected.
+ */
+function makeMarkerStub(opts: {
+  exists: boolean;
+  writeResult?: { ok: true } | { ok: false; error: string };
+}) {
+  const readCalls: string[] = [];
+  const writeCalls: RunLog[] = [];
+  const readMarker = (dateKey: string): { exists: boolean } => {
+    readCalls.push(dateKey);
+    return { exists: opts.exists };
+  };
+  const writeMarker = (runLog: RunLog): { ok: true } | { ok: false; error: string } => {
+    writeCalls.push(runLog);
+    return opts.writeResult ?? { ok: true };
+  };
+  return { readMarker, writeMarker, readCalls, writeCalls };
+}
 
 describe("runNightly — orchestration paths (REL-01 / REL-02 / MEET-04)", () => {
   it("is a weekday now (guard sanity — fails loudly if the fixed date drifts to a weekend)", () => {
@@ -389,5 +413,134 @@ describe("runNightly — orchestration paths (REL-01 / REL-02 / MEET-04)", () =>
       "the degraded card has no button (proves it is the degraded variant)",
     );
     assert.ok(!json.includes("GOOGLE_SA_KEY"), "no SA-key reason leaks into the degraded card");
+  });
+});
+
+describe("runNightly — idempotency + run log (REL-03 / D-04/D-05/D-06/D-07-fail)", () => {
+  // The studio-local date the marker for this fixed NOW must carry.
+  const KEY = markerDateKey(NOW);
+
+  it("(a) scheduled + marker exists → no POST, returns 0 (never double-post, D-05a)", async () => {
+    const post = makePostStub({ ok: true, value: undefined });
+    const marker = makeMarkerStub({ exists: true });
+
+    const code = await runNightly(NOW, {
+      gather: async () => stubGatherResult(),
+      gatherCalendar: async () => stubCalendarResult(),
+      postToChat: post.postToChat,
+      webhookUrl: STUB_WEBHOOK,
+      readMarker: marker.readMarker,
+      writeMarker: marker.writeMarker,
+      eventName: "schedule",
+    });
+
+    assert.equal(code, 0, "the scheduled guard returns 0");
+    assert.equal(post.calls.length, 0, "postToChat was NOT called (no double-post)");
+    assert.equal(marker.writeCalls.length, 0, "no marker re-write on a skip");
+    assert.deepEqual(marker.readCalls, [KEY], "the guard read today's marker key once");
+  });
+
+  it("(b) scheduled + no marker → POST + marker written with posted true and today's date (D-05b/c)", async () => {
+    const post = makePostStub({ ok: true, value: undefined });
+    const marker = makeMarkerStub({ exists: false });
+
+    const code = await runNightly(NOW, {
+      gather: async () => stubGatherResult(),
+      gatherCalendar: async () => stubCalendarResult(),
+      postToChat: post.postToChat,
+      webhookUrl: STUB_WEBHOOK,
+      readMarker: marker.readMarker,
+      writeMarker: marker.writeMarker,
+      eventName: "schedule",
+    });
+
+    assert.equal(code, 0, "a fresh scheduled run posts and returns 0");
+    assert.equal(post.calls.length, 1, "postToChat called exactly once");
+    assert.equal(marker.writeCalls.length, 1, "the marker was written exactly once");
+    assert.equal(marker.writeCalls[0].posted, true, "the run log records posted === true");
+    assert.equal(marker.writeCalls[0].date, KEY, "the run log carries the studio-local date key for NOW");
+    assert.equal(marker.writeCalls[0].postOutcome, "ok", "postOutcome is the redacted 'ok'");
+  });
+
+  it("(c) manual event + marker exists → STILL posts once, returns 0 (D-04 manual always posts)", async () => {
+    const post = makePostStub({ ok: true, value: undefined });
+    const marker = makeMarkerStub({ exists: true });
+
+    const code = await runNightly(NOW, {
+      gather: async () => stubGatherResult(),
+      gatherCalendar: async () => stubCalendarResult(),
+      postToChat: post.postToChat,
+      webhookUrl: STUB_WEBHOOK,
+      readMarker: marker.readMarker,
+      writeMarker: marker.writeMarker,
+      eventName: "workflow_dispatch",
+    });
+
+    assert.equal(code, 0, "a manual run returns 0");
+    assert.equal(post.calls.length, 1, "manual dispatch posts even though the marker exists");
+    assert.equal(marker.writeCalls.length, 1, "the manual run also writes the marker on success");
+  });
+
+  it("(d) post fails → marker NOT written, returns 1 (D-05 two-path rule)", async () => {
+    const post = makePostStub({ ok: false, error: "stub fail" });
+    const marker = makeMarkerStub({ exists: false });
+
+    const code = await runNightly(NOW, {
+      gather: async () => stubGatherResult(),
+      gatherCalendar: async () => stubCalendarResult(),
+      postToChat: post.postToChat,
+      webhookUrl: STUB_WEBHOOK,
+      readMarker: marker.readMarker,
+      writeMarker: marker.writeMarker,
+      eventName: "schedule",
+    });
+
+    assert.equal(code, 1, "a POST failure exits non-zero (REL-02)");
+    assert.equal(post.calls.length, 1, "postToChat was attempted");
+    assert.equal(marker.writeCalls.length, 0, "the marker is NEVER written on the POST-failure path");
+  });
+
+  it("(e) degraded post → marker written with degraded true and posted true (D-06)", async () => {
+    const post = makePostStub({ ok: true, value: undefined });
+    const marker = makeMarkerStub({ exists: false });
+
+    const code = await runNightly(NOW, {
+      gather: async () => stubGatherResult(["Couldn't reach Productive: 403"]),
+      gatherCalendar: async () => stubCalendarResult(),
+      postToChat: post.postToChat,
+      webhookUrl: STUB_WEBHOOK,
+      readMarker: marker.readMarker,
+      writeMarker: marker.writeMarker,
+      eventName: "schedule",
+    });
+
+    assert.equal(code, 0, "a degraded post still returns 0");
+    assert.equal(post.calls.length, 1, "the degraded card was posted once");
+    assert.equal(marker.writeCalls.length, 1, "a degraded post still writes the marker (counts as posted)");
+    assert.equal(marker.writeCalls[0].posted, true, "posted === true on the degraded path");
+    assert.equal(marker.writeCalls[0].degraded, true, "degraded === true (Productive sourceError)");
+  });
+
+  it("(f) writeMarker { ok:false } after a good post → loud warn, returns 0 (D-07-fail)", async () => {
+    const post = makePostStub({ ok: true, value: undefined });
+    const marker = makeMarkerStub({
+      exists: false,
+      writeResult: { ok: false, error: "EACCES: permission denied" },
+    });
+
+    const code = await runNightly(NOW, {
+      gather: async () => stubGatherResult(),
+      gatherCalendar: async () => stubCalendarResult(),
+      postToChat: post.postToChat,
+      webhookUrl: STUB_WEBHOOK,
+      readMarker: marker.readMarker,
+      writeMarker: marker.writeMarker,
+      eventName: "schedule",
+    });
+
+    assert.equal(code, 0, "the post succeeded — a marker-write failure must NOT return 1 (D-07-fail)");
+    assert.equal(post.calls.length, 1, "the post happened");
+    assert.equal(marker.writeCalls.length, 1, "writeMarker was attempted once");
+    assert.equal(marker.writeCalls[0].posted, true, "the captured run-log facts still reflect posted === true");
   });
 });
