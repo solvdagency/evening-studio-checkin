@@ -324,13 +324,9 @@ export async function gather(deps: GatherDeps): Promise<GatherResult> {
   // CR-02 — the roster gate. A row contributes ONLY if its person id resolves to
   // a rostered designer; rows with an empty/un-included person link (the 02-04
   // include-set failure mode) or a non-monitored person id are dropped, never
-  // silently attributed. `seen` accumulates the rostered ids actually observed on
-  // a resolved row across BOTH bookings and allocations — `assessedDesigners` is
-  // derived from this, NOT the static roster, so a designer the pull never reached
-  // falls through to the report's `missingDesigners` (T-02-15 partial-result guard)
-  // instead of masquerading as "present-but-empty".
+  // silently attributed. (assessedDesigners is derived from pull COVERAGE at step
+  // (8), not from which designers happened to have rows — see the note there.)
   const ROSTER = new Set<string>(DESIGNER_PERSON_IDS);
-  const seen = new Set<DesignerId>();
 
   // (1) Holidays + target day + window (mirror report.ts's clock derivation).
   const holidays = buildHolidaySet(yearsForWindow(deps.now), STUDIO_CLOSURES);
@@ -401,7 +397,6 @@ export async function gather(deps: GatherDeps): Promise<GatherResult> {
       sourceErrors.push("a booking row had no rostered person (skipped)");
       continue;
     }
-    seen.add(personId as DesignerId);
     const taskRel = (parsed.data.relationships as {
       task?: { data?: { id: string; type: string } | null };
     }).task;
@@ -464,9 +459,6 @@ export async function gather(deps: GatherDeps): Promise<GatherResult> {
       // below would wrongly resurrect it as live tentative work, inflating the
       // shaky figure. Skip it here regardless of what the API filter returned.
       if (a.attributes.canceled === true) continue;
-      // A resolved (rostered, non-canceled) allocation means the pull reached this
-      // designer — record it even if the row is later skipped as confirmed/event.
-      seen.add(personId as DesignerId);
       if (confirmedIds.has(a.id)) continue; // present in /bookings → confirmed, not tentative
       if (a.attributes.booking_type !== "service") continue; // ignore tentative absences (scope boundary)
       rawBookings.push(tentativeAllocationToRawBooking(a));
@@ -520,16 +512,22 @@ export async function gather(deps: GatherDeps): Promise<GatherResult> {
   );
   const briefFlags = assessBriefs(assessInputs, briefedMap);
 
-  // (8) assessedDesigners = ONLY the rostered designers a resolved row actually
-  //     attributed to (CR-02). "Reached" is decided by whether ANY pulled raw row
-  //     (booking OR allocation) resolved to a rostered person id — NOT by whether
-  //     the designer had bookings (a reached-but-empty designer is still assessed)
-  //     and NOT by the static roster (a designer the pull never reached must fall
-  //     through to the report's `missingDesigners`, T-02-15). Preserving roster
-  //     order keeps the output stable.
-  const assessedDesigners = DESIGNER_PERSON_IDS
-    .filter((id) => seen.has(id as DesignerId))
-    .map((id) => id as DesignerId);
+  // (8) assessedDesigners = the whole roster. Reaching this point means the
+  //     /bookings pull SUCCEEDED — a failure returns degraded() (assessedDesigners
+  //     []) above. That pull is person-scoped to DESIGNER_PERSON_IDS, so a
+  //     successful response COVERS all three designers: every rostered designer was
+  //     reached, including those with zero rows of their own (reached-but-empty →
+  //     "open / nothing booked", NOT "couldn't read"). This supersedes the old
+  //     row-based assessment + the T-02-15 partial-result guard, which mislabelled
+  //     genuinely empty designers as unread (live-surfaced 2026-06-04: an all-empty
+  //     Friday rendered every unbooked designer "couldn't read").
+  //
+  //     NOTE: this coverage assumption holds ONLY because the roster is fetched in
+  //     ONE all-or-nothing person-scoped query. If this is ever split into
+  //     per-designer pulls, restore a per-designer reachability signal so a designer
+  //     whose individual pull failed falls through to `missingDesigners` instead of
+  //     falsely showing as open.
+  const assessedDesigners = DESIGNER_PERSON_IDS.map((id) => id as DesignerId);
 
   return {
     bookings,

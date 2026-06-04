@@ -457,8 +457,12 @@ describe("gather (composition root — pull → validate → map → assess → 
       out.sourceErrors.some((e) => /no rostered person/.test(e)),
       "person-less row recorded as a sourceError",
     );
-    // Only the reached designer is assessed; the other two never resolved a row.
-    assert.deepEqual(out.assessedDesigners, [reached]);
+    // Coverage-based assessment (supersedes T-02-15's row-based rule; live-corrected
+    // 2026-06-04). The /bookings pull is person-scoped to the whole roster and it
+    // SUCCEEDED, so all three designers were reached. The person-less row is still
+    // dropped (recorded above), but the two designers with no rows of their own are
+    // reached-but-empty (assessed), NOT missing.
+    assert.deepEqual([...out.assessedDesigners].sort(), [...roster].sort());
 
     const report = computeStudioReport({
       now: NOW,
@@ -468,10 +472,45 @@ describe("gather (composition root — pull → validate → map → assess → 
       absences: out.absences,
       assessedDesigners: out.assessedDesigners,
     });
-    // The two designers the pull never reached are reported missing, not silently
-    // present-but-empty — the partial-result guard holds.
-    const expectedMissing = roster.filter((id) => id !== reached);
-    assert.deepEqual([...report.missingDesigners].sort(), [...expectedMissing].sort());
+    // A successful pull means nobody is "missing" — empty designers are open, not unread.
+    assert.deepEqual([...report.missingDesigners], []);
+    // The anti-phantom guard still holds: the person-less 240 min reached NO figure,
+    // so total confirmed across designers is the reached designer's 300 min alone.
+    const totalConfirmed = report.designers.reduce((s, d) => s + d.confirmedMin, 0);
+    assert.equal(totalConfirmed, 300, "person-less 240 min attributed to nobody");
+  });
+
+  it("live-corrected (Fri-5-Jun regression): a successful pull with ZERO rows for a designer assesses them as open, not 'couldn't read'", async () => {
+    // Mirrors the live smoke post: /bookings empty, /allocations has rows for only
+    // ONE designer; the other two have no rows anywhere. Because the pull SUCCEEDED
+    // and is person-scoped to the roster, all three are reached → the two empty
+    // designers are assessed (→ open/underbooked), NOT missing/"couldn't read".
+    const TARGET = "2026-06-04";
+    const onlyOne = DESIGNER_PERSON_IDS[2]; // Ella
+    const roster = DESIGNER_PERSON_IDS.map((id) => id as DesignerId);
+    const out = await gather(
+      depsWith({
+        "/bookings": OK({ data: [], included: [] }),
+        "/allocations": OK({
+          data: [allocation("e1", onlyOne, "service", 150, TARGET)],
+          included: [],
+        }),
+        "/workflow_statuses": OK(workflowStatusesPage()),
+      }),
+    );
+    assert.deepEqual(out.sourceErrors, []);
+    assert.deepEqual([...out.assessedDesigners].sort(), [...DESIGNER_PERSON_IDS].sort());
+
+    const report = computeStudioReport({
+      now: NOW,
+      holidays: out.holidays,
+      roster,
+      bookings: out.bookings,
+      absences: out.absences,
+      assessedDesigners: out.assessedDesigners,
+    });
+    assert.deepEqual([...report.missingDesigners], []);
+    assert.equal(report.designers.length, 3);
   });
 
   it("CR-02: a designer reached with ZERO bookings is still assessed (reached, not missing)", async () => {
