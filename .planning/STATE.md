@@ -117,6 +117,7 @@ None yet.
 |---|-------------|------|--------|-----------|
 | 260604-kig | Add end-to-end calendar render + runNightly integration tests for Phase 04 | 2026-06-04 | dd4fcb0 | [260604-kig-add-end-to-end-calendar-render-runnightl](./quick/260604-kig-add-end-to-end-calendar-render-runnightl/) |
 | fast | Type DesignerId index keys in gather tests — tsc --noEmit now clean | 2026-06-04 | f5170cb | — |
+| 260604-l0j | Calendar-only failure keeps Productive figures + clean note (no leaked key) | 2026-06-04 | afb98a5 | [260604-l0j-calendar-only-failure-keeps-productive-f](./quick/260604-l0j-calendar-only-failure-keeps-productive-f/) |
 
 ## Deferred Items
 
