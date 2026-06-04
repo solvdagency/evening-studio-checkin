@@ -202,7 +202,15 @@ Plans:
   1. Re-running the check for the same evening does not produce a duplicate post (idempotency via a dated marker)
   2. Each run leaves a structured log of what it did (sources reached, flags raised, renderer used, post outcome) that a human can inspect after the fact
 
-**Plans**: TBD
+**Plans**: 2 plans
+Plans:
+**Wave 1**
+
+- [ ] 07-01-PLAN.md — Injectable marker/run-log module (idempotency marker + redacted structured log, fully unit-tested)
+
+**Wave 2** *(blocked on Wave 1)*
+
+- [ ] 07-02-PLAN.md — Wire scheduled-only idempotency guard + post-success run-log into runNightly + nightly.yml commit step + REL-03 traceability fix
 
 ## Progress
 
@@ -217,4 +225,4 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7
 | 4. Calendar & Meeting Reconciliation | 4/4 | Complete   | 2026-06-04 |
 | 5. LLM Renderer (optional) | 2/2 | Complete   | 2026-06-04 |
 | 6. Designer Working-Day Availability | 3/3 | Complete   | 2026-06-04 |
-| 7. Hardening | 0/TBD | Not started | - |
+| 7. Hardening | 0/2 | Not started | - |
