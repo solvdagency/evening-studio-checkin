@@ -1,0 +1,142 @@
+[
+  {
+    "_fixtureNote": "REAL — golden CASE A (COVERED). 'Quick FDC catch up', Tue 3 Jun 2026, Liam (686717). Matches FDC alias; Liam booked FDC same day → reconciler must stay SILENT.",
+    "_label": "counts/FDC · covered",
+    "kind": "calendar#event",
+    "id": "5qgrrirk5qc0slel43dgbv13lh",
+    "status": "confirmed",
+    "summary": "Quick FDC catch up",
+    "htmlLink": "https://www.google.com/calendar/event?eid=NXFncnJpcms1cWMwc2xlbDQzZGdidjEzbGggbGlhbW1Ac29sdmRhZ2VuY3kuY29tLmF1&ctz=Australia/Sydney",
+    "eventType": "default",
+    "start": {
+      "dateTime": "2026-06-03T09:45:00+10:00",
+      "timeZone": "Australia/Sydney"
+    },
+    "attendees": [
+      { "email": "dans@solvdagency.com.au", "responseStatus": "needsAction" },
+      { "email": "georgiab@solvdagency.com.au", "organizer": true, "responseStatus": "accepted" },
+      { "email": "liamm@solvdagency.com.au", "self": true, "responseStatus": "needsAction" }
+    ]
+  },
+  {
+    "_fixtureNote": "REAL — golden CASE B (WORTH A LOOK). 'FDC IPO Launch Check-In', Tue 26 May 2026, Liam (686717). Matches FDC alias ('IPO Launch'); Liam had NO FDC booking on the 26th → reconciler must FLAG.",
+    "_label": "counts/FDC · worth-a-look",
+    "kind": "calendar#event",
+    "id": "5mqse015lf6amhmkefmjv6lvgd",
+    "status": "confirmed",
+    "summary": "FDC IPO Launch Check-In",
+    "htmlLink": "https://www.google.com/calendar/event?eid=NW1xc2UwMTVsZjZhbWhta2VmbWp2Nmx2Z2QgbGlhbW1Ac29sdmRhZ2VuY3kuY29tLmF1&ctz=Australia/Sydney",
+    "eventType": "default",
+    "start": {
+      "dateTime": "2026-05-26T12:00:00+10:00",
+      "timeZone": "Australia/Sydney"
+    },
+    "attendees": [
+      { "email": "lexiew@solvdagency.com.au", "responseStatus": "accepted" },
+      { "email": "dans@solvdagency.com.au", "responseStatus": "needsAction" },
+      { "email": "georgiab@solvdagency.com.au", "organizer": true, "responseStatus": "accepted" },
+      { "email": "liamm@solvdagency.com.au", "self": true, "responseStatus": "needsAction" }
+    ]
+  },
+  {
+    "_fixtureNote": "REAL — SOLO (A1 pinned). 'appointment', 8 May 2026, Liam. The 'attendees' key is ENTIRELY ABSENT (not present-but-empty). The solo filter must treat a missing attendees field as solo → excluded.",
+    "_label": "not-work · solo (no attendees field)",
+    "kind": "calendar#event",
+    "id": "6csb70l4tl47k40q4n7vrtuohn",
+    "status": "confirmed",
+    "summary": "appointment",
+    "htmlLink": "https://www.google.com/calendar/event?eid=NmNzYjcwbDR0bDQ3azQwcTRuN3ZydHVvaG4gbGlhbW1Ac29sdmRhZ2VuY3kuY29tLmF1&ctz=Australia/Sydney",
+    "eventType": "default",
+    "start": {
+      "dateTime": "2026-05-08T11:15:00+10:00",
+      "timeZone": "Australia/Sydney"
+    }
+  },
+  {
+    "_fixtureNote": "REAL — AFTER-HOURS. 'Falcon Dinner', 28 May 2026 starting 17:30 (== WORK_DAY_END). Group event but starts outside studio hours → excluded by the after-hours mechanical filter.",
+    "_label": "not-work · after-hours (17:30 start)",
+    "kind": "calendar#event",
+    "id": "6igmg30baq6k6ke99i33i50be9",
+    "status": "confirmed",
+    "summary": "Falcon Dinner",
+    "htmlLink": "https://www.google.com/calendar/event?eid=NmlnbWczMGJhcTZrNmtlOTlpMzNpNTBiZTkgZWxsYXdAc29sdmRhZ2VuY3kuY29tLmF1&ctz=Australia/Sydney",
+    "eventType": "default",
+    "start": {
+      "dateTime": "2026-05-28T17:30:00+10:00",
+      "timeZone": "Australia/Sydney"
+    },
+    "attendees": [
+      { "email": "ellaw@solvdagency.com.au", "self": true, "responseStatus": "needsAction" },
+      { "email": "isabelb@solvdagency.com.au", "organizer": true, "responseStatus": "accepted" },
+      { "email": "liamm@solvdagency.com.au", "responseStatus": "needsAction" },
+      { "email": "anishag@solvdagency.com.au", "responseStatus": "needsAction" }
+    ]
+  },
+  {
+    "_fixtureNote": "REAL — OVERHEAD ceremony. 'Team Daily Stand-up', 8 May 2026. Matches MEETING_IGNORE_LIST 'Daily Stand-up' → hard-excluded, never reconciled.",
+    "_label": "overhead · ignore-list",
+    "kind": "calendar#event",
+    "id": "u93lm3m642469u403lo0d2j2du_20260507T233000Z",
+    "status": "confirmed",
+    "summary": "Team Daily Stand-up",
+    "htmlLink": "https://www.google.com/calendar/event?eid=dTkzbG0zbTY0MjQ2OXU0MDNsbzBkMmoyZHVfMjAyNjA1MDdUMjMzMDAwWiBlbGxhd0Bzb2x2ZGFnZW5jeS5jb20uYXU&ctz=Australia/Sydney",
+    "eventType": "default",
+    "start": {
+      "dateTime": "2026-05-08T09:30:00+10:00",
+      "timeZone": "Australia/Sydney"
+    },
+    "attendees": [
+      { "email": "ellaw@solvdagency.com.au", "self": true, "responseStatus": "accepted" },
+      { "email": "samg@solvdagency.com.au", "organizer": true, "responseStatus": "declined" },
+      { "email": "liamm@solvdagency.com.au", "responseStatus": "needsAction" }
+    ]
+  },
+  {
+    "_fixtureNote": "HAND-BUILT (A2: no declined-self event exists in the 28-day live window). Self attendee responseStatus 'declined' → the declined filter must exclude it even though the title would match an FDC alias.",
+    "_label": "synthetic · declined-self (exclude)",
+    "kind": "calendar#event",
+    "id": "synthetic-declined-fdc-001",
+    "status": "confirmed",
+    "summary": "FDC Construction sync",
+    "htmlLink": "https://www.google.com/calendar/event?eid=synthetic-declined-001",
+    "eventType": "default",
+    "start": {
+      "dateTime": "2026-05-20T11:00:00+10:00",
+      "timeZone": "Australia/Sydney"
+    },
+    "attendees": [
+      { "email": "georgiab@solvdagency.com.au", "organizer": true, "responseStatus": "accepted" },
+      { "email": "liamm@solvdagency.com.au", "self": true, "responseStatus": "declined" }
+    ]
+  },
+  {
+    "_fixtureNote": "HAND-BUILT (A2: no all-day event exists in the 28-day live window). start.date present (no dateTime) → all-day; the timed-window/after-hours filters must handle a date-only start without crashing (excluded as not a timed studio meeting).",
+    "_label": "synthetic · all-day (date-only start)",
+    "kind": "calendar#event",
+    "id": "synthetic-allday-001",
+    "status": "confirmed",
+    "summary": "Annual leave",
+    "htmlLink": "https://www.google.com/calendar/event?eid=synthetic-allday-001",
+    "eventType": "default",
+    "start": {
+      "date": "2026-05-21"
+    }
+  },
+  {
+    "_fixtureNote": "HAND-BUILT (A2: no outOfOffice event exists in the 28-day live window). eventType 'outOfOffice' → excluded by the eventType filter regardless of title/attendees.",
+    "_label": "synthetic · out-of-office (eventType)",
+    "kind": "calendar#event",
+    "id": "synthetic-ooo-001",
+    "status": "confirmed",
+    "summary": "Out of office",
+    "htmlLink": "https://www.google.com/calendar/event?eid=synthetic-ooo-001",
+    "eventType": "outOfOffice",
+    "start": {
+      "dateTime": "2026-05-22T09:00:00+10:00",
+      "timeZone": "Australia/Sydney"
+    },
+    "attendees": [
+      { "email": "liamm@solvdagency.com.au", "self": true, "responseStatus": "accepted" }
+    ]
+  }
+]

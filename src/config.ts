@@ -116,13 +116,23 @@ export const BRAND_COLORS = {
  * count against the 7.5h day and never reconciles. Specific phrases — so a future
  * client meeting like "FDC WIP" is NOT accidentally swallowed by "WIP". Seeded
  * from the real meetings observed across all three calendars (04-CONTEXT
- * §Specifics); plan 02's labelling spike refines/extends this list.
+ * §Specifics); plan 02's labelling spike (D-09) refined/confirmed this list against
+ * ~4 weeks of real meetings across all three calendars (2026-05-07 → 2026-06-04).
+ * Liam's labels: the four ceremonies below are pure overhead. "travel time" is
+ * NOT-work overhead AND is hard-excluded here specifically so "travel time,
+ * stevedores" does NOT match the new "Stevedores" client alias (it is travel, not
+ * client work). NOTE: "Problem/SOLVD" is deliberately NOT here — per the spike it
+ * now COUNTS as internal SOLVD time (see CLIENT_ALIAS_MAP, SOLVD Agency entry).
+ * Lunch / appointment / Falcon Dinner / the webinar / "Lunch and Chats" need no
+ * entry: they match no client alias and/or are caught by the mechanical solo /
+ * after-hours filters (plan 03).
  */
 export const MEETING_IGNORE_LIST: readonly string[] = [
   "Daily Stand-up", // "Team Daily Stand-up"
   "Weekly WIP", // "Team Weekly WIP"
   "Creative WIP", // "Creative WIP - plan the week"
   "Creative team", // "Creative team - review (bring a piece of work!)"
+  "travel time", // "travel time, stevedores" — travel overhead; excluded BEFORE alias match so it never resolves to the Stevedores client
 ];
 
 /**
@@ -141,17 +151,92 @@ export interface ClientAlias {
 /**
  * Committed client-alias map (D-03/D-09): calendar-title tokens → Productive
  * company. Seeded with the live-validated FDC entry (04-CONTEXT §Specifics: FDC
- * Construction, id 1333899, code FDCC, IPO Launch Video project). Plan 02's
- * labelling spike confirms/extends this map against ~3-4 weeks of real meetings.
+ * Construction, id 1333899, code FDCC, IPO Launch Video project) and CONFIRMED +
+ * EXTENDED by plan 02's labelling spike against ~4 weeks of real meetings
+ * (Liam's labels, 2026-06-04).
+ *
+ * ALIAS SAFETY (D-04 bias-to-silence): the matcher must avoid cross-matches.
+ *  - "Streem" (double-e, STREEM id 1057026) and "Stream Hill" (id 1109526) are
+ *    DISTINCT companies — keep their aliases narrow so neither swallows the other.
+ *  - There is deliberately NO bare "Solvd"/"SOLVD" alias: it would wrongly capture
+ *    "Solvd X Streem WIP" (→ STREEM) and "Stevedores x Solvd ..." (→ Newcastle
+ *    Stevedores). SOLVD-internal time uses only the specific multi-word phrases.
+ *  - There is deliberately NO bare "Thirdi" alias: only "Sable" (a Thirdi
+ *    development) maps to Thirdi Property; other Thirdi entities must not match.
+ *  - "travel time, stevedores" is hard-excluded by MEETING_IGNORE_LIST BEFORE
+ *    alias matching, so it never resolves to Newcastle Stevedores.
+ *  - If a title matches two companies, bias to SILENCE (treat as covered) per D-04
+ *    — that resolution lives in plan 03's matcher, noted here for traceability.
  */
 export const CLIENT_ALIAS_MAP: readonly ClientAlias[] = [
   {
     companyId: "1333899",
     companyName: "FDC Construction",
     code: "FDCC",
-    aliases: ["FDC", "FDC Construction", "FDCC", "IPO Launch"], // spike confirms/extends
+    // "Atlassian": "Atlassian positioning"/"Atlassian concepts run through" + "FDC / Atlassian - Internal Review" are an FDC project.
+    aliases: ["FDC", "FDC Construction", "FDCC", "IPO Launch", "Atlassian"],
+  },
+  {
+    companyId: "779697",
+    companyName: "Hunter Water Corporation",
+    code: "HW",
+    aliases: ["HW", "Hunter Water"], // "HW - Internal Regroup"
+  },
+  {
+    companyId: "1109526",
+    companyName: "Stream Hill Pty Ltd",
+    code: "SH",
+    // DISTINCT from STREEM. "Stream Hill Project Video Discussion", "SH Project Video Storyboard IR"
+    aliases: ["Stream Hill", "SH"],
+  },
+  {
+    companyId: "1057026",
+    companyName: "STREEM",
+    // DISTINCT from Stream Hill. "Streem - Sales Prop...", "Solvd X Streem WIP"
+    aliases: ["Streem", "STREEM"],
+  },
+  {
+    companyId: "1319181",
+    companyName: "Newcastle Stevedores",
+    // "Stevedores x Solvd - Logo refresh briefing", "Newcastle Stevedores - Moodboard Review"
+    aliases: ["Stevedores", "Newcastle Stevedores"],
+  },
+  {
+    companyId: "753249",
+    companyName: "Reflections Holiday Parks",
+    code: "RFH",
+    aliases: ["RFH", "Reflections"], // "RFH + SOLVD WIP"
+  },
+  {
+    companyId: "752556",
+    companyName: "Thirdi Property Pty Ltd",
+    // "Sable" is a Thirdi development; NO bare "Thirdi" alias (other Thirdi entities exist).
+    aliases: ["Sable"],
+  },
+  {
+    companyId: "742669",
+    companyName: "SOLVD Agency",
+    // Internal SOLVD time that COUNTS (flags if there is no SOLVD Agency booking
+    // that day). ONLY specific multi-word phrases — never a bare "Solvd".
+    aliases: ["Problem/SOLVD", "Solvd rebrand", "Claude 101", "Emerging Leaders", "Liam and Sam"],
   },
 ];
+
+/**
+ * SPIKE DATA-SHAPE FINDINGS (D-09, plan 02), pinned for plan 03's filter.ts so the
+ * mechanical filters build against the REAL shapes seen in the 28-day live window
+ * (2026-05-07 → 2026-06-04, 141 instances / 30 distinct titles), not assumptions.
+ * Golden samples for these live in src/calendar/__fixtures__/labelled-events.json.
+ *
+ * A1 — SOLO events: the `attendees` key is ENTIRELY ABSENT on solo events (e.g.
+ *      "appointment"), NOT present-but-empty. The solo filter MUST treat a missing
+ *      `attendees` field as solo (length 0/undefined → exclude).
+ * A2 — eventType: ONLY "default" (63) and "focusTime" (1) appear in the live
+ *      window. NO "outOfOffice", NO all-day, and NO declined-self events occurred
+ *      in 28 days. The OOO / all-day / declined fixtures are therefore HAND-BUILT
+ *      to the CalendarEventResource shape — plan 03 must still implement and test
+ *      those filter paths even though live data did not exercise them.
+ */
 
 /**
  * The three monitored designers' primary calendar emails, keyed by Productive
