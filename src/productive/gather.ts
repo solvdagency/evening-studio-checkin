@@ -49,10 +49,7 @@ import {
   ProjectResource,
   AllocationResource,
 } from "./schemas.ts";
-import {
-  mapToBookingsAndAbsences,
-  type RawBookingForMapping,
-} from "./mappers.ts";
+import { mapToBookingsAndAbsences, type RawBookingForMapping } from "./mappers.ts";
 import { buildBriefedPositionMap, type RawWorkflowStatus } from "./briefed.ts";
 import { assessBriefs, type AssessBookingInput, type BriefFlag } from "./brief.ts";
 import { buildHolidaySet, yearsForWindow } from "../holidays.ts";
@@ -76,6 +73,16 @@ export interface GatherResult {
   assessedDesigners: DesignerId[];
   /** Accumulated source failures — non-empty means a degraded run, never a crash. */
   sourceErrors: string[];
+  /**
+   * Open Q1 — each assessed designer's set of booked CLIENT company ids for the
+   * TARGET day, derived from the SAME already-fetched bookings `included` (NO
+   * second /bookings call). The Phase-4 meeting reconciler consumes this ready-
+   * made Set per designer to decide same-day coverage (D-01/D-02/D-03); it never
+   * recomputes hours. Every assessed designer is initialised to an empty Set
+   * (empty, never undefined) so "no client booking" is distinct from "unread".
+   * Domain `Booking` is deliberately NOT extended — src/domain stays untouched.
+   */
+  bookedClientsByDesignerDay: Record<DesignerId, Set<string>>;
 }
 
 /**
@@ -111,9 +118,7 @@ interface StatusIndexEntry {
 }
 
 /** Pull the linkage id off a tolerant relationship ({data}|{meta}|absent). */
-function relId(
-  rel: { data?: { id: string; type: string } | null } | undefined,
-): string | null {
+function relId(rel: { data?: { id: string; type: string } | null } | undefined): string | null {
   return rel?.data?.id ?? null;
 }
 
@@ -191,6 +196,53 @@ function indexProjects(included: unknown[]): Map<string, boolean> {
 }
 
 /**
+ * Build a taskId → companyId map (Open Q1) from the bookings `included`, reading
+ * the SAME already-fetched task → project → company linkage (NO second call).
+ * Path: task.relationships.project.data.id → (project in included)
+ * .relationships.company.data.id. A task with no resolvable client company is
+ * simply absent from the map (the booking then contributes no company id — a
+ * fail-safe that can never manufacture a false client). All reads go through the
+ * tolerant relId reader; nothing is parsed raw beyond a cheap type pre-filter.
+ */
+function indexTaskCompany(included: unknown[]): Map<string, string> {
+  // First: projectId → companyId.
+  const companyByProject = new Map<string, string>();
+  for (const raw of included) {
+    if (
+      typeof raw !== "object" ||
+      raw === null ||
+      (raw as { type?: unknown }).type !== "projects"
+    ) {
+      continue;
+    }
+    const p = raw as {
+      id: string;
+      relationships?: { company?: { data?: { id: string; type: string } | null } };
+    };
+    const companyId = relId(p.relationships?.company);
+    if (companyId !== null) companyByProject.set(p.id, companyId);
+  }
+
+  // Then: taskId → companyId (via the task's project).
+  const companyByTask = new Map<string, string>();
+  for (const raw of included) {
+    if (typeof raw !== "object" || raw === null || (raw as { type?: unknown }).type !== "tasks") {
+      continue;
+    }
+    const t = raw as {
+      id: string;
+      relationships?: { project?: { data?: { id: string; type: string } | null } };
+    };
+    const projectId = relId(t.relationships?.project);
+    if (projectId === null) continue;
+    const companyId = companyByProject.get(projectId);
+    if (companyId !== undefined) companyByTask.set(t.id, companyId);
+  }
+
+  return companyByTask;
+}
+
+/**
  * Resolve every sideloaded task into a ResolvedTask keyed by task id. A task
  * exposes its current status via the `workflow_status` relationship (id only);
  * the status's workflow + position come from the workflow_status index. The
@@ -204,11 +256,7 @@ function indexTasks(
 ): Map<string, ResolvedTask> {
   const tasks = new Map<string, ResolvedTask>();
   for (const raw of included) {
-    if (
-      typeof raw !== "object" ||
-      raw === null ||
-      (raw as { type?: unknown }).type !== "tasks"
-    ) {
+    if (typeof raw !== "object" || raw === null || (raw as { type?: unknown }).type !== "tasks") {
       continue;
     }
     const t = raw as {
@@ -306,7 +354,10 @@ function tentativeAllocationToRawBooking(
     // Event-type allocations are filtered out before reaching here.
     relationships: {
       person: r.person,
-      service: r.service?.data?.id != null ? r.service : { data: { id: "alloc-" + parsed.id, type: "services" } },
+      service:
+        r.service?.data?.id != null
+          ? r.service
+          : { data: { id: "alloc-" + parsed.id, type: "services" } },
       event: undefined,
     },
   };
@@ -344,6 +395,7 @@ export async function gather(deps: GatherDeps): Promise<GatherResult> {
     holidays,
     assessedDesigners: [], // reached nobody → report names the whole roster missing
     sourceErrors,
+    bookedClientsByDesignerDay: {}, // reached nobody → no per-designer sets
   });
 
   // (2) Pull bookings for the whole window with the live-confirmed include set.
@@ -389,17 +441,21 @@ export async function gather(deps: GatherDeps): Promise<GatherResult> {
     // attribute to nobody/"" and falsely mark a designer assessed). Drop it and
     // record the signal as a sourceError rather than producing a ""-keyed booking.
     const personId = relId(
-      (parsed.data.relationships as {
-        person?: { data?: { id: string; type: string } | null };
-      }).person,
+      (
+        parsed.data.relationships as {
+          person?: { data?: { id: string; type: string } | null };
+        }
+      ).person,
     );
     if (personId === null || !ROSTER.has(personId)) {
       sourceErrors.push("a booking row had no rostered person (skipped)");
       continue;
     }
-    const taskRel = (parsed.data.relationships as {
-      task?: { data?: { id: string; type: string } | null };
-    }).task;
+    const taskRel = (
+      parsed.data.relationships as {
+        task?: { data?: { id: string; type: string } | null };
+      }
+    ).task;
     taskIdByBooking.set(parsed.data.id, relId(taskRel));
     rawBookings.push(asRawBooking(parsed.data));
   }
@@ -446,9 +502,11 @@ export async function gather(deps: GatherDeps): Promise<GatherResult> {
       // reached (assessed). A designer reached only via allocations (zero confirmed
       // bookings) is still assessed, not missing.
       const personId = relId(
-        (a.relationships as {
-          person?: { data?: { id: string; type: string } | null };
-        }).person,
+        (
+          a.relationships as {
+            person?: { data?: { id: string; type: string } | null };
+          }
+        ).person,
       );
       if (personId === null || !ROSTER.has(personId)) {
         sourceErrors.push("an allocation row had no rostered person (skipped)");
@@ -486,11 +544,7 @@ export async function gather(deps: GatherDeps): Promise<GatherResult> {
   //     read them from THIS pull's `included` (no extra call needed); parse each
   //     via ProjectResource.safeParse — raw projects JSON never crosses the line.
   const isClientByProject = indexProjects(bookingsResult.value.included);
-  const tasksById = indexTasks(
-    bookingsResult.value.included,
-    statusIndex,
-    isClientByProject,
-  );
+  const tasksById = indexTasks(bookingsResult.value.included, statusIndex, isClientByProject);
 
   // (6) Map per window day so each booking/absence carries its `date` (the
   //     report's rollup attributes by date). Brief checks are target-day only.
@@ -504,12 +558,7 @@ export async function gather(deps: GatherDeps): Promise<GatherResult> {
 
   // (7) Brief flags: build one AssessBookingInput per TARGET-DAY booking that
   //     resolves to a work (service) booking, then delegate to assessBriefs.
-  const assessInputs = buildAssessInputs(
-    rawBookings,
-    targetKey,
-    tasksById,
-    taskIdByBooking,
-  );
+  const assessInputs = buildAssessInputs(rawBookings, targetKey, tasksById, taskIdByBooking);
   const briefFlags = assessBriefs(assessInputs, briefedMap);
 
   // (8) assessedDesigners = the whole roster. Reaching this point means the
@@ -529,6 +578,30 @@ export async function gather(deps: GatherDeps): Promise<GatherResult> {
   //     falsely showing as open.
   const assessedDesigners = DESIGNER_PERSON_IDS.map((id) => id as DesignerId);
 
+  // (9) Open Q1 — per-designer booked CLIENT company ids for the TARGET day, read
+  //     from the SAME already-fetched `included` (no second /bookings call). Build
+  //     a taskId→companyId index, then for each confirmed target-day WORK booking
+  //     add its company id (via its linked task) to that designer's set. Every
+  //     assessed designer is initialised to an empty Set so "no client booking"
+  //     is distinct from "unread". Tentative (allocation-synthesized) bookings
+  //     have no included company linkage and simply contribute nothing.
+  const companyByTask = indexTaskCompany(bookingsResult.value.included);
+  const bookedClientsByDesignerDay: Record<DesignerId, Set<string>> = {};
+  for (const id of assessedDesigners) bookedClientsByDesignerDay[id] = new Set<string>();
+  for (const raw of rawBookings) {
+    const a = raw.attributes;
+    if (a.canceled === true) continue;
+    if (relId(raw.relationships.service) === null) continue; // work bookings only
+    if (!(a.started_on <= targetKey && targetKey <= a.ended_on)) continue; // target day only
+    const designerId = (relId(raw.relationships.person) ?? "") as DesignerId;
+    const set = bookedClientsByDesignerDay[designerId];
+    if (set === undefined) continue; // non-rostered / unassessed → skip
+    const taskId = taskIdByBooking.get(raw.id) ?? null;
+    if (taskId === null) continue;
+    const companyId = companyByTask.get(taskId);
+    if (companyId !== undefined) set.add(companyId);
+  }
+
   return {
     bookings,
     absences,
@@ -536,6 +609,7 @@ export async function gather(deps: GatherDeps): Promise<GatherResult> {
     holidays,
     assessedDesigners,
     sourceErrors,
+    bookedClientsByDesignerDay,
   };
 }
 

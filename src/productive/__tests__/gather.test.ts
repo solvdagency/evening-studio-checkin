@@ -33,9 +33,7 @@ const NOW = DateTime.fromISO("2026-06-03T17:00:00", { zone: STUDIO_ZONE });
 
 /** Load the captured live /bookings page (6 bookings, 9 included). */
 function loadBookingsFixture(): Page {
-  const path = fileURLToPath(
-    new URL("../__fixtures__/bookings-page.json", import.meta.url),
-  );
+  const path = fileURLToPath(new URL("../__fixtures__/bookings-page.json", import.meta.url));
   const raw = JSON.parse(readFileSync(path, "utf8")) as {
     data: unknown[];
     included?: unknown[];
@@ -45,12 +43,7 @@ function loadBookingsFixture(): Page {
 
 /** A minimal /workflow_statuses pull: SOLVD Standard Briefed at position 3. */
 function workflowStatusesPage(): Page {
-  const status = (
-    id: string,
-    name: string,
-    position: number,
-    workflowId: string,
-  ) => ({
+  const status = (id: string, name: string, position: number, workflowId: string) => ({
     id,
     type: "workflow_statuses",
     attributes: { name, position, category_id: 2 },
@@ -117,20 +110,13 @@ function allocation(
           ? { data: { id: "svc-" + id, type: "services" } }
           : { data: null },
       event:
-        bookingType === "event"
-          ? { data: { id: "evt-" + id, type: "events" } }
-          : { data: null },
+        bookingType === "event" ? { data: { id: "evt-" + id, type: "events" } } : { data: null },
     },
   };
 }
 
 /** A confirmed /bookings page entry sharing the bookings/allocations id space. */
-function confirmedBooking(
-  id: string,
-  personId: string,
-  minutes: number,
-  day: string,
-): unknown {
+function confirmedBooking(id: string, personId: string, minutes: number, day: string): unknown {
   return {
     id,
     type: "bookings",
@@ -314,8 +300,14 @@ describe("gather (composition root — pull → validate → map → assess → 
     const tentative = targetBookings.filter((b) => b.isTentative);
 
     // The shared id is confirmed once (not double-counted); 200 is tentative.
-    assert.equal(confirmed.reduce((s, b) => s + b.minutes, 0), 300);
-    assert.equal(tentative.reduce((s, b) => s + b.minutes, 0), 210);
+    assert.equal(
+      confirmed.reduce((s, b) => s + b.minutes, 0),
+      300,
+    );
+    assert.equal(
+      tentative.reduce((s, b) => s + b.minutes, 0),
+      210,
+    );
     assert.ok(tentative.length === 1);
     assert.equal(tentative[0].isTentative, true);
   });
@@ -377,7 +369,10 @@ describe("gather (composition root — pull → validate → map → assess → 
     // Only the non-canceled allocation (500 → 210 min) survives; the canceled
     // 300 min must not inflate the tentative/shaky figure.
     assert.equal(tentative.length, 1);
-    assert.equal(tentative.reduce((s, b) => s + b.minutes, 0), 210);
+    assert.equal(
+      tentative.reduce((s, b) => s + b.minutes, 0),
+      210,
+    );
   });
 
   it("CR-01 regression: the /allocations query omits filter[canceled] (Productive returns HTTP 400 'unsupported_filter' on that endpoint; canceled exclusion is client-side per the test above)", async () => {
@@ -389,10 +384,7 @@ describe("gather (composition root — pull → validate → map → assess → 
         return { ok: true, value: { data: [], included: [] } };
       },
     });
-    assert.ok(
-      queryByPath["/allocations"] !== undefined,
-      "the /allocations endpoint was queried",
-    );
+    assert.ok(queryByPath["/allocations"] !== undefined, "the /allocations endpoint was queried");
     assert.ok(
       !queryByPath["/allocations"].includes("filter[canceled]"),
       `the /allocations query must omit filter[canceled] (live: HTTP 400 unsupported_filter); got: ${queryByPath["/allocations"]}`,
@@ -531,10 +523,7 @@ describe("gather (composition root — pull → validate → map → assess → 
       }),
     );
     assert.deepEqual(out.sourceErrors, []);
-    assert.deepEqual(
-      [...out.assessedDesigners].sort(),
-      [...DESIGNER_PERSON_IDS].sort(),
-    );
+    assert.deepEqual([...out.assessedDesigners].sort(), [...DESIGNER_PERSON_IDS].sort());
   });
 
   it("Open Q1: bookedClientsByDesignerDay surfaces target-day company ids from already-fetched included", async () => {
@@ -566,7 +555,12 @@ describe("gather (composition root — pull → validate → map → assess → 
       {
         id: "t-fdc",
         type: "tasks",
-        attributes: { title: "FDC IPO Launch Video", description: "brief", workflow_status_id: 3, workflow_id: 1 },
+        attributes: {
+          title: "FDC IPO Launch Video",
+          description: "brief",
+          workflow_status_id: 3,
+          workflow_id: 1,
+        },
         relationships: { project: { data: { id: "p-fdc", type: "projects" } } },
       },
       {

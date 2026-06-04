@@ -26,9 +26,7 @@ const NOW = DateTime.fromISO("2026-06-03T17:00:00", { zone: STUDIO_ZONE });
 
 /** Load the captured events-day fixture (3 events: timed FDC, standup, all-day). */
 function loadEventsFixture(): unknown[] {
-  const path = fileURLToPath(
-    new URL("../__fixtures__/events-day.json", import.meta.url),
-  );
+  const path = fileURLToPath(new URL("../__fixtures__/events-day.json", import.meta.url));
   const raw = JSON.parse(readFileSync(path, "utf8")) as { items: unknown[] };
   return raw.items;
 }

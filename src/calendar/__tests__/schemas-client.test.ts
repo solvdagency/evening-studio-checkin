@@ -32,7 +32,11 @@ describe("CalendarEventResource (tolerant zod boundary)", () => {
     const r = CalendarEventResource.safeParse({
       id: "x",
       summary: "FDC catch up",
-      start: { dateTime: "2026-06-05T14:30:00+10:00", timeZone: "Australia/Sydney", weirdNewField: 1 },
+      start: {
+        dateTime: "2026-06-05T14:30:00+10:00",
+        timeZone: "Australia/Sydney",
+        weirdNewField: 1,
+      },
       attendees: [{ self: true, responseStatus: "needsAction", futureField: "v" }],
       someBrandNewTopLevelField: { nested: true },
     });
