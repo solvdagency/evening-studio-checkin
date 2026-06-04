@@ -14,6 +14,11 @@ on:
 jobs:
   checkin:
     runs-on: ubuntu-latest
+    # REL-03 (T-07-04): job-scoped write permission so the marker commit step below
+    # can push `.runs/<date>.json` back. Declared at the JOB level (not workflow-wide)
+    # to keep the GITHUB_TOKEN scope minimal — no other permission is granted.
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -28,3 +33,19 @@ jobs:
           # Phase 4 — Google Calendar service-account key (raw single-line JSON;
           # consumed via JSON.parse(process.env.GOOGLE_SA_KEY) in the calendar source).
           GOOGLE_SA_KEY: ${{ secrets.GOOGLE_SA_KEY }}
+      # REL-03 — persist the idempotency marker / run log. Stage `.runs/`, and ONLY
+      # if there is a staged change, commit + push it. The commit message carries
+      # `[skip ci]` (T-07-05) so the marker commit can never re-trigger this workflow.
+      # A manual run that wrote no marker (or a re-run writing an identical file) has
+      # nothing staged → the guard no-ops, so the job never fails on "nothing to commit".
+      - name: Commit run-log marker
+        run: |
+          git add .runs/
+          if git diff --cached --quiet; then
+            echo "no marker change to commit — skipping"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "chore: record nightly run-log marker [skip ci]"
+          git push

@@ -51,7 +51,7 @@ Requirements for the initial release. Each maps to roadmap phases.
 
 - [ ] **REL-01**: If a data source is unreachable, the check posts a degraded message naming what it couldn't reach, rather than skipping the night
 - [ ] **REL-02**: A failed run surfaces a human-visible alert (never fails silently)
-- [ ] **REL-03**: The check avoids duplicate posts for the same evening (idempotency)
+- [x] **REL-03**: The check avoids duplicate posts for the same evening (idempotency)
 
 ### Intelligence Layer
 
@@ -123,7 +123,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | MSG-07 | Phase 3 | Pending |
 | REL-01 | Phase 3 | Pending |
 | REL-02 | Phase 3 | Pending |
-| REL-03 | Phase 6 | Pending |
+| REL-03 | Phase 7 | Complete |
 | LLM-01 | Phase 5 | Complete |
 | LLM-02 | Phase 5 | Complete |
 
