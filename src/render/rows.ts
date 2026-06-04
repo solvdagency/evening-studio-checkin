@@ -22,10 +22,7 @@ import { BRAND_COLORS } from "../config.ts";
 
 /** HTML-escape the Cards-v2 HTML-subset specials (`&` first). */
 export function escapeHtml(value: string): string {
-  return value
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;");
+  return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 
 /** Display hours with a forced single decimal — "7.5", "3.0" (matches the mockup). */
@@ -69,7 +66,9 @@ function statusLine(d: DesignerResult, escapedName: string): string {
 
 /** Line 2 (greyed): `Nothing booked` when 0, else `{X.X}h booked`. */
 function bookedLine(d: DesignerResult): string {
-  return d.bookedHours === 0 ? muted("Nothing booked") : muted(`${oneDecimal(d.bookedHours)}h booked`);
+  return d.bookedHours === 0
+    ? muted("Nothing booked")
+    : muted(`${oneDecimal(d.bookedHours)}h booked`);
 }
 
 /**
@@ -93,6 +92,7 @@ function missingDesignerRow(escapedName: string): { decoratedText: DecoratedText
  *   2. greyed booked detail (omitted only for an on-leave "off" day — D-22 minimal)
  *   3. ⚠️ tentative line if a tentative note exists (D-14/D-15, additive, NO job code)
  *   4. 📄 brief line(s) for each brief flag on this designer (D-16, CODE + hours)
+ *   5. 📅 "worth a look" line(s) for each unaccounted meeting (D-14, deep-linked)
  *
  * A designer in `missingDesigners` (D-19) short-circuits to the minimal 🤖 row —
  * its figures are untrusted this run and are never shown.
@@ -105,6 +105,7 @@ export function buildRow(
     tentativeNotes: Record<string, TentativeNote>;
     leaveNotes?: Record<string, string>;
     missingDesigners?: ReadonlyArray<DesignerResult["designerId"]>;
+    worthALook?: Record<string, Array<{ title: string; start: string; link: string }>>;
   },
 ): { decoratedText: DecoratedText } {
   const escapedName = escapeHtml(ctx.designerNames[d.designerId] ?? String(d.designerId));
@@ -148,6 +149,15 @@ export function buildRow(
     const label = BRIEF_LABEL[flag.reason];
     const code = escapeHtml(flag.jobLabel);
     lines.push(`📄 ${label} · ${muted(`${code} · ${oneDecimal(d.bookedHours)}h`)}`);
+  }
+
+  // 📅 "worth a look" line(s) (D-14 / MEET-04): a counting meeting whose client
+  // isn't booked that day. Soft nudge only — the title deep-links (MSG-06) and the
+  // voice stays "worth a look", never an asserted clash (D-04). Same nested-sub-line
+  // widget pattern as ⚠️/📄; every dynamic string is escaped (threat T-04-11).
+  for (const m of ctx.worthALook?.[d.designerId] ?? []) {
+    const titleLink = `<a href="${escapeHtml(m.link)}">${escapeHtml(m.title)}</a>`;
+    lines.push(`📅 ${titleLink} · ${muted(escapeHtml(m.start))} · ${muted("worth a look")}`);
   }
 
   return { decoratedText: { text: lines.join("<br>"), wrapText: true } };

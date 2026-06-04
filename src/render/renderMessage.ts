@@ -145,6 +145,7 @@ export const renderTemplate: RenderMessage = (report, ctx) => {
           tentativeNotes: ctx.tentativeNotes,
           leaveNotes: ctx.leaveNotes,
           missingDesigners: report.missingDesigners,
+          worthALook: ctx.worthALook,
         }),
       );
     });

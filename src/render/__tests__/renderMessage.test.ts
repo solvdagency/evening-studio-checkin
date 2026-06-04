@@ -419,9 +419,10 @@ describe("renderTemplate — 📅 worth-a-look sub-line (D-14 / MEET-04 / MSG-06
 
   it("renders a soft, deep-linked 📅 line under the relevant designer", () => {
     const out = renderTemplate(worthALookReport(), ctx({ worthALook: FIX.worthALook }));
-    // Liam (index 2) gets the FDC line.
+    // Rows are divider-separated: widget[0]=Anisha, [1]=divider, [2]=Ella,
+    // [3]=divider, [4]=Liam. Liam gets the FDC line.
     const rowSection = out.cardsV2[0].card.sections[1];
-    const liamRow = rowSection.widgets[2];
+    const liamRow = rowSection.widgets[4];
     assert.ok("decoratedText" in liamRow);
     const text = liamRow.decoratedText.text;
     assert.match(
@@ -454,8 +455,8 @@ describe("renderTemplate — 📅 worth-a-look sub-line (D-14 / MEET-04 / MSG-06
   it("a designer with no worthALook entry renders no 📅 line", () => {
     const out = renderTemplate(worthALookReport(), ctx({ worthALook: FIX.worthALook }));
     const rowSection = out.cardsV2[0].card.sections[1];
-    // Ella (index 1) has no fixture entry.
-    const ellaRow = rowSection.widgets[1];
+    // Ella (widget[2], divider-separated) has no fixture entry.
+    const ellaRow = rowSection.widgets[2];
     assert.ok("decoratedText" in ellaRow);
     assert.doesNotMatch(ellaRow.decoratedText.text, /📅/);
   });

@@ -161,6 +161,15 @@ export interface RenderContext {
   briefFlags: BriefFlag[];
   /** Per-designer additive tentative notes for the ⚠️ "(on top)" line (D-14/D-15). */
   tentativeNotes: Record<string, TentativeNote>;
+  /**
+   * Per-designer "worth a look" meetings → the 📅 sub-line (D-14 / MEET-04). A
+   * counting meeting whose client isn't booked that day, surfaced by
+   * reconcileMeetings as { title, start, link }. Presentation-only: the renderer
+   * formats and deep-links the title (MSG-06) but asserts nothing — the soft "worth
+   * a look" voice, never "conflict" (D-04). Every dynamic string is escaped before
+   * insertion (threat T-04-11). Absent/empty ⇒ no 📅 line (no regression).
+   */
+  worthALook?: Record<string, Array<{ title: string; start: string; link: string }>>;
   /** Set when tomorrow is a public holiday (D-20) — short warm message, no rows. */
   holidayTomorrow?: { dateLabel: string };
   /** Set when tomorrow is a studio closure/offsite (D-21). */
