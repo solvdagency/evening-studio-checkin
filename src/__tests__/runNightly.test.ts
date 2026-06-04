@@ -8,10 +8,14 @@
  * inside it) over fully stubbed external sources, proving:
  *   (a) happy   — all sources succeed, an unaccounted meeting surfaces all the way
  *                 to the posted payload as a 📅 line, runNightly returns 0.
- *   (b) degrade — a calendar sourceError still posts the 🤖 degraded card and
- *                 returns 0 (REL-01: never silently skip a night).
+ *   (b) calendar-only — a calendar sourceError (figures intact) posts the NORMAL
+ *                 card with real figures + one muted calendars-unavailable note,
+ *                 NO 📅 line, returns 0 (REL-01: figures stay trusted, never the
+ *                 degraded card, and the GOOGLE_SA_KEY reason never leaks).
  *   (c) post-fail — postToChat returns { ok:false } → returns 1 (REL-02: GitHub's
  *                 failed-run email fires).
+ *   (d) productive — a Productive sourceError posts the 🤖 degraded card and
+ *                 returns 0 (REL-01: never silently skip a night).
  *
  * The injected `now` is a FIXED weekday (asserted ≤ Friday so the test fails loudly
  * if the date ever drifts onto a weekend, which the SCHED-01 guard would skip).
@@ -166,18 +170,43 @@ describe("runNightly — orchestration paths (REL-01 / REL-02 / MEET-04)", () =>
     assert.equal(post.calls[0].webhookUrl, STUB_WEBHOOK, "the injected webhook is used, not env");
   });
 
-  it("(b) degrade: a calendar sourceError still posts the degraded card and returns 0 (REL-01)", async () => {
+  it("(b) calendar-only: a calendar sourceError posts the NORMAL card with figures + one muted note, no 📅, returns 0 (REL-01)", async () => {
     const post = makePostStub({ ok: true, value: undefined });
+
+    // A realistic calendar failure: the failing read yields NO events for the
+    // designer(s) — only the sourceError. Reuse stubCalendarResult, then clear the
+    // eventsByDesigner so no meeting survives to reconcile (matches a real outage).
+    const calFail: CalendarResult = {
+      ...stubCalendarResult([
+        "Couldn't reach Calendar for Liam Mills: GOOGLE_SA_KEY missing client_email/private_key",
+      ]),
+      eventsByDesigner: { [LIAM]: [], [ANISHA]: [], [ELLA]: [] },
+    };
 
     const code = await runNightly(NOW, {
       gather: async () => stubGatherResult(),
-      gatherCalendar: async () => stubCalendarResult(["Couldn't reach Calendar for Liam Mills"]),
+      gatherCalendar: async () => calFail,
       postToChat: post.postToChat,
       webhookUrl: STUB_WEBHOOK,
     });
 
-    assert.equal(code, 0, "a data-source failure degrades and still returns 0 (never skip a night)");
-    assert.equal(post.calls.length, 1, "the degraded card was still posted");
+    assert.equal(code, 0, "a calendar-only failure keeps figures and still returns 0");
+    assert.equal(post.calls.length, 1, "the normal card was still posted exactly once");
+    const json = JSON.stringify(post.calls[0].payload);
+    assert.ok(
+      json.includes("couldn't check calendars"),
+      "the muted calendars-unavailable note is present",
+    );
+    assert.ok(!json.includes("📅"), "no 📅 worth-a-look line on a calendar-only failure");
+    assert.ok(
+      json.includes("Open in Productive"),
+      "it is the NORMAL card (figures intact), not the degraded card",
+    );
+    assert.ok(!json.includes("GOOGLE_SA_KEY"), "the SA-key reason never reaches the card");
+    assert.ok(
+      !json.includes("Couldn't reach Couldn't reach"),
+      "no doubled 'Couldn't reach' prefix",
+    );
   });
 
   it("(c) post-fail: postToChat { ok:false } returns 1 (REL-02)", async () => {
@@ -192,5 +221,26 @@ describe("runNightly — orchestration paths (REL-01 / REL-02 / MEET-04)", () =>
 
     assert.equal(code, 1, "a POST failure exits non-zero so GitHub's failed-run email fires");
     assert.equal(post.calls.length, 1, "postToChat was attempted before the non-zero exit");
+  });
+
+  it("(d) productive failure still posts the 🤖 degraded card and returns 0 (REL-01)", async () => {
+    const post = makePostStub({ ok: true, value: undefined });
+
+    const code = await runNightly(NOW, {
+      gather: async () => stubGatherResult(["Couldn't reach Productive: 403"]),
+      gatherCalendar: async () => stubCalendarResult(),
+      postToChat: post.postToChat,
+      webhookUrl: STUB_WEBHOOK,
+    });
+
+    assert.equal(code, 0, "a Productive failure degrades and still returns 0 (never skip a night)");
+    assert.equal(post.calls.length, 1, "the degraded card was still posted exactly once");
+    const json = JSON.stringify(post.calls[0].payload);
+    assert.ok(json.includes("🤖"), "the 🤖 degraded marker is present");
+    assert.ok(
+      !json.includes("Open in Productive"),
+      "the degraded card has no button (proves it is the degraded variant)",
+    );
+    assert.ok(!json.includes("GOOGLE_SA_KEY"), "no SA-key reason leaks into the degraded card");
   });
 });
