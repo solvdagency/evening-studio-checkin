@@ -1,0 +1,39 @@
+{
+  "items": [
+    {
+      "id": "evt-fdc-checkin",
+      "status": "confirmed",
+      "summary": "FDC IPO Launch Check-In",
+      "htmlLink": "https://www.google.com/calendar/event?eid=evt-fdc-checkin",
+      "eventType": "default",
+      "start": {
+        "dateTime": "2026-06-05T14:30:00+10:00",
+        "timeZone": "Australia/Sydney"
+      },
+      "attendees": [
+        { "self": true, "responseStatus": "needsAction" },
+        { "self": false, "responseStatus": "accepted" }
+      ]
+    },
+    {
+      "id": "evt-standup",
+      "status": "confirmed",
+      "summary": "Team Daily Stand-up",
+      "htmlLink": "https://www.google.com/calendar/event?eid=evt-standup",
+      "eventType": "default",
+      "start": {
+        "dateTime": "2026-06-05T09:00:00+10:00",
+        "timeZone": "Australia/Sydney"
+      },
+      "attendees": [{ "self": true, "responseStatus": "accepted" }]
+    },
+    {
+      "id": "evt-allday-leave",
+      "status": "confirmed",
+      "summary": "Annual leave",
+      "htmlLink": "https://www.google.com/calendar/event?eid=evt-allday-leave",
+      "eventType": "default",
+      "start": { "date": "2026-06-05" }
+    }
+  ]
+}

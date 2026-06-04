@@ -537,6 +537,76 @@ describe("gather (composition root — pull → validate → map → assess → 
     );
   });
 
+  it("Open Q1: bookedClientsByDesignerDay surfaces target-day company ids from already-fetched included", async () => {
+    const TARGET = "2026-06-04";
+    const person = DESIGNER_PERSON_IDS[0]; // Liam 686717
+    // A confirmed target-day booking linked to a task → project → company (1333899).
+    const booking = {
+      id: "b-fdc",
+      type: "bookings",
+      attributes: {
+        booking_method_id: 1,
+        time: 360,
+        total_time: 360,
+        percentage: null,
+        started_on: TARGET,
+        ended_on: TARGET,
+        draft: false,
+        canceled: false,
+        total_working_days: 1,
+      },
+      relationships: {
+        person: { data: { id: person, type: "people" } },
+        service: { data: { id: "svc-fdc", type: "services" } },
+        event: { data: null },
+        task: { data: { id: "t-fdc", type: "tasks" } },
+      },
+    };
+    const included = [
+      {
+        id: "t-fdc",
+        type: "tasks",
+        attributes: { title: "FDC IPO Launch Video", description: "brief", workflow_status_id: 3, workflow_id: 1 },
+        relationships: { project: { data: { id: "p-fdc", type: "projects" } } },
+      },
+      {
+        id: "p-fdc",
+        type: "projects",
+        attributes: { project_type_id: 2 },
+        relationships: { company: { data: { id: "1333899", type: "companies" } } },
+      },
+      { id: "1333899", type: "companies", attributes: { name: "FDC Construction" } },
+    ];
+    const out = await gather(
+      depsWith({
+        "/bookings": OK({ data: [booking], included }),
+        "/workflow_statuses": OK(workflowStatusesPage()),
+      }),
+    );
+    const map = out.bookedClientsByDesignerDay;
+    assert.ok(map, "bookedClientsByDesignerDay present");
+    // Every assessed designer is initialised to a Set (empty, not undefined).
+    for (const id of DESIGNER_PERSON_IDS) {
+      assert.ok(map[id] instanceof Set, `set for ${id}`);
+    }
+    // Liam's set carries the FDC company id for the target day.
+    assert.ok(map[person].has("1333899"));
+    // A designer with no client booking has an EMPTY set (not undefined).
+    assert.equal(map[DESIGNER_PERSON_IDS[1]].size, 0);
+  });
+
+  it("bookedClientsByDesignerDay is an empty-Set record on a degraded (failed) pull", async () => {
+    const out = await gather(
+      depsWith({
+        "/bookings": ERR("HTTP 403"),
+        "/workflow_statuses": OK(workflowStatusesPage()),
+      }),
+    );
+    // degraded() returns {} for the map (no assessed designers).
+    assert.ok(out.bookedClientsByDesignerDay);
+    assert.deepEqual(out.bookedClientsByDesignerDay, {});
+  });
+
   it("never throws even when every source fails (degrade contract)", async () => {
     await assert.doesNotReject(async () => {
       const out = await gather(
