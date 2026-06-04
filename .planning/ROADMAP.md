@@ -15,7 +15,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Core Math & Clock** - Pure, unit-tested capacity arithmetic and working-day logic with no external dependencies (completed 2026-06-02)
 - [x] **Phase 2: Productive Pull & Briefed Discovery** - Live Productive data into typed objects; discover and confirm the real "briefed" mapping (completed 2026-06-03)
-- [ ] **Phase 3: Template Renderer & Chat Delivery** - Shippable v1: on-brand Cards v2 message, scheduled weekday posting, always-post and degraded mode (no LLM, no Calendar)
+- [x] **Phase 3: Template Renderer & Chat Delivery** - Shippable v1: on-brand Cards v2 message, scheduled weekday posting, always-post and degraded mode (no LLM, no Calendar) (completed 2026-06-04)
 - [ ] **Phase 4: Calendar & Meeting Reconciliation** - Read designer calendars and reconcile ad-hoc meetings against bookings, behind a real-evening pilot gate
 - [ ] **Phase 5: LLM Renderer (optional)** - Swappable LLM renderer for prose and fuzzy meeting judgment, with templated fallback; cuttable
 - [ ] **Phase 6: Hardening** - Idempotency and structured run logging so a stable, unattended automation stays trustworthy
@@ -102,7 +102,7 @@ Plans:
 
 **Wave 3** *(blocked on Wave 2 + Wave 3 transport)*
 
-- [ ] 03-04-PLAN.md — Composition root + weekday guard + GitHub Actions cron/dispatch + avatar PNG + manual smoke checkpoint (SCHED-01/02, REL-01/02)
+- [x] 03-04-PLAN.md — Composition root + weekday guard + GitHub Actions cron/dispatch + avatar PNG + manual smoke checkpoint (SCHED-01/02, REL-01/02)
 
 ### Phase 4: Calendar & Meeting Reconciliation
 
@@ -157,7 +157,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 |-------|----------------|--------|-----------|
 | 1. Core Math & Clock | 3/3 | Complete   | 2026-06-02 |
 | 2. Productive Pull & Briefed Discovery | 4/4 | Complete   | 2026-06-03 |
-| 3. Template Renderer & Chat Delivery | 3/4 | In Progress|  |
+| 3. Template Renderer & Chat Delivery | 4/4 | Complete   | 2026-06-04 |
 | 4. Calendar & Meeting Reconciliation | 0/TBD | Not started | - |
 | 5. LLM Renderer (optional) | 0/TBD | Not started | - |
 | 6. Hardening | 0/TBD | Not started | - |
