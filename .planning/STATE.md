@@ -3,9 +3,9 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: shipped
-stopped_at: v1.0 SHIPPED & archived (tag v1.0, local) — milestones/v1.0-ROADMAP.md; audit tech_debt, no blockers
-last_updated: "2026-06-04T12:10:00.000Z"
-last_activity: 2026-06-04
+stopped_at: "SCHED-04 done (2026-06-09) — late-send fixed: GitHub cron removed, cron-job.org+healthchecks.io trigger/watchdog, pushed to main. v1.0 shipped & archived. Open: ANTHROPIC_API_KEY secret + public-holiday suppression (.planning/BACKLOG.md)"
+last_updated: "2026-06-09T00:00:00.000Z"
+last_activity: 2026-06-09
 progress:
   total_phases: 7
   completed_phases: 7
@@ -134,9 +134,10 @@ None yet.
 
 [Issues that affect future work]
 
-- [Phase 4]: Google Calendar — **UNBLOCKED + LIVE-VALIDATED 2026-06-04.** Service account `studio-checkin-calendar@evening-studio-checkin.iam.gserviceaccount.com` (Client ID 114624945849863129481, project evening-studio-checkin) created; JSON key in gitignored `secrets/`; DWD authorised by admin for scope `https://www.googleapis.com/auth/calendar.readonly`. End-to-end probe PASSED for ALL THREE designers (read primary calendars, Australia/Sydney tz, all share a real "Creative team - review" meeting). Confirmed impersonation emails: liamm@solvdagency.com.au (686717), anishag@solvdagency.com.au (686712), ellaw@solvdagency.com.au (686716). Still TODO for Phase 4 execution: set the SA JSON as a GitHub secret (e.g. GOOGLE_SA_KEY); build the read via `googleapis` JWT+subject (probe used raw JWT, no dep); the WIP/creative-team meeting ignore-list (per CLAUDE.md) is relevant — "Creative team - review" is exactly such a meeting.
-- [Phase 5]: ~~Production LLM needs an org-sanctioned Anthropic API key.~~ **RESOLVED 2026-06-04** — Liam confirmed the `ANTHROPIC_API_KEY` already in the local `.env` IS the org-sanctioned, approved key (single key for dev + prod; no approval gate, no separate dev key, Pro/Max OAuth route not used). Only remaining production-wiring step: add this same key as a GitHub Actions repository secret for the unattended nightly cron.
-- [Phase 3 → production]: The nightly GitHub Actions cron will not fire until `GCHAT_WEBHOOK_URL` (real studio space, not the test space), `PRODUCTIVE_AUTH_TOKEN`, and `PRODUCTIVE_ORG_ID` are added as GitHub Actions repository secrets. They currently exist only in the local gitignored `.env`. Phase 3 code is shippable; production delivery is gated on these secrets.
+- [Phase 4]: Google Calendar — **DONE + LIVE.** `GOOGLE_SA_KEY` is set as a GitHub Actions secret (confirmed via `gh secret list` 2026-06-09). Service account `studio-checkin-calendar@evening-studio-checkin.iam.gserviceaccount.com` (project evening-studio-checkin); DWD authorised for `calendar.readonly`; impersonates liamm/anishag/ellaw. No longer a blocker.
+- [Phase 5 → production]: **STILL PENDING (2026-06-09).** `ANTHROPIC_API_KEY` (the org-sanctioned key, already in local `.env`) is **NOT yet a GitHub Actions repo secret** — confirmed absent via `gh secret list`. So the unattended run currently falls back to the deterministic template (no LLM phrasing). Add the key as a repo secret to enable LLM phrasing in production. This is the one outstanding production-wiring item.
+- [Phase 3 → production]: **RESOLVED 2026-06-09.** `GCHAT_WEBHOOK_URL`, `PRODUCTIVE_AUTH_TOKEN`, `PRODUCTIVE_ORG_ID` are all set as GitHub Actions secrets (confirmed via `gh secret list`). NOTE: `GCHAT_WEBHOOK_URL` currently points at the **TEST** Chat space — confirm/swap to the real studio space before going fully live (see memory `gchat-webhook-test-space`).
+- [Scheduling — SCHED-04, 2026-06-09]: The GitHub Actions `schedule:` cron was **removed** (it fired 4–5h late on all 3 runs). The nightly run is now triggered by **cron-job.org → `workflow_dispatch`** at 4:30pm Sydney, with **healthchecks.io** as an independent dead-man's switch (`HEALTHCHECK_PING_URL` secret set; workflow pings on success). End-to-end proven 2026-06-08 (dispatch run started + finished in ~29s vs hours late). See debug `.planning/debug/nightly-post-4h-late.md`, `scheduler/README.md`, and memory `github-cron-late-send`. **Open follow-up:** suppress posting on public holidays — see `.planning/BACKLOG.md`.
 
 ### Quick Tasks Completed
 
@@ -165,6 +166,8 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-06-04T12:40:00.000Z
-Stopped at: v1.0 shipped + archived (tag v1.0 local); all carried-forward tech debt cleared — Phase 4 live-run done, availability period-selection hardened, D-06 fixed, Phase 5 eval extended. Suite 335 green.
-Resume file: None — milestone complete & clean. Next is `/gsd:new-milestone` for v2 (phase numbering continues from 8); `git push origin v1.0` to publish the tag when ready.
+Last session: 2026-06-09 (SCHED-04 — scheduling reliability)
+Stopped at: Fixed the late-send bug (all 3 scheduled runs fired 4–5h late). Removed GitHub `schedule:` cron entirely; nightly run is now triggered by cron-job.org → `workflow_dispatch` (punctual) with a healthchecks.io dead-man's switch (`HEALTHCHECK_PING_URL` secret set; workflow pings on success). NO app/src change — `nightly.yml` only (cron removed + ping step). Committed + pushed to main (`fix(sched)…`, SCHED-04). End-to-end proven 2026-06-08: a manual dispatch ran in ~29s and the ping step succeeded. Suite 335 green. Setup runbook: `scheduler/README.md`; debug record: `.planning/debug/nightly-post-4h-late.md`.
+External setup DONE by Liam this session: healthchecks.io check (`evening-checkin`, alerts to digital@solvdagency.com.au) + cron-job.org job (POST to workflow_dispatch, Sydney 16:30 Mon–Fri) + fine-grained PAT.
+Resume file: None. Open items: (1) `ANTHROPIC_API_KEY` not yet a GitHub secret (LLM falls back to template) — see Blockers. (2) Public-holiday suppression — see `.planning/BACKLOG.md`. (3) Optional: test the watchdog by breaking the token once. (4) `GCHAT_WEBHOOK_URL` is still the TEST space. (5) v2 work: `/gsd:new-milestone` (phases continue from 8); `git push origin v1.0` to publish the tag.
+Pre-existing v1.0 state: shipped + archived (tag v1.0 local); all carried-forward tech debt cleared.

@@ -6,7 +6,7 @@ All hour/capacity arithmetic is done in deterministic TypeScript (never an LLM) 
 
 ## How it runs
 
-- **Schedule:** GitHub Actions cron, `30 16 * * 1-5` with `timezone: Australia/Sydney` (DST-aware). No always-on server.
+- **Schedule:** triggered punctually by an external scheduler ([cron-job.org](https://cron-job.org)) calling the GitHub `workflow_dispatch` API at 4:30pm Australia/Sydney on weekdays. GitHub Actions' own `schedule:` cron was **removed** — it fired the job 4–5h late on every run (best-effort queue, SCHED-04). No always-on server. Trigger + watchdog setup: see [`scheduler/README.md`](scheduler/README.md).
 - **Entrypoint:** `node --import tsx src/index.ts` (the `runNightly` composition root). It carries a luxon weekday guard as defence-in-depth — a weekend run exits 0 without posting.
 - **Pipeline:** `gather` (Productive pull) → `computeStudioReport` (deterministic figures) → `renderTemplate` (Cards v2 payload) → `postToChat` (the one outbound POST).
 
@@ -18,13 +18,17 @@ In the **target Chat space**: `Apps & integrations` → `Webhooks` → `Create`.
 
 ### 2. Add the GitHub Actions secrets
 
-Repo → `Settings` → `Secrets and variables` → `Actions` → `New repository secret`. Add all three:
+Repo → `Settings` → `Secrets and variables` → `Actions` → `New repository secret`:
 
 | Secret | Value |
 |--------|-------|
 | `GCHAT_WEBHOOK_URL` | the full Chat webhook URL from step 1 |
 | `PRODUCTIVE_AUTH_TOKEN` | Productive personal access token (`X-Auth-Token`) |
 | `PRODUCTIVE_ORG_ID` | Productive org id (the numeric prefix of the org slug, e.g. `34092`) |
+| `GOOGLE_SA_KEY` | Google service-account JSON (raw single line) for Calendar reads |
+| `HEALTHCHECK_PING_URL` | healthchecks.io ping URL for the dead-man's switch (SCHED-04) |
+
+(`ANTHROPIC_API_KEY` is also used by the optional LLM phrasing phase — it is **not yet** set as a repo secret, so the unattended run falls back to the deterministic template. Add it to enable LLM phrasing in production.)
 
 `.env.example` lists the same names for local dev — copy it to a gitignored `.env` with real values to run locally.
 
@@ -47,10 +51,11 @@ There is no extra alerting infrastructure (D-25) — reliability rides on two di
 
 - **A data-source failure** (Productive unreachable) is **not** a silent skip: the run still posts a degraded "Couldn't reach Productive tonight." card (REL-01).
 - **A post failure** (dead webhook, bad URL) makes the run **exit non-zero**, which triggers **GitHub's built-in failed-run email** to the repo owners (REL-02) — that is the alert channel.
+- **A trigger or run that never happens at all** (cron-job.org down, expired token, the run never fires) is caught by an independent **healthchecks.io dead-man's switch** (SCHED-04): the workflow pings it only on a successful post; if no ping arrives within the grace window, healthchecks.io emails the team. This lives on infrastructure separate from the trigger, so one outage can't disable both the run and the alarm. Setup: [`scheduler/README.md`](scheduler/README.md).
 
-### Caveat: scheduled workflows disable after inactivity
+### Why an external scheduler (not GitHub cron)
 
-GitHub disables scheduled workflows after **60 days of repo inactivity**, and scheduled runs can be **delayed under load** (so don't assume exactly 16:30 — the guard checks the weekday, not the minute). If the studio goes quiet for two months, re-enable the workflow from the Actions tab.
+GitHub Actions' `schedule:` cron is best-effort — it fired this job **4–5h late on every run** (and scheduled workflows are auto-disabled after 60 days of repo inactivity). So scheduling was moved off GitHub cron entirely (SCHED-04): cron-job.org provides the punctual `workflow_dispatch` trigger and healthchecks.io the watchdog. The composition root still carries a luxon weekday guard as defence-in-depth. See [`scheduler/README.md`](scheduler/README.md).
 
 ## Local development
 
