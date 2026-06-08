@@ -1,15 +1,34 @@
 name: Evening Studio Check-in
 
 on:
-  schedule:
-    # 4:30pm Mon–Fri in studio time (Australia/Sydney), DST-aware via the native
-    # timezone field (GitHub Actions, GA Mar 2026). The composition root also
-    # carries a luxon weekday guard as defence-in-depth (SCHED-01).
-    - cron: "30 16 * * 1-5"
-      timezone: "Australia/Sydney"
-  # SCHED-02 — manual trigger from the Actions tab (bypasses the time window so a
-  # test run fires any time on a weekday).
+  # SCHED-04 — this run is triggered EXCLUSIVELY by an external punctual scheduler:
+  # a free Cloudflare Worker (see /scheduler) that calls the GitHub workflow_dispatch
+  # API at 4:30pm Australia/Sydney on weekdays.
+  #
+  # WHY the GitHub `schedule:` cron was REMOVED (not kept as a fallback): GitHub
+  # deprioritises scheduled cron on low-activity repos. EVERY scheduled run this repo
+  # ever had fired 4–5h late (2026-06-04 8:27pm, 2026-06-05 8:34pm, 2026-06-08
+  # 9:27pm) — useless to the team, which is the whole bug. An API-triggered
+  # (workflow_dispatch) run does NOT go through that queue; it starts within seconds.
+  # Keeping a cron "fallback" only re-introduced the late post AND a double-post race
+  # (two triggers), so it was deleted outright — one punctual trigger, nothing to
+  # de-duplicate.
+  #
+  # NEVER-SILENTLY-SKIP is honored without the cron: (1) a POST failure still exits
+  # the job non-zero → GitHub's failed-run email fires; (2) the Worker checks the
+  # GitHub API response and self-alerts to Chat on a bad dispatch; (3) the Worker
+  # runs a heartbeat ~45m later and alerts Chat if no successful run is found today.
+  #
+  # workflow_dispatch ALSO remains the manual "Run workflow" button in the Actions
+  # tab. eventName==="workflow_dispatch" always posts — it is intentionally NOT
+  # marker-guarded (src/index.ts), so a human can re-test any time.
   workflow_dispatch: {}
+
+# Serialise runs so a manual test can never overlap a Worker-triggered run.
+# cancel-in-progress:false lets an in-flight post complete rather than being killed.
+concurrency:
+  group: evening-checkin
+  cancel-in-progress: false
 
 jobs:
   checkin:
@@ -49,3 +68,20 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git commit -m "chore: record nightly run-log marker [skip ci]"
           git push
+      # SCHED-04 — never-silently-skip dead-man's switch. Ping healthchecks.io ONLY
+      # after a fully successful run. `if: success()` means every prior step — incl.
+      # the post step (which exits non-zero on a failed Chat post) — succeeded. So a
+      # failed post, a crash, or the trigger never firing all mean NO ping → and
+      # healthchecks.io emails a human after its grace window. The ping URL is a
+      # capability secret. The step is non-fatal and self-skips until the secret is
+      # set, so it can never break an otherwise-good run.
+      - name: Ping dead-man's switch (healthcheck)
+        if: success()
+        env:
+          PING_URL: ${{ secrets.HEALTHCHECK_PING_URL }}
+        run: |
+          if [ -n "$PING_URL" ]; then
+            curl -fsS --retry 3 --max-time 15 "$PING_URL" || echo "healthcheck ping failed (non-fatal)"
+          else
+            echo "HEALTHCHECK_PING_URL not set — skipping ping"
+          fi
