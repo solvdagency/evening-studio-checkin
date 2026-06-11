@@ -3,9 +3,9 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: shipped
-stopped_at: "SCHED-04 done (2026-06-09) — late-send fixed: GitHub cron removed, cron-job.org+healthchecks.io trigger/watchdog, pushed to main. v1.0 shipped & archived. Open: ANTHROPIC_API_KEY secret + public-holiday suppression (.planning/BACKLOG.md)"
-last_updated: "2026-06-09T00:00:00.000Z"
-last_activity: 2026-06-09
+stopped_at: "Rolled out to MAIN Chat space (2026-06-11) — GCHAT_WEBHOOK_URL swapped from TEST to the team space, cron-job.org Test run fired, team comms sent, live. Explored infra consolidation (NO CHANGE MADE): GCP = single-vendor target; GitHub cron can't be the punctual 4:30 trigger. Open: ANTHROPIC_API_KEY secret + public-holiday suppression (.planning/BACKLOG.md)"
+last_updated: "2026-06-11T00:00:00.000Z"
+last_activity: 2026-06-11
 progress:
   total_phases: 7
   completed_phases: 7
@@ -136,8 +136,9 @@ None yet.
 
 - [Phase 4]: Google Calendar — **DONE + LIVE.** `GOOGLE_SA_KEY` is set as a GitHub Actions secret (confirmed via `gh secret list` 2026-06-09). Service account `studio-checkin-calendar@evening-studio-checkin.iam.gserviceaccount.com` (project evening-studio-checkin); DWD authorised for `calendar.readonly`; impersonates liamm/anishag/ellaw. No longer a blocker.
 - [Phase 5 → production]: **STILL PENDING (2026-06-09).** `ANTHROPIC_API_KEY` (the org-sanctioned key, already in local `.env`) is **NOT yet a GitHub Actions repo secret** — confirmed absent via `gh secret list`. So the unattended run currently falls back to the deterministic template (no LLM phrasing). Add the key as a repo secret to enable LLM phrasing in production. This is the one outstanding production-wiring item.
-- [Phase 3 → production]: **RESOLVED 2026-06-09.** `GCHAT_WEBHOOK_URL`, `PRODUCTIVE_AUTH_TOKEN`, `PRODUCTIVE_ORG_ID` are all set as GitHub Actions secrets (confirmed via `gh secret list`). NOTE: `GCHAT_WEBHOOK_URL` currently points at the **TEST** Chat space — confirm/swap to the real studio space before going fully live (see memory `gchat-webhook-test-space`).
+- [Phase 3 → production]: **RESOLVED 2026-06-09; ROLLED OUT TO MAIN 2026-06-11.** `GCHAT_WEBHOOK_URL`, `PRODUCTIVE_AUTH_TOKEN`, `PRODUCTIVE_ORG_ID` are all set as GitHub Actions secrets. The production `GCHAT_WEBHOOK_URL` was swapped from the TEST space to the **real team Chat space on 2026-06-11** (rollout by Liam: secret updated + cron-job.org Test run + team comms sent). Local `.env` deliberately stays on the TEST space so dev runs never post to the team. See memory `gchat-webhook-test-space`.
 - [Scheduling — SCHED-04, 2026-06-09]: The GitHub Actions `schedule:` cron was **removed** (it fired 4–5h late on all 3 runs). The nightly run is now triggered by **cron-job.org → `workflow_dispatch`** at 4:30pm Sydney, with **healthchecks.io** as an independent dead-man's switch (`HEALTHCHECK_PING_URL` secret set; workflow pings on success). End-to-end proven 2026-06-08 (dispatch run started + finished in ~29s vs hours late). See debug `.planning/debug/nightly-post-4h-late.md`, `scheduler/README.md`, and memory `github-cron-late-send`. **Open follow-up:** suppress posting on public holidays — see `.planning/BACKLOG.md`.
+- [Infra consolidation — EXPLORED 2026-06-11, NO CHANGE MADE]: Liam wants fewer infra services long-term. Conclusion recorded for future work: the stack splits into hard deps (Productive, Google Calendar + Chat, Anthropic — can't move, they ARE the job) and the infra layer (run = GitHub Actions, trigger = cron-job.org, watch = healthchecks.io). **4:30pm punctuality is a HARD constraint, which rules out GitHub's own `schedule:` cron as the trigger** (it fired 4–5h late, SCHED-04) — so a precise external scheduler is mandatory and cron-job.org is not removable sprawl. The genuine single-vendor consolidation target = **GCP** (Cloud Scheduler exact-minute trigger + Cloud Run running the Node code unchanged + Cloud Monitoring watchdog), the platform Solvd is already on for Calendar + Chat. Not actioned — current setup hits 4:30 and works. See memory `consolidation-target-gcp`.
 
 ### Quick Tasks Completed
 
@@ -166,8 +167,11 @@ Items acknowledged and carried forward from previous milestone close:
 
 ## Session Continuity
 
-Last session: 2026-06-09 (SCHED-04 — scheduling reliability)
+Last session: 2026-06-11 (production rollout to MAIN Chat space + infra-consolidation exploration)
+Stopped at: Rolled the nightly check-in out to the **real team Chat space** — swapped the production `GCHAT_WEBHOOK_URL` GitHub secret from the TEST space to the team space, fired a cron-job.org Test run to confirm, and sent the team a plain-English explainer. Local `.env` stays on the TEST space on purpose. NO code/src change — secret swap only (done in the GitHub + Google Chat web UIs, outside the repo). Then explored consolidating the infra stack (cron-job.org/healthchecks.io) into fewer services — recorded the GCP target + the 4:30-punctuality constraint that rules out GitHub cron (see Blockers/Concerns + memory `consolidation-target-gcp`); no change made. Open follow-ups unchanged: ANTHROPIC_API_KEY GitHub secret + public-holiday suppression.
+
+Previous session: 2026-06-09 (SCHED-04 — scheduling reliability)
 Stopped at: Fixed the late-send bug (all 3 scheduled runs fired 4–5h late). Removed GitHub `schedule:` cron entirely; nightly run is now triggered by cron-job.org → `workflow_dispatch` (punctual) with a healthchecks.io dead-man's switch (`HEALTHCHECK_PING_URL` secret set; workflow pings on success). NO app/src change — `nightly.yml` only (cron removed + ping step). Committed + pushed to main (`fix(sched)…`, SCHED-04). End-to-end proven 2026-06-08: a manual dispatch ran in ~29s and the ping step succeeded. Suite 335 green. Setup runbook: `scheduler/README.md`; debug record: `.planning/debug/nightly-post-4h-late.md`.
 External setup DONE by Liam this session: healthchecks.io check (`evening-checkin`, alerts to digital@solvdagency.com.au) + cron-job.org job (POST to workflow_dispatch, Sydney 16:30 Mon–Fri) + fine-grained PAT.
-Resume file: None. Open items: (1) `ANTHROPIC_API_KEY` not yet a GitHub secret (LLM falls back to template) — see Blockers. (2) Public-holiday suppression — see `.planning/BACKLOG.md`. (3) Optional: test the watchdog by breaking the token once. (4) `GCHAT_WEBHOOK_URL` is still the TEST space. (5) v2 work: `/gsd:new-milestone` (phases continue from 8); `git push origin v1.0` to publish the tag.
+Resume file: None. Open items: (1) `ANTHROPIC_API_KEY` not yet a GitHub secret (LLM falls back to template) — see Blockers. (2) Public-holiday suppression — see `.planning/BACKLOG.md`. (3) Optional: test the watchdog by breaking the token once. (4) `GCHAT_WEBHOOK_URL` rolled out to the MAIN team space 2026-06-11 (DONE). (5) v2 work: `/gsd:new-milestone` (phases continue from 8); `git push origin v1.0` to publish the tag.
 Pre-existing v1.0 state: shipped + archived (tag v1.0 local); all carried-forward tech debt cleared.
