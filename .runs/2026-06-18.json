@@ -1,0 +1,16 @@
+{
+  "date": "2026-06-18",
+  "posted": true,
+  "degraded": false,
+  "sourcesReached": {
+    "productive": true,
+    "calendar": true
+  },
+  "flagsRaised": {
+    "notFullyBooked": 0,
+    "missingBrief": 0,
+    "worthALook": 0
+  },
+  "rendererUsed": "template",
+  "postOutcome": "ok"
+}
