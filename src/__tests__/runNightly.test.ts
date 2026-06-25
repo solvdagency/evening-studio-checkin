@@ -125,6 +125,8 @@ function stubGatherResult(sourceErrors: string[] = []): GatherResult {
       [ANISHA]: new Set<string>(),
       [ELLA]: new Set<string>(),
     },
+    activeClients: [], // no live clients in this stub → curated-map matching only
+    bookedLabelsByDesignerDay: { [LIAM]: [], [ANISHA]: [], [ELLA]: [] },
   };
 }
 
@@ -142,10 +144,7 @@ function stubCalendarResult(sourceErrors: string[] = []): CalendarResult {
 /** A capturing postToChat stub: records the payload, returns the configured Result. */
 function makePostStub(result: Result<void>) {
   const calls: { payload: CardsV2Payload; webhookUrl: string }[] = [];
-  const postToChat = async (
-    payload: CardsV2Payload,
-    webhookUrl: string,
-  ): Promise<Result<void>> => {
+  const postToChat = async (payload: CardsV2Payload, webhookUrl: string): Promise<Result<void>> => {
     calls.push({ payload, webhookUrl });
     return result;
   };
@@ -349,7 +348,7 @@ describe("runNightly — orchestration paths (REL-01 / REL-02 / MEET-04)", () =>
     assert.ok(json.includes("⚪"), "the off row keeps the ⚪ marker");
   });
 
-  it("(g) availability-unreadable: a designer in missingDesigners still renders the 🤖 \"couldn't read\" row (D-06, no regression)", async () => {
+  it('(g) availability-unreadable: a designer in missingDesigners still renders the 🤖 "couldn\'t read" row (D-06, no regression)', async () => {
     const post = makePostStub({ ok: true, value: undefined });
 
     // Anisha omitted from assessedDesigners (availability unreadable) → she lands in
@@ -374,7 +373,7 @@ describe("runNightly — orchestration paths (REL-01 / REL-02 / MEET-04)", () =>
     assert.equal(post.calls.length, 1, "posted exactly once");
     const json = JSON.stringify(post.calls[0].payload);
     assert.ok(json.includes("🤖"), "the availability-unreadable designer renders the 🤖 row");
-    assert.ok(json.includes("couldn't read"), "the 🤖 row carries the \"couldn't read\" copy");
+    assert.ok(json.includes("couldn't read"), 'the 🤖 row carries the "couldn\'t read" copy');
     // It is the NORMAL card (figures intact), not the top-level degraded variant.
     assert.ok(
       json.includes("Open in Productive"),
@@ -408,7 +407,7 @@ describe("runNightly — orchestration paths (REL-01 / REL-02 / MEET-04)", () =>
     assert.equal(post.calls.length, 1, "posted exactly once");
     const json = JSON.stringify(post.calls[0].payload);
     const robotCount = (json.match(/🤖/g) ?? []).length;
-    assert.equal(robotCount, 3, "all three designers render a 🤖 \"couldn't read\" row");
+    assert.equal(robotCount, 3, 'all three designers render a 🤖 "couldn\'t read" row');
     assert.ok(
       json.includes("Open in Productive"),
       "it is the normal figures-bearing card (figures intact), not the degraded variant",
@@ -482,7 +481,11 @@ describe("runNightly — idempotency + run log (REL-03 / D-04/D-05/D-06/D-07-fai
     assert.equal(post.calls.length, 1, "postToChat called exactly once");
     assert.equal(marker.writeCalls.length, 1, "the marker was written exactly once");
     assert.equal(marker.writeCalls[0].posted, true, "the run log records posted === true");
-    assert.equal(marker.writeCalls[0].date, KEY, "the run log carries the studio-local date key for NOW");
+    assert.equal(
+      marker.writeCalls[0].date,
+      KEY,
+      "the run log carries the studio-local date key for NOW",
+    );
     assert.equal(marker.writeCalls[0].postOutcome, "ok", "postOutcome is the redacted 'ok'");
   });
 
@@ -523,7 +526,11 @@ describe("runNightly — idempotency + run log (REL-03 / D-04/D-05/D-06/D-07-fai
 
     assert.equal(code, 1, "a POST failure exits non-zero (REL-02)");
     assert.equal(post.calls.length, 1, "postToChat was attempted");
-    assert.equal(marker.writeCalls.length, 0, "the marker is NEVER written on the POST-failure path");
+    assert.equal(
+      marker.writeCalls.length,
+      0,
+      "the marker is NEVER written on the POST-failure path",
+    );
   });
 
   it("(e) degraded post → marker written with degraded true and posted true (D-06)", async () => {
@@ -543,7 +550,11 @@ describe("runNightly — idempotency + run log (REL-03 / D-04/D-05/D-06/D-07-fai
 
     assert.equal(code, 0, "a degraded post still returns 0");
     assert.equal(post.calls.length, 1, "the degraded card was posted once");
-    assert.equal(marker.writeCalls.length, 1, "a degraded post still writes the marker (counts as posted)");
+    assert.equal(
+      marker.writeCalls.length,
+      1,
+      "a degraded post still writes the marker (counts as posted)",
+    );
     assert.equal(marker.writeCalls[0].posted, true, "posted === true on the degraded path");
     assert.equal(marker.writeCalls[0].degraded, true, "degraded === true (Productive sourceError)");
   });
@@ -566,9 +577,17 @@ describe("runNightly — idempotency + run log (REL-03 / D-04/D-05/D-06/D-07-fai
       eventName: "schedule",
     });
 
-    assert.equal(code, 0, "the post succeeded — a marker-write failure must NOT return 1 (D-07-fail)");
+    assert.equal(
+      code,
+      0,
+      "the post succeeded — a marker-write failure must NOT return 1 (D-07-fail)",
+    );
     assert.equal(post.calls.length, 1, "the post happened");
     assert.equal(marker.writeCalls.length, 1, "writeMarker was attempted once");
-    assert.equal(marker.writeCalls[0].posted, true, "the captured run-log facts still reflect posted === true");
+    assert.equal(
+      marker.writeCalls[0].posted,
+      true,
+      "the captured run-log facts still reflect posted === true",
+    );
   });
 });

@@ -57,10 +57,16 @@ import {
   type RawBookingForMapping,
   type RawAvailabilityForMapping,
 } from "./mappers.ts";
-import { buildBriefedPositionMap, type RawWorkflowStatus } from "./briefed.ts";
+import { buildBriefedPositionMap, briefHasContent, type RawWorkflowStatus } from "./briefed.ts";
 import { assessBriefs, type AssessBookingInput, type BriefFlag } from "./brief.ts";
 import { buildHolidaySet, yearsForWindow } from "../holidays.ts";
-import { DESIGNER_PERSON_IDS, STUDIO_CLOSURES } from "../config.ts";
+import {
+  DESIGNER_PERSON_IDS,
+  STUDIO_CLOSURES,
+  BRIEF_TEMPLATE_SKELETON,
+  BRIEF_TEMPLATE_TAIL_ANCHORS,
+} from "../config.ts";
+import type { ActiveClient } from "../config.ts";
 
 /**
  * What `gather` produces — everything Phase 3 needs. `bookings`/`absences` are
@@ -102,6 +108,21 @@ export interface GatherResult {
    * Domain `Booking` is deliberately NOT extended — src/domain stays untouched.
    */
   bookedClientsByDesignerDay: Record<DesignerId, Set<string>>;
+  /**
+   * Live active-client companies — every company with an OPEN client project
+   * (status=1, project_type=2), pulled fresh each run (Liam pilot feedback
+   * 2026-06-25). The meeting reconciler whole-phrase-matches these so real client
+   * meetings are caught even when the curated alias map doesn't know the client.
+   * Empty on a failed/degraded pull (reconcile then falls back to the curated map).
+   */
+  activeClients: ActiveClient[];
+  /**
+   * Per-designer TARGET-DAY booked task/service labels (job titles). Feeds the
+   * narrow "needs its own booking" reconciler rule (Problem/SOLVD): generic company
+   * time doesn't cover such a meeting, but a same-named booking label does. Every
+   * assessed designer is initialised to an empty array.
+   */
+  bookedLabelsByDesignerDay: Record<DesignerId, string[]>;
 }
 
 /**
@@ -141,11 +162,17 @@ function relId(rel: { data?: { id: string; type: string } | null } | undefined):
   return rel?.data?.id ?? null;
 }
 
-/** True when a task description (brief markdown) has real content (D-04). */
+/**
+ * True when a task description is a REAL brief, not just the unfilled studio
+ * template (BRIEF-02 false-trust guard / Liam pilot feedback 2026-06-25). The
+ * brief template is auto-inserted into the description on task creation, so a
+ * merely non-empty description is NOT proof of a written brief. `briefHasContent`
+ * strips the fixed template skeleton + boilerplate tail (committed config) and
+ * checks whether any real content remains. Lean lenient — any genuine content
+ * counts — to avoid false "not briefed" flags (Liam's explicit instruction).
+ */
 function descriptionNonEmpty(description: string | null | undefined): boolean {
-  if (typeof description !== "string") return false;
-  // Strip HTML tags + whitespace; an empty/whitespace-only brief is NOT content.
-  return description.replace(/<[^>]*>/g, "").trim().length > 0;
+  return briefHasContent(description, BRIEF_TEMPLATE_SKELETON, BRIEF_TEMPLATE_TAIL_ANCHORS);
 }
 
 /**
@@ -416,6 +443,8 @@ export async function gather(deps: GatherDeps): Promise<GatherResult> {
     sourceErrors,
     rosteredMinutes: () => 0, // reached nobody → no rostered data → 0 (degrade-safe, D-06)
     bookedClientsByDesignerDay: {}, // reached nobody → no per-designer sets
+    activeClients: [], // figures degraded → 🤖 card, no meeting matching needed
+    bookedLabelsByDesignerDay: {}, // reached nobody → no per-designer labels
   });
 
   // (2) Pull bookings for the whole window with the live-confirmed include set.
@@ -668,7 +697,11 @@ export async function gather(deps: GatherDeps): Promise<GatherResult> {
   //     have no included company linkage and simply contribute nothing.
   const companyByTask = indexTaskCompany(bookingsResult.value.included);
   const bookedClientsByDesignerDay: Record<DesignerId, Set<string>> = {};
-  for (const id of assessedDesigners) bookedClientsByDesignerDay[id] = new Set<string>();
+  const bookedLabelsByDesignerDay: Record<DesignerId, string[]> = {};
+  for (const id of assessedDesigners) {
+    bookedClientsByDesignerDay[id] = new Set<string>();
+    bookedLabelsByDesignerDay[id] = [];
+  }
   for (const raw of rawBookings) {
     const a = raw.attributes;
     if (a.canceled === true) continue;
@@ -679,9 +712,20 @@ export async function gather(deps: GatherDeps): Promise<GatherResult> {
     if (set === undefined) continue; // non-rostered / unassessed → skip
     const taskId = taskIdByBooking.get(raw.id) ?? null;
     if (taskId === null) continue;
+    // Booked task LABEL (job title) — the coverage signal for the Problem/SOLVD
+    // "needs its own booking" reconciler rule. A generic "Liam time" booking has a
+    // task label that won't contain "Problem/SOLVD", so it can't mask the meeting.
+    const label = tasksById.get(taskId)?.jobLabel;
+    if (label !== undefined) bookedLabelsByDesignerDay[designerId]?.push(label);
     const companyId = companyByTask.get(taskId);
     if (companyId !== undefined) set.add(companyId);
   }
+
+  // (10) LIVE active-client list (Liam pilot feedback 2026-06-25) — widens meeting
+  //      matching beyond the frozen curated map. Additive + NON-FATAL: a failed pull
+  //      is logged and yields [] (reconcile falls back to the curated map), never a
+  //      figures-degrade sourceError. See fetchActiveClients.
+  const activeClients = await fetchActiveClients(fetchPages);
 
   return {
     bookings,
@@ -692,7 +736,48 @@ export async function gather(deps: GatherDeps): Promise<GatherResult> {
     sourceErrors,
     rosteredMinutes,
     bookedClientsByDesignerDay,
+    activeClients,
+    bookedLabelsByDesignerDay,
   };
+}
+
+/**
+ * Pull the LIVE active-client company list (Liam pilot feedback 2026-06-25): every
+ * company with an OPEN client project (status=1, project_type=2). Those companies
+ * ride in the response `included` (only companies linked to a returned active
+ * client project appear there), so we read them straight from `included`, distinct
+ * by id. NON-FATAL + additive: a failed pull is logged (console.warn) and returns
+ * [] so reconcile falls back to the curated alias map. It is deliberately NOT pushed
+ * to `sourceErrors` — that would trip the whole-card 🤖 figures-degrade (variants.ts),
+ * and this is a meeting-matching enhancement, not a figures source.
+ */
+async function fetchActiveClients(
+  fetchPages: NonNullable<GatherDeps["fetchPages"]>,
+): Promise<ActiveClient[]> {
+  const query =
+    "filter[status]=1&filter[project_type]=2&include=company" +
+    "&fields[projects]=id&fields[companies]=name";
+  const res = await fetchPages("/projects", query);
+  if (!res.ok) {
+    console.warn(
+      `active-client list pull failed (meeting matching falls back to curated map): ${res.error}`,
+    );
+    return [];
+  }
+  const byId = new Map<string, string>();
+  for (const raw of res.value.included) {
+    if (
+      typeof raw !== "object" ||
+      raw === null ||
+      (raw as { type?: unknown }).type !== "companies"
+    ) {
+      continue;
+    }
+    const c = raw as { id: string; attributes?: { name?: unknown } };
+    const name = typeof c.attributes?.name === "string" ? c.attributes.name.trim() : "";
+    if (name.length > 0) byId.set(c.id, name);
+  }
+  return [...byId].map(([companyId, companyName]) => ({ companyId, companyName }));
 }
 
 /** Tag a Booking/Absence with the window day it was mapped for. */

@@ -67,5 +67,53 @@ export function buildVerdict(report: StudioReport, ctx: RenderContext): string {
   return "All sorted for tomorrow.";
 }
 
-/** The locked clean-night status line (verbatim, D-17 / UI-SPEC table). */
-export const CLEAN_STATUS_LINE = "Three designers fully booked. Nothing to action.";
+/** Number words for the working-designer count (roster is 3; extra slots are harmless). */
+const COUNT_WORDS = ["No", "One", "Two", "Three", "Four", "Five"] as const;
+
+/** First name only — the status line names people informally ("Anisha", not "Anisha Gittins"). */
+function firstName(fullName: string): string {
+  return fullName.trim().split(/\s+/)[0] ?? fullName;
+}
+
+/** Join names as "A", "A and B", or "A, B and C". */
+function joinNames(names: string[]): string {
+  if (names.length <= 1) return names[0] ?? "";
+  if (names.length === 2) return `${names[0]} and ${names[1]}`;
+  return `${names.slice(0, -1).join(", ")} and ${names[names.length - 1]}`;
+}
+
+/**
+ * The clean-night status line (D-17 / UI-SPEC table) — now scenario-adaptive so it
+ * counts who is ACTUALLY working, not the fixed roster of three.
+ *
+ * Only the CLEAN card calls this (no underbooked/overbooked/brief/missing — see
+ * isBusy), so every designer here is either "ok" (working, fully booked) or "off"
+ * (booked full-day leave OR a routine non-working day — both classify "off"). The
+ * old hardcoded "Three designers fully booked." over-counted whenever anyone was
+ * off (sick, or e.g. Anisha's regular Wed/Fri off-day). We count the working
+ * designers and NAME the off ones instead — "Two designers fully booked — Anisha's
+ * off." When nobody is off the output is byte-identical to the old constant
+ * ("Three designers fully booked. Nothing to action."), so the clean fixture is
+ * unchanged. Pure; never throws; names come from config via ctx.designerNames.
+ */
+export function buildCleanStatusLine(report: StudioReport, ctx: RenderContext): string {
+  const working = report.designers.filter((d) => d.status !== "off");
+  const off = report.designers.filter((d) => d.status === "off");
+
+  // Everyone off on a working day (rare — usually already a holiday/closure/weekend):
+  // there is no count to state, so a plain note rather than "No designers fully booked."
+  if (working.length === 0) {
+    return "No one's in tomorrow. Nothing to action.";
+  }
+
+  const countWord = COUNT_WORDS[working.length] ?? String(working.length);
+  const noun = working.length === 1 ? "designer" : "designers";
+  let line = `${countWord} ${noun} fully booked`;
+
+  if (off.length > 0) {
+    const names = off.map((d) => firstName(ctx.designerNames[d.designerId] ?? ""));
+    line += off.length === 1 ? ` — ${names[0]}'s off` : ` — ${joinNames(names)} off`;
+  }
+
+  return `${line}. Nothing to action.`;
+}
