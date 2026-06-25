@@ -20,8 +20,14 @@ import { fileURLToPath } from "node:url";
 import { DateTime } from "luxon";
 import type { FilteredEvent } from "../gather.ts";
 import type { DesignerId } from "../../domain/types.ts";
-import { CLIENT_ALIAS_MAP, MEETING_IGNORE_LIST } from "../../config.ts";
-import { reconcileMeetings, matchTitleToClient, type WorthALookItem } from "../reconcile.ts";
+import { CLIENT_ALIAS_MAP, MEETING_IGNORE_LIST, type ActiveClient } from "../../config.ts";
+import {
+  reconcileMeetings,
+  matchTitleToClient,
+  matchActiveClient,
+  deSuffixCompanyName,
+  type WorthALookItem,
+} from "../reconcile.ts";
 
 const LIAM = "686717" as DesignerId;
 
@@ -231,5 +237,134 @@ describe("reconcileMeetings — structure", () => {
       MEETING_IGNORE_LIST,
     );
     assert.equal(out[LIAM].length, 1);
+  });
+});
+
+/* ----------------------------------------------------------------------------
+ * Fix 1 (Liam pilot feedback 2026-06-25): match against the LIVE active-client
+ * list (whole-name) + the narrow Problem/SOLVD "needs its own booking" rule.
+ * ------------------------------------------------------------------------- */
+
+describe("deSuffixCompanyName — distinctive core for whole-phrase matching", () => {
+  it("strips trailing legal + geographic suffixes", () => {
+    assert.equal(deSuffixCompanyName("Hunter Water Corporation"), "Hunter Water");
+    assert.equal(deSuffixCompanyName(" Stream Hill Pty Ltd"), "Stream Hill");
+    assert.equal(deSuffixCompanyName("Yancoal Australia Ltd"), "Yancoal");
+    assert.equal(deSuffixCompanyName("Dairy Farmers Pty Ltd"), "Dairy Farmers");
+  });
+
+  it("drops a trailing parenthetical", () => {
+    assert.equal(
+      deSuffixCompanyName("Hunter Valley Operations (SITE)"),
+      "Hunter Valley Operations",
+    );
+  });
+});
+
+describe("matchActiveClient — whole-name, conservative (D-04)", () => {
+  const HW: ActiveClient = { companyId: "779697", companyName: "Hunter Water Corporation" };
+  const ACME: ActiveClient = { companyId: "acme", companyName: "Acme Pty Ltd" };
+  const BETA: ActiveClient = { companyId: "beta", companyName: "Beta" };
+
+  it("matches the de-suffixed full name as a whole phrase", () => {
+    assert.equal(matchActiveClient("Hunter Water — logo round 2", [HW])?.companyId, "779697");
+    assert.equal(matchActiveClient("Acme workshop", [ACME])?.companyId, "acme");
+  });
+
+  it("does NOT match a name buried inside a longer word (whole-word only)", () => {
+    assert.equal(matchActiveClient("Acmexyz workshop", [ACME]), null);
+  });
+
+  it("skips a de-suffixed core shorter than 4 chars (curated map owns short aliases)", () => {
+    assert.equal(matchActiveClient("GWH review", [{ companyId: "g", companyName: "GWH" }]), null);
+  });
+
+  it("two different companies in one title → ambiguous → null (stay quiet)", () => {
+    assert.equal(matchActiveClient("Acme x Beta joint sync", [ACME, BETA]), null);
+  });
+
+  it("no active-client match → null", () => {
+    assert.equal(matchActiveClient("Internal planning", [HW, ACME]), null);
+  });
+});
+
+describe("reconcileMeetings — live active-client matching (opts.activeClients)", () => {
+  const BUNNINGS: ActiveClient = { companyId: "bun", companyName: "Bunnings" };
+
+  it("a live client meeting with NO same-day booking → flagged (the frozen-8 gap, fixed)", () => {
+    const e: FilteredEvent = { ...COVERED, summary: "Bunnings packaging review" };
+    const out = reconcileMeetings(
+      { [LIAM]: [e] },
+      { [LIAM]: new Set<string>() },
+      CLIENT_ALIAS_MAP,
+      MEETING_IGNORE_LIST,
+      {
+        activeClients: [BUNNINGS],
+      },
+    );
+    assert.equal(out[LIAM].length, 1);
+    assert.equal(out[LIAM][0].title, "Bunnings packaging review");
+  });
+
+  it("the same live client meeting WITH a same-day booking → covered (not flagged)", () => {
+    const e: FilteredEvent = { ...COVERED, summary: "Bunnings packaging review" };
+    const out = reconcileMeetings(
+      { [LIAM]: [e] },
+      { [LIAM]: new Set(["bun"]) },
+      CLIENT_ALIAS_MAP,
+      MEETING_IGNORE_LIST,
+      {
+        activeClients: [BUNNINGS],
+      },
+    );
+    assert.deepEqual(out[LIAM], []);
+  });
+
+  it("curated vs dynamic DISAGREE on the company → ambiguous → stay quiet (D-04)", () => {
+    // 'FDC' resolves via the curated map to FDC; 'Acme' resolves via the dynamic list
+    // to a different company → the two disagree → silence even with no bookings.
+    const e: FilteredEvent = { ...COVERED, summary: "FDC x Acme joint review" };
+    const out = reconcileMeetings(
+      { [LIAM]: [e] },
+      { [LIAM]: new Set<string>() },
+      CLIENT_ALIAS_MAP,
+      MEETING_IGNORE_LIST,
+      {
+        activeClients: [{ companyId: "acme", companyName: "Acme Pty Ltd" }],
+      },
+    );
+    assert.deepEqual(out[LIAM], []);
+  });
+});
+
+describe("reconcileMeetings — Problem/SOLVD needs its OWN booking (opts.ownBookingPhrases)", () => {
+  const SOLVD = "742669"; // SOLVD Agency company id (curated map)
+  const OWN = ["Problem/SOLVD"];
+  const meeting = (): FilteredEvent => ({
+    ...COVERED,
+    summary: "Problem/SOLVD Fortnightly Team Meeting",
+  });
+
+  it("generic SOLVD time on the day does NOT cover it → flagged (the live miss, fixed)", () => {
+    const out = reconcileMeetings(
+      { [LIAM]: [meeting()] },
+      { [LIAM]: new Set([SOLVD]) }, // SOLVD company IS booked that day (generic time)…
+      CLIENT_ALIAS_MAP,
+      MEETING_IGNORE_LIST,
+      { ownBookingPhrases: OWN, bookedLabelsByDesignerDay: { [LIAM]: ["Liam time"] } },
+    );
+    assert.equal(out[LIAM].length, 1, "flagged — generic SOLVD time is not coverage");
+    assert.equal(out[LIAM][0].title, "Problem/SOLVD Fortnightly Team Meeting");
+  });
+
+  it("a booking LABELLED like the meeting ('Problem Solvd') covers it → not flagged", () => {
+    const out = reconcileMeetings(
+      { [LIAM]: [meeting()] },
+      { [LIAM]: new Set<string>() },
+      CLIENT_ALIAS_MAP,
+      MEETING_IGNORE_LIST,
+      { ownBookingPhrases: OWN, bookedLabelsByDesignerDay: { [LIAM]: ["Problem Solvd"] } },
+    );
+    assert.deepEqual(out[LIAM], [], "covered by a same-named booking (punctuation-insensitive)");
   });
 });

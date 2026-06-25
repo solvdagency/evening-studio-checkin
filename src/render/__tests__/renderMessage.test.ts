@@ -179,6 +179,52 @@ describe("renderTemplate — clean scenario (MSG-04/05)", () => {
   });
 });
 
+describe("renderTemplate — clean status line counts working designers (off-day wording)", () => {
+  /** A clean report (no under/over/brief/missing) with `offIds` set to status "off". */
+  function cleanWith(offIds: DesignerId[]): StudioReport {
+    const ids: DesignerId[] = [ANISHA, ELLA, LIAM];
+    return {
+      targetDay: "2026-06-04",
+      window: ["2026-06-04"],
+      designers: ids.map((id) =>
+        offIds.includes(id)
+          ? designer({ designerId: id, status: "off", availableHours: 0, bookedHours: 0 })
+          : designer({ designerId: id, status: "ok", confirmedMin: h(7.5), bookedHours: 7.5 }),
+      ),
+      rollup: { totalMin: h(45), openMin: 0, totalHours: 45, openHours: 0 },
+      missingDesigners: [],
+    };
+  }
+
+  /** The muted status line is the 2nd widget of the verdict section on a clean card. */
+  function statusLineText(out: ReturnType<typeof renderTemplate>): string {
+    const w = out.cardsV2[0].card.sections[0].widgets[1];
+    assert.ok("textParagraph" in w);
+    return w.textParagraph.text;
+  }
+
+  it("nobody off → byte-identical 'Three designers fully booked.'", () => {
+    const out = renderTemplate(cleanWith([]), ctx({}));
+    assert.match(statusLineText(out), />Three designers fully booked\. Nothing to action\.</);
+  });
+
+  it("one off → names who's off: 'Two designers fully booked — Anisha's off.'", () => {
+    const out = renderTemplate(cleanWith([ANISHA]), ctx({}));
+    assert.match(
+      statusLineText(out),
+      />Two designers fully booked — Anisha's off\. Nothing to action\.</,
+    );
+  });
+
+  it("two off → 'One designer fully booked — Anisha and Ella off.'", () => {
+    const out = renderTemplate(cleanWith([ANISHA, ELLA]), ctx({}));
+    assert.match(
+      statusLineText(out),
+      />One designer fully booked — Anisha and Ella off\. Nothing to action\.</,
+    );
+  });
+});
+
 describe("renderTemplate — overbooked scenario (MSG-01/02)", () => {
   it("matches the locked overbooked card JSON (🟠 Xh over in #b06000)", () => {
     const report: StudioReport = {
@@ -538,7 +584,11 @@ describe("renderTemplate — 📅 worth-a-look sub-line (D-14 / MEET-04 / MSG-06
     assert.ok("decoratedText" in liamRow);
     const text = liamRow.decoratedText.text;
     assert.match(text, /📅 .*Mystery meeting.*not in Productive/, "title + tail present");
-    assert.match(text, /Mystery meeting<\/font>, /, "tail joins title directly (no duration segment)");
+    assert.match(
+      text,
+      /Mystery meeting<\/font>, /,
+      "tail joins title directly (no duration segment)",
+    );
     assert.doesNotMatch(text, / · /, "no ' · ' duration separator when duration is missing");
     assert.doesNotMatch(text, /undefined|NaN/, "never prints undefined/NaN");
   });

@@ -149,6 +149,31 @@ export interface ClientAlias {
 }
 
 /**
+ * A LIVE client company pulled from Productive (a company with an active client
+ * project), used to widen meeting→client matching beyond the hand-curated
+ * CLIENT_ALIAS_MAP (Liam pilot feedback 2026-06-25: the curated 8 was a frozen June
+ * snapshot; the studio has ~40+ active clients). The reconciler matches the
+ * de-suffixed `companyName` as a WHOLE phrase (never a stray substring) so vendor /
+ * dead-account / one-person names can't false-flag. Built by gather; consumed by
+ * reconcileMeetings. NO aliases — just the real company name, matched conservatively.
+ */
+export interface ActiveClient {
+  companyId: string;
+  companyName: string;
+}
+
+/**
+ * Meeting titles that require their OWN same-named Productive booking to count as
+ * covered — generic standing/company time does NOT cover them (Liam pilot feedback
+ * 2026-06-25, the "Problem/SOLVD" miss). NARROW by design: only the named team
+ * initiative below, never 1:1s or training. Matched case-/punctuation-insensitively
+ * (see reconcile.ts normForOwnBooking) against BOTH the meeting title and the day's
+ * booked task/service labels — so a "Problem Solvd" booking covers a "Problem/SOLVD
+ * Fortnightly" meeting, but generic "Liam time" never does.
+ */
+export const MEETINGS_NEEDING_OWN_BOOKING: readonly string[] = ["Problem/SOLVD"];
+
+/**
  * Committed client-alias map (D-03/D-09): calendar-title tokens → Productive
  * company. Seeded with the live-validated FDC entry (04-CONTEXT §Specifics: FDC
  * Construction, id 1333899, code FDCC, IPO Launch Video project) and CONFIRMED +
@@ -271,5 +296,59 @@ export const WORK_DAY_END = "17:30" as const;
  * Read from the environment at the wiring point so a CI/cron run can flip it without
  * a code change; absent or any value other than the string "true" → OFF.
  */
-export const USE_LLM_MEETING_JUDGMENT: boolean =
-  process.env.USE_LLM_MEETING_JUDGMENT === "true";
+export const USE_LLM_MEETING_JUDGMENT: boolean = process.env.USE_LLM_MEETING_JUDGMENT === "true";
+
+/**
+ * The studio's brief-template skeleton (BRIEF-02 false-trust guard — Liam pilot
+ * feedback 2026-06-25). When a "Brief in …" task is created, Productive auto-drops
+ * this fixed template into the task description, so a NON-EMPTY description is NOT
+ * proof a brief was written: an untouched template is still "non-empty". To tell a
+ * real brief from a blank template, `briefHasContent` (src/productive/briefed.ts)
+ * strips these fixed skeleton lines + the boilerplate tail (below) and checks
+ * whether any real text remains.
+ *
+ * These are the FIXED lines of the live template, confirmed against the real
+ * UNFILLED task 18541491 (metadata fields blank, not auto-filled) plus 5 filled
+ * tasks (2026-06-25). Matching is whitespace-, markdown- and case-insensitive (see
+ * `normalizeBriefLine`), so only the wording matters here — not the **bold**,
+ * numbering or spacing. Both observed wordings of the BACKGROUND heading are listed
+ * ("Give us us the history" typo + the corrected "Give us the history") so either
+ * template variant is recognised.
+ */
+export const BRIEF_TEMPLATE_SKELETON: readonly string[] = [
+  "FINAL CLIENT APPROVED BRIEF GOES HERE",
+  "You can copy and paste from your Client Brief or complete a new one here",
+  "DESIGN BRIEF",
+  "Brief Writer:",
+  "Project No:",
+  "Budget:",
+  "Deadline:",
+  "BACKGROUND - why are we here. Give us us the history:",
+  "BACKGROUND - why are we here. Give us the history:",
+  "WHAT DO WE NEED TO ACHIEVE - clear objectives or single outcome",
+  "DELIVERABLES - simply... what do you need me to do/create?",
+  "Asset 1 (copy and paste this if there are more than 1 asset):",
+  "What is it?",
+  "Where is it going?",
+  "How many are we creating?",
+  "What is the size/spec?",
+  "Will it be printed?",
+  "Link to asset folder (images, logos, copy etc)?",
+  "What exact copy is going in, or on, the asset?",
+  "Detail any design direction (reference material, where colours need to go etc)",
+  "Asset 2: (paste numbers 1-8 below)",
+  "NEXT STEPS:",
+  "OTHER DOCS, LINKS, FILES ETC",
+];
+
+/**
+ * Tail anchors for `briefHasContent`: once a line matches one of these (normalized
+ * prefix), reading STOPS — everything below is the fixed Designer Check-List +
+ * Version Control Process boilerplate that is ALWAYS present (filled or not) and
+ * drifts between the "⁃"-bullet and "-"-bullet template variants. Cutting at the
+ * anchor is far more robust than listing every bullet line.
+ */
+export const BRIEF_TEMPLATE_TAIL_ANCHORS: readonly string[] = [
+  "Designer Check-List",
+  "VERSION CONTROL PROCESS",
+];

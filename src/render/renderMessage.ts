@@ -25,7 +25,7 @@ import type {
 import type { StudioReport } from "../domain/report.ts";
 import { AVATAR_PNG_URL, BRAND_COLORS, PRODUCTIVE_DEEPLINK_TEMPLATE } from "../config.ts";
 import { isBusy, selectVariant } from "./variants.ts";
-import { buildVerdict, CLEAN_STATUS_LINE } from "./verdict.ts";
+import { buildVerdict, buildCleanStatusLine } from "./verdict.ts";
 import { buildRow, escapeHtml } from "./rows.ts";
 import { buildWeekBar } from "./weekBar.ts";
 
@@ -126,7 +126,9 @@ export const renderTemplate: RenderMessage = (report, ctx) => {
   ];
   if (!busy) {
     verdictWidgets.push({
-      textParagraph: { text: `<font color="${BRAND_COLORS.muted}">${CLEAN_STATUS_LINE}</font>` },
+      textParagraph: {
+        text: `<font color="${BRAND_COLORS.muted}">${buildCleanStatusLine(report, ctx)}</font>`,
+      },
     });
   }
   // Calendar-only failure (figures intact, REL-01): one soft muted note alongside

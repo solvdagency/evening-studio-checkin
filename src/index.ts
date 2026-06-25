@@ -58,6 +58,7 @@ import {
   STUDIO_CLOSURES,
   CLIENT_ALIAS_MAP,
   MEETING_IGNORE_LIST,
+  MEETINGS_NEEDING_OWN_BOOKING,
 } from "./config.ts";
 
 /**
@@ -312,6 +313,14 @@ export async function runNightly(now: DateTime, deps?: Partial<RunNightlyDeps>):
     g.bookedClientsByDesignerDay,
     CLIENT_ALIAS_MAP,
     MEETING_IGNORE_LIST,
+    {
+      // Liam pilot feedback 2026-06-25: match against the LIVE client list (not the
+      // frozen curated 8), and require Problem/SOLVD to have its OWN booking rather
+      // than being masked by generic SOLVD time.
+      activeClients: g.activeClients,
+      bookedLabelsByDesignerDay: g.bookedLabelsByDesignerDay,
+      ownBookingPhrases: MEETINGS_NEEDING_OWN_BOOKING,
+    },
   );
 
   // (4) Presentation context + (5) render the Cards v2 payload. Calendar and
@@ -370,10 +379,7 @@ export async function runNightly(now: DateTime, deps?: Partial<RunNightlyDeps>):
     (d) => d.status === "underbooked" || d.status === "overbooked",
   ).length;
   const missingBrief = g.briefFlags.length;
-  const worthALookCount = Object.values(worthALook).reduce(
-    (sum, items) => sum + items.length,
-    0,
-  );
+  const worthALookCount = Object.values(worthALook).reduce((sum, items) => sum + items.length, 0);
   const runLog = buildRunLog({
     date: dateKey,
     posted: true,
